@@ -35,7 +35,7 @@ PGURE-SVT makes use of several 3rd-party libraries, which need to be installed f
 + **[Armadillo](http://arma.sourceforge.net)**
 
    Armadillo is a C++ linear algebra library, and is heavily used in PGURE-SVT to handle the image
-   sequences. The latest version (6.200) is recommended.
+   sequences. The latest version (6.400) is recommended.
    
 + **[NLopt](http://ab-initio.mit.edu/wiki/index.php/NLopt)** 
 
