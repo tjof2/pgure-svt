@@ -1,0 +1,68 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Temp files
+*~
+
+# MX files
+*.mx
+
+# CSV files
+*.csv
+
+# NB files
+*.nb
+
+# TIF files
+*.tif
+
+# Archives
+*.tar
+*.gz
+
+# CMake Files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+src/CMakeCache.txt
+src/CMakeFiles/
+cmake_install.cmake
+
+# Programs
+PGURE-SVT
+
+# Directories
+bin
+build
+images
+test
+extra
+results
+report
+wnnm

@@ -1,0 +1,63 @@
+##### Example parameter file for PGURE-SVT program #####
+
+##### REQUIRED #####
+
+# Specify the file name of the TIFF stack to be denoised
+filename             : ./images/demo.tif
+
+# The start and end frames of the sequence to be denoised
+start_image          : 1
+end_image            : 50
+
+##### OPTIONAL #####
+
+# The dimensions of the patch in pixels to form a Casorati matrix
+#	Default = 4 pixels
+patch_size           : 16
+
+# The length in frames of the block to form a Casorati matrix (must be odd)
+# 	Default = 15 frames
+trajectory_length    : 15
+
+# Noise parameter estimation
+# 	Setting a value will override automatic estimation of that parameter
+alpha                : 0.1
+mu                   : 0.1
+sigma                : 0.1
+
+# Turn off lambda optimization with PGURE
+#	0 = OFF
+#	1 = ON
+#	Default = ON
+pgure                : 0 
+
+# If PGURE is turned off, you MUST specify a threshold
+lambda               : 0.15
+
+# Motion estimation
+#	0 = OFF
+#	1 = ON
+#	Default = ON
+motion_estimation    : 1
+
+##### ADVANCED #####
+
+# Verbosity
+#	If turned on, returns detailed timing and optimization
+#	information for each step of the algorithm
+#	0 = OFF
+#	1 = ON
+#	Default = OFF
+#verbose              : 0
+
+# Size of ARPS motion estimation neighbourhood
+#	Default = 7 pixels
+#motion_neighbourhood : 7
+
+# Relative tolerance of PGURE optimization
+#	Default = 1E-7
+#tolerance            : 1E-7
+
+# Size of median filter
+#	Default = 5 pixels
+#median_filter        : 5
