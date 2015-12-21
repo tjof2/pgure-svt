@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>PGURE-SVT by tjof2</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">PGURE-SVT</h1>
+        <p class="header">PGURE-SVT denoising for time-resolved microscopy</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/tjof2/pgure-svt/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/tjof2/pgure-svt/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/tjof2/pgure-svt">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/tjof2">tjof2</a></p>
+
+
+      </header>
+      <section>
+        <h1>
+<a id="pgure-svt" class="anchor" href="#pgure-svt" aria-hidden="true"><span class="octicon octicon-link"></span></a>PGURE-SVT</h1>
+
+<p><strong>Singular value thresholding for denoising video microscopy data</strong></p>
+
+<p>PGURE-SVT is an algorithm designed to denoise image sequences acquired in microscopy. It exploits the correlations between
+consecutive frames to form low-rank matrices, which are then recovered using a technique known as nuclear norm minimization.
+An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate the selection of the regularization parameter, while
+robust noise and motion estimation maintain broad applicability to many different types of microscopy. The algorithm is
+described in detail in: </p>
+
+<blockquote>
+<p>Furnival T, Leary RK, Midgley PA. (2015). Denoising time-resolved microscopy sequences with singular 
+value thresholding. <em>Manuscript in preparation.</em></p>
+</blockquote>
+
+<hr>
+
+<h2>
+<a id="contents" class="anchor" href="#contents" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contents</h2>
+
+<ul>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#using-pgure-svt">Using PGURE-SVT</a></li>
+</ul>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<h4>
+<a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dependencies</h4>
+
+<p>PGURE-SVT makes use of several 3rd-party libraries, which need to be installed first.</p>
+
+<ul>
+<li>
+<p><strong><a href="http://www.cmake.org">CMake</a></strong> </p>
+
+<p>CMake is used to configure the build before compilation.</p>
+</li>
+<li>
+<p><strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a></strong> </p>
+
+<p>PGURE-SVT currently only supports TIFF image stacks.</p>
+</li>
+<li>
+<p><strong><a href="http://arma.sourceforge.net">Armadillo</a></strong></p>
+
+<p>Armadillo is a C++ linear algebra library, and is heavily used in PGURE-SVT to handle the image
+sequences. The latest version (6.400) is recommended.</p>
+</li>
+<li>
+<p><strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> </p>
+
+<p>NLopt is a non-linear optimization library, implementing several different optimization algorithms.
+The latest version (2.4.2) is recommended.</p>
+</li>
+</ul>
+
+<h4>
+<a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compiling from source</h4>
+
+<p>To build PGURE-SVT, unpack the source and <code>cd</code> into the unpacked directory:</p>
+
+<pre><code>$ tar -xzf pgure-svt.tar.gz
+$ cd pgure-svt
+</code></pre>
+
+<p>The next step is to configure the build, and then finally compile it. This will generate 
+an executable file in the <code>bin/</code> directory. </p>
+
+<pre><code>$ cmake .
+$ make
+</code></pre>
+
+<p>To run PGURE-SVT from any directory, add the following line to your <code>.bashrc</code> file including
+the full path to the <code>bin/</code> directory:</p>
+
+<pre><code>$ echo alias PGURE-SVT='/path/to/directory/PGURE-SVT' &gt;&gt; ~/.bashrc
+$ source ~/.bashrc
+</code></pre>
+
+<p>You can now run the program by typing <code>PGURE-SVT</code> in the terminal.</p>
+
+<h2>
+<a id="using-pgure-svt" class="anchor" href="#using-pgure-svt" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using PGURE-SVT</h2>
+
+<p>PGURE-SVT uses a simple command-line interface along with a separate parameter file.</p>
+
+<pre><code>$ PGURE-SVT param.svt
+</code></pre>
+
+<p>The parameter file allows the user to customize various options of the PGURE-SVT
+algorithm. An example is provided, with short comments to explain the effects of
+each option. For an in-depth explanation of the options, users are referred to the
+paper describing the algorithm.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		          <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-65991272-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
