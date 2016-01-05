@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 	std::cout<<"PGURE-SVT Denoising"<<std::endl;
 	std::cout<<"Author: Tom Furnival"<<std::endl;
 	std::cout<<"Email:  tjof2@cam.ac.uk"<<std::endl<<std::endl;
-	std::cout<<"Version 1.0 - October 2015"<<std::endl<<std::endl;
+	std::cout<<"Version 0.1 - December 2015"<<std::endl<<std::endl;
 	
 	/////////////////////////////		
 	//						   //
