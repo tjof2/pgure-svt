@@ -34,8 +34,7 @@ PGURE-SVT makes use of several 3rd-party libraries, which need to be installed f
 
 + **[Armadillo](http://arma.sourceforge.net)**
 
-   Armadillo is a C++ linear algebra library, and is heavily used in PGURE-SVT to handle the image
-   sequences. The latest version (6.400) is recommended.
+   Armadillo is a C++ linear algebra library, and is used extensively in PGURE-SVT. The latest version (6.500) is recommended.
    
 + **[NLopt](http://ab-initio.mit.edu/wiki/index.php/NLopt)** 
 
@@ -46,7 +45,7 @@ PGURE-SVT makes use of several 3rd-party libraries, which need to be installed f
 
 To build PGURE-SVT, unpack the source and `cd` into the unpacked directory:
 
-```
+```bash
 $ tar -xzf pgure-svt.tar.gz
 $ cd pgure-svt
 ```
@@ -54,7 +53,7 @@ $ cd pgure-svt
 The next step is to configure the build, and then finally compile it. This will generate 
 an executable file in the `bin/` directory. 
 
-```
+```bash
 $ cmake .
 $ make
 ```
@@ -62,7 +61,7 @@ $ make
 To run PGURE-SVT from any directory, add the following line to your `.bashrc` file including
 the full path to the `bin/` directory:
 
-```
+```bash
 $ echo alias PGURE-SVT='/path/to/directory/PGURE-SVT' >> ~/.bashrc
 $ source ~/.bashrc
 ```
@@ -73,7 +72,7 @@ You can now run the program by typing `PGURE-SVT` in the terminal.
 
 PGURE-SVT uses a simple command-line interface along with a separate parameter file.
 
-```
+```bash
 $ PGURE-SVT param.svt
 ```
 
