@@ -120,6 +120,7 @@ int main(int argc, char** argv) {
 	// Patch size and trajectory length
 	// Check sizes to ensure SVD is done right way round
 	int Bs = (programOptions.count("patch_size") == 1) ? std::stoi(programOptions.at("patch_size")) : 4;
+	//int Overlap = (programOptions.count("patch_overlap") == 1) ? std::stoi(programOptions.at("patch_overlap")) : 1;
 	int T = (programOptions.count("trajectory_length") == 1) ? std::stoi(programOptions.at("trajectory_length")) : 15;
 	T = (Bs*Bs<T) ? (Bs*Bs)-1 : T;
 	std::string casoratisize = std::to_string(Bs*Bs) + "x" + std::to_string(T);
@@ -389,10 +390,10 @@ int main(int argc, char** argv) {
 		
 		// Option to return Quadtree 
 		// (e.g. for export)
-		arma::cube quadtree(Nx,Ny,T);
-		
+		arma::cube quadtree(Nx,Ny,T);		
+	
 		// Perform noise estimation
-		EstimateNoiseParams(&u, &quadtree, &alpha, &mu, &sigma, 2);
+		EstimateNoiseParams(&u, &quadtree, &alpha, &mu, &sigma, 8);
 		
 		// Finish timing
 		verboseEnd = std::chrono::steady_clock::now();
