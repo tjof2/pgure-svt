@@ -8,7 +8,7 @@ An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate 
 robust noise and motion estimation maintain broad applicability to many different types of microscopy. The algorithm is
 described in detail in: 
 
-> Furnival T, Leary R, Midgley PA. (2015). Denoising time-resolved  microscopy sequences with singular 
+> Furnival T, Leary R, Midgley PA. (2016). Denoising time-resolved  microscopy sequences with singular 
 > value thresholding. *Manuscript in preparation.*
 
 ---
