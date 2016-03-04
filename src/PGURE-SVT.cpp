@@ -5,7 +5,7 @@
 	Author:	Tom Furnival	
 	Email:	tjof2@cam.ac.uk
 
-	Copyright (C) 2015 Tom Furnival
+	Copyright (C) 2015-16 Tom Furnival
 
 	This program uses Singular Value Thresholding (SVT) [1], combined 
 	with an unbiased risk estimator (PGURE) to denoise a video sequence 
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 	std::cout<<"PGURE-SVT Denoising"<<std::endl;
 	std::cout<<"Author: Tom Furnival"<<std::endl;
 	std::cout<<"Email:  tjof2@cam.ac.uk"<<std::endl<<std::endl;
-	std::cout<<"Version 0.1 - December 2015"<<std::endl<<std::endl;
+	std::cout<<"Version 0.2 - March 2016"<<std::endl<<std::endl;
 	
 	/////////////////////////////		
 	//						   //

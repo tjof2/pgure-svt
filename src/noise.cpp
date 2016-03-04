@@ -1,6 +1,6 @@
 /***************************************************************************
 
-	Copyright (C) 2015 Tom Furnival
+	Copyright (C) 2015-16 Tom Furnival
 	
 	File: noise.cpp
 	
