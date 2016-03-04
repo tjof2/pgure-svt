@@ -57,14 +57,15 @@ extern "C" {
 	#include "medfilter.h"
 }
 
-
 // Own headers
 #include "arps.hpp"
 #include "params.hpp"
-#include "tools.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
 #include "svt.hpp"
+
+// Little function to convert string "0"/"1" to boolean
+bool strToBool(std::string const& s) {return s != "0";};
 
 /**************************************************************************/
 
