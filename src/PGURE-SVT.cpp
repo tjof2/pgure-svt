@@ -389,12 +389,12 @@ int main(int argc, char** argv) {
 		// Verbose timer
 		verboseStart = std::chrono::steady_clock::now();
 		
-		// Option to return Quadtree 
-		// (e.g. for export)
-		arma::cube quadtree(Nx,Ny,T);		
-	
-		// Perform noise estimation
-		EstimateNoiseParams(&u, &quadtree, &alpha, &mu, &sigma, 8);
+		// Perform noise estimation	
+		NoiseEstimator estimator;
+		estimator.Estimate(u, alpha, mu, sigma, 8);
+		alpha = estimator.alpha_estimate();
+		mu = estimator.mu_estimate();
+		sigma = estimator.sigma_estimate();
 		
 		// Finish timing
 		verboseEnd = std::chrono::steady_clock::now();
