@@ -4,7 +4,7 @@ project (PGURE-SVT)
 include_directories(${CMAKETEST_SOURCE_DIR}/src)
 link_directories(${CMAKETEST_BINARY_DIR}/src)
 
-add_executable(PGURE-SVT medfilter.c arps.cpp params.cpp pgure.cpp svt.cpp PGURE-SVT.cpp)
+add_executable(PGURE-SVT medfilter.c params.cpp pgure.cpp svt.cpp PGURE-SVT.cpp)
 
 set_target_properties( PGURE-SVT
     PROPERTIES

@@ -31,8 +31,8 @@
 
 class MotionEstimator {
 	public:
-		MotionEstimator();
-		~MotionEstimator();
+		MotionEstimator() {};
+		~MotionEstimator() {};
 
 		void Estimate(const arma::cube &A,
 					  int iter, int timewindow, int Tall,
@@ -45,10 +45,11 @@ class MotionEstimator {
 			Bs = blocksize;
 			vecSize = (Nx-Bs+1)*(Ny-Bs+1);
 
-			patches = arma::zeros<arma::icube>(2,vecSize,2*framewindow+1);
-			motions = arma::zeros<arma::icube>(2,vecSize,2*framewindow);
+			patches = arma::zeros<arma::icube>(2,vecSize,2*timewindow+1);
+			motions = arma::zeros<arma::icube>(2,vecSize,2*timewindow);
 
 			// Perform motion estimation
+			// Complicated for cases near beginning and end of sequence
 			if(iter < timewindow) {
 				// Populate reference frame coordinates
 				for(int i = 0; i < vecSize; i++) {
@@ -58,14 +59,14 @@ class MotionEstimator {
 				// Perform motion estimation
 				// Go forwards
 				for(int i = 0; i < T-iter-1; i++) {
-					ARPSMotionEstimation(A.slice(iter+i).eval(), A.slice(iter+i+1).eval(), &(patches.slice(iter+i)), &(patches.slice(iter+i+1)), &(motions.slice(iter+i)), i);
+					ARPSMotionEstimation(A, i, iter+i, iter+i+1);
 				}
 				// Go backwards
 				for(int i = -1; i >= -iter; i--) {
-					ARPSMotionEstimation(A.slice(iter+i+1).eval(), A.slice(iter+i).eval(), &(patches.slice(iter+i+1)), &(patches.slice(iter+i)), &(motions.slice(iter+i+1)), i);
+					ARPSMotionEstimation(A, i, iter+i+1, iter+i);
 				}
 			}
-			else if(iter >= (num_images - timewindow)) {
+			else if(iter >= (Tall - timewindow)) {
 				int endseqFrame = iter - (Tall - T);
 				// Populate reference frame coordinates
 				for(int i = 0; i < vecSize; i++) {
@@ -75,15 +76,15 @@ class MotionEstimator {
 				// Perform motion estimation
 				// Go forwards
 				for(int i = 0; i < 2*timewindow - endseqFrame; i++) {
-					ARPSMotionEstimation(A.slice(endseqFrame+i).eval(), A.slice(endseqFrame+i+1).eval(), &(patches.slice(endseqFrame+i)), &(patches.slice(endseqFrame+i+1)), &(motions.slice(endseqFrame+i)), i);
+					ARPSMotionEstimation(A, i, endseqFrame+i, endseqFrame+i+1);
 				}
 				// Go backwards
 				for(int i = -1; i >= -endseqFrame; i--) {
 					if(2*timewindow == endseqFrame) {
-						ARPSMotionEstimation(A.slice(endseqFrame+i+1).eval(), A.slice(endseqFrame+i).eval(), &(patches.slice(endseqFrame+i+1)), &(patches.slice(endseqFrame+i)), &(motions.slice(endseqFrame+i)), i);
+						ARPSMotionEstimation(A, i, endseqFrame+i+1, endseqFrame+i);
 					}
 					else {
-						ARPSMotionEstimation(A.slice(endseqFrame+i+1).eval(), A.slice(endseqFrame+i).eval(), &(patches.slice(endseqFrame+i+1)), &(patches.slice(endseqFrame+i)), &(motions.slice(endseqFrame+i+1)), i);
+						ARPSMotionEstimation(A, i, endseqFrame+i+1, endseqFrame+i);
 					}
 				}
 			}
@@ -96,11 +97,11 @@ class MotionEstimator {
 				// Perform motion estimation
 				// Go forwards
 				for(int i = 0; i < timewindow; i++) {
-					ARPSMotionEstimation(A.slice(timewindow+i).eval(), A.slice(timewindow+i+1).eval(), &(patches.slice(timewindow+i)), &(patches.slice(timewindow+i+1)), &(motions.slice(timewindow+i)), i);
+					ARPSMotionEstimation(A, i, timewindow+i, timewindow+i+1);
 				}
 				// Go backwards
 				for(int i = -1; i >= -timewindow; i--) {
-					ARPSMotionEstimation(A.slice(timewindow+i+1).eval(), A.slice(timewindow+i).eval(), &(patches.slice(timewindow+i+1)), &(patches.slice(timewindow+i)), &(motions.slice(timewindow+i+1)), i);
+					ARPSMotionEstimation(A, i, timewindow+i+1, timewindow+i);
 				}
 			}
 			return;
@@ -115,19 +116,23 @@ class MotionEstimator {
 		int Nx, Ny, T, Bs, vecSize, wind;
 
 		// Adaptive Rood Pattern Search (ARPS) method
-		void ARPSMotionEstimation(const arma::mat &frame1, const arma::mat &frame2, const arma::imat &refpatches, arma::imat &curpatches, arma::imat &motion, int curFr) {
+		void ARPSMotionEstimation(const arma::cube &A, int curFr, int iARPS1, int iARPS2) {
 			#pragma omp parallel for
 			for(int it = 0; it < vecSize; it++) {
 				arma::vec costs = arma::ones<arma::vec>(6) * 1E8;
 				arma::umat chkMat = arma::zeros<arma::umat>(2*wind+1, 2*wind+1);
-				arma::imat LDSP = arma::zeros<arma::imat>(6,2);
-				arma::imat SDSP = arma::zeros<arma::imat>(5,2);
-				SDSP(0,0) = 0; SDSP(0,1) = -1;
-				SDSP(1,0) = -1; SDSP(1,1) = 0;
-				SDSP(2,0) = 0; SDSP(2,1) = 0;
-				SDSP(3,0) = 1; SDSP(3,1) = 0;
-				SDSP(4,0) = 0; SDSP(4,1) = 1;
-
+				arma::imat LDSP = arma::zeros<arma::imat>(6, 2);
+				arma::imat SDSP = arma::zeros<arma::imat>(5, 2);
+				SDSP(0,0) = 0; 
+				SDSP(0,1) = -1;
+				SDSP(1,0) = -1; 
+				SDSP(1,1) = 0;
+				SDSP(2,0) = 0; 
+				SDSP(2,1) = 0;
+				SDSP(3,0) = 1; 
+				SDSP(3,1) = 0;
+				SDSP(4,0) = 0; 
+				SDSP(4,1) = 1;
 				LDSP.rows(arma::span(0,4)) = SDSP;
 
 				int i = it % (Nx-Bs+1);
@@ -136,8 +141,9 @@ class MotionEstimator {
 				int x = j;
 				int y = i;
 
-				arma::mat refblock = frame1(arma::span(i,i+Bs-1),arma::span(j,j+Bs-1));
-				costs(2) = std::pow(arma::norm(refblock - frame2(arma::span(i,i+Bs-1),arma::span(j,j+Bs-1)),"fro"),2)/(Bs*Bs);
+				arma::cube refblock = A(arma::span(i,i+Bs-1), arma::span(j,j+Bs-1), arma::span(iARPS1));
+				arma::cube newblock = A(arma::span(i,i+Bs-1), arma::span(j,j+Bs-1), arma::span(iARPS2));
+				costs(2) = std::pow(arma::norm(refblock.slice(0) - newblock.slice(0),"fro"),2)/(Bs*Bs);
 				chkMat(wind,wind) = 1;
 
 				int stepSize, maxIdx;
@@ -146,15 +152,16 @@ class MotionEstimator {
 					maxIdx = 5;
 				}
 				else {
-					int ytmp = std::abs((*motion)(0,it));
-					int xtmp = std::abs((*motion)(1,it));
+					int ytmp = std::abs(motions(0,it,iARPS1));
+					int xtmp = std::abs(motions(1,it,iARPS1));
 					stepSize = (xtmp <= ytmp) ? ytmp : xtmp;
 					if((xtmp == stepSize && ytmp == 0) || (xtmp == 0 && ytmp == stepSize)) {
 						maxIdx = 5;
 					}
 					else {
 						maxIdx = 6;
-						LDSP(5,0) = motion(1,it); LDSP(5,1) = motion(0,it);
+						LDSP(5,0) = motions(1,it,iARPS1); 
+						LDSP(5,1) = motions(0,it,iARPS1);
 					}
 				}
 				LDSP(0,0) = 0;
@@ -168,6 +175,8 @@ class MotionEstimator {
 				LDSP(4,0) = 0;
 				LDSP(4,1) = stepSize;
 
+				// Currently not used, but motion estimation can be predictive
+				// if this value is larger than 0!
 				double pMot = 0.0;
 				// Do the LDSP
 				for(int k = 0; k < maxIdx; k++) {
@@ -176,16 +185,17 @@ class MotionEstimator {
 					if( refBlkHor < 0 || refBlkHor+Bs-1 >= Ny || refBlkVer < 0 || refBlkVer+Bs-1 >= Nx ) { continue; }
 					else if( k == 2 || stepSize == 0 ) { continue; }
 					else {
+						arma::cube powblock = A(arma::span(refBlkVer,refBlkVer+Bs-1),arma::span(refBlkHor,refBlkHor+Bs-1),arma::span(iARPS2));
 						if(curFr == 0) {
-							costs(k) = std::pow(arma::norm(refblock - frame2(arma::span(refBlkVer,refBlkVer+Bs-1),arma::span(refBlkHor,refBlkHor+Bs-1)),"fro"),2)/(Bs*Bs);
+							costs(k) = std::pow(arma::norm(refblock.slice(0) - powblock.slice(0),"fro"),2)/(Bs*Bs);
 						}
 						else if(curFr < 0) {
-							arma::ivec predpos = refpatches.col(it) - motion.col(it);
-							costs(k) = std::pow(arma::norm(refblock - frame2(arma::span(refBlkVer,refBlkVer+Bs-1),arma::span(refBlkHor,refBlkHor+Bs-1)),"fro"),2)/(Bs*Bs) + pMot * std::sqrt(std::pow(predpos(0)-refBlkVer,2)+std::pow(predpos(1)-refBlkHor,2));
+							arma::ivec predpos = arma::vectorise(patches(arma::span(),arma::span(it),arma::span(iARPS1)) - motions(arma::span(),arma::span(it),arma::span(iARPS1)));
+							costs(k) = std::pow(arma::norm(refblock.slice(0) - powblock.slice(0),"fro"),2)/(Bs*Bs) + pMot * std::sqrt(std::pow(predpos(0)-refBlkVer,2)+std::pow(predpos(1)-refBlkHor,2));
 						}
 						else if(curFr > 0) {
-							arma::ivec predpos = refpatches.col(it) + motion.col(it);
-							costs(k) = std::pow(arma::norm(refblock - frame2(arma::span(refBlkVer,refBlkVer+Bs-1),arma::span(refBlkHor,refBlkHor+Bs-1)),"fro"),2)/(Bs*Bs) + pMot * std::sqrt(std::pow(predpos(0)-refBlkVer,2)+std::pow(predpos(1)-refBlkHor,2));
+							arma::ivec predpos = arma::vectorise(patches(arma::span(),arma::span(it),arma::span(iARPS1)) + motions(arma::span(),arma::span(it),arma::span(iARPS1)));
+							costs(k) = std::pow(arma::norm(refblock.slice(0) - powblock.slice(0),"fro"),2)/(Bs*Bs) + pMot * std::sqrt(std::pow(predpos(0)-refBlkVer,2)+std::pow(predpos(1)-refBlkHor,2));
 						}
 						chkMat(LDSP(k,1)+wind, LDSP(k,0)+wind) = 1;
 					}
@@ -211,16 +221,17 @@ class MotionEstimator {
 						else if( refBlkHor < j-wind || refBlkHor > j+wind || refBlkVer < i-wind || refBlkVer > i+wind ) { continue; }
 						else if( chkMat(y-i+SDSP(k,1)+wind, x-j+SDSP(k,0)+wind) == 1) { continue; }
 						else {
+							arma::cube powblock = A(arma::span(refBlkVer,refBlkVer+Bs-1),arma::span(refBlkHor,refBlkHor+Bs-1),arma::span(iARPS2));
 							if(curFr == 0) {
-								costs(k) = std::pow(arma::norm(refblock - frame2(arma::span(refBlkVer,refBlkVer+Bs-1),arma::span(refBlkHor,refBlkHor+Bs-1)),"fro"),2)/(Bs*Bs);
+								costs(k) = std::pow(arma::norm(refblock.slice(0) - powblock.slice(0),"fro"),2)/(Bs*Bs);
 							}
 							else if(curFr < 0) {
-								arma::ivec predpos = refpatches.col(it) - motion.col(it);
-								costs(k) = std::pow(arma::norm(refblock - frame2(arma::span(refBlkVer,refBlkVer+Bs-1),arma::span(refBlkHor,refBlkHor+Bs-1)),"fro"),2)/(Bs*Bs) + pMot * std::sqrt(std::pow(predpos(0)-refBlkVer,2)+std::pow(predpos(1)-refBlkHor,2));
+								arma::ivec predpos = arma::vectorise(patches(arma::span(),arma::span(it),arma::span(iARPS1)) - motions(arma::span(),arma::span(it),arma::span(iARPS1)));
+								costs(k) = std::pow(arma::norm(refblock.slice(0) - powblock.slice(0),"fro"),2)/(Bs*Bs) + pMot * std::sqrt(std::pow(predpos(0)-refBlkVer,2)+std::pow(predpos(1)-refBlkHor,2));
 							}
 							else if(curFr > 0) {
-								arma::ivec predpos = refpatches.col(it) + motion.col(it);
-								costs(k) = std::pow(arma::norm(refblock - frame2(arma::span(refBlkVer,refBlkVer+Bs-1),arma::span(refBlkHor,refBlkHor+Bs-1)),"fro"),2)/(Bs*Bs) + pMot * std::sqrt(std::pow(predpos(0)-refBlkVer,2)+std::pow(predpos(1)-refBlkHor,2));
+								arma::ivec predpos = arma::vectorise(patches(arma::span(),arma::span(it),arma::span(iARPS1)) + motions(arma::span(),arma::span(it),arma::span(iARPS1)));
+								costs(k) = std::pow(arma::norm(refblock.slice(0) - powblock.slice(0),"fro"),2)/(Bs*Bs) + pMot * std::sqrt(std::pow(predpos(0)-refBlkVer,2)+std::pow(predpos(1)-refBlkHor,2));
 							}
 							chkMat(y-i+SDSP(k,1)+wind, x-j+SDSP(k,0)+wind) = 1;
 						}
@@ -243,11 +254,10 @@ class MotionEstimator {
 				int ystep = y - i;
 				int xstep = x - j;
 
-				motion(0,it) = ystep;
-				motion(1,it) = xstep;
-
-				curpatches(0,it) = y;
-				curpatches(1,it) = x;
+				motions(0,it,iARPS1) = ystep;
+				motions(1,it,iARPS1) = xstep;
+				patches(0,it,iARPS2) = y;
+				patches(1,it,iARPS2) = x;
 			}
 			return;
 		}
