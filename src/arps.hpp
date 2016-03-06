@@ -36,14 +36,15 @@ class MotionEstimator {
 
 		void Estimate(const arma::cube &A,
 					  int iter, int timewindow, int Tall,
-					  int blocksize, int MotionP) {
+					  int blocksize, int blockoverlap, int MotionP) {
 
 			Nx = A.n_rows;
 			Ny = A.n_cols;
 			T = A.n_slices;
 			wind = MotionP;
 			Bs = blocksize;
-			vecSize = (Nx-Bs+1)*(Ny-Bs+1);
+			Bo = blockoverlap;
+			vecSize = (1+(Nx-Bs)/Bo)*(1+(Ny-Bs)/Bo);
 
 			patches = arma::zeros<arma::icube>(2,vecSize,2*timewindow+1);
 			motions = arma::zeros<arma::icube>(2,vecSize,2*timewindow);
@@ -53,8 +54,8 @@ class MotionEstimator {
 			if(iter < timewindow) {
 				// Populate reference frame coordinates
 				for(int i = 0; i < vecSize; i++) {
-					patches(0,i,iter) = i % (Ny-Bs+1);
-					patches(1,i,iter) = i / (Nx-Bs+1);
+					patches(0,i,iter) = i % (1+(Ny-Bs)/Bo);
+					patches(1,i,iter) = i / (1+(Nx-Bs)/Bo);
 				}
 				// Perform motion estimation
 				// Go forwards
@@ -70,8 +71,8 @@ class MotionEstimator {
 				int endseqFrame = iter - (Tall - T);
 				// Populate reference frame coordinates
 				for(int i = 0; i < vecSize; i++) {
-					patches(0,i,endseqFrame) = i % (Ny-Bs+1);
-					patches(1,i,endseqFrame) = i / (Nx-Bs+1);
+					patches(0,i,endseqFrame) = i % (1+(Ny-Bs)/Bo);
+					patches(1,i,endseqFrame) = i / (1+(Nx-Bs)/Bo);
 				}
 				// Perform motion estimation
 				// Go forwards
@@ -91,8 +92,8 @@ class MotionEstimator {
 			else {
 				// Populate reference frame coordinates
 				for(int i = 0; i < vecSize; i++) {
-					patches(0,i,timewindow) = i % (Ny-Bs+1);
-					patches(1,i,timewindow) = i / (Nx-Bs+1);
+					patches(0,i,timewindow) = i % (1+(Ny-Bs)/Bo);
+					patches(1,i,timewindow) = i / (1+(Nx-Bs)/Bo);
 				}
 				// Perform motion estimation
 				// Go forwards
@@ -113,7 +114,7 @@ class MotionEstimator {
 
 	private:
 		arma::icube patches, motions;
-		int Nx, Ny, T, Bs, vecSize, wind;
+		int Nx, Ny, T, Bs, Bo, vecSize, wind;
 
 		// Adaptive Rood Pattern Search (ARPS) method
 		void ARPSMotionEstimation(const arma::cube &A, int curFr, int iARPS1, int iARPS2) {
@@ -135,8 +136,8 @@ class MotionEstimator {
 				SDSP(4,1) = 1;
 				LDSP.rows(arma::span(0,4)) = SDSP;
 
-				int i = it % (Nx-Bs+1);
-				int j = it / (Ny-Bs+1);
+				int i = it % (1+(Nx-Bs)/Bo);
+				int j = it / (1+(Ny-Bs)/Bo);
 
 				int x = j;
 				int y = i;
@@ -260,7 +261,7 @@ class MotionEstimator {
 				patches(1,it,iARPS2) = x;
 			}
 			return;
-		}
+		};
 };
 
 #endif

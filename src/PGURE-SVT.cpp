@@ -44,9 +44,6 @@
 // Armadillo library
 #include <armadillo>
 
-// NLopt library
-#include <nlopt.h>
-
 // LibTIFF
 namespace libtiff {
     #include "tiffio.h"
@@ -62,7 +59,6 @@ extern "C" {
 #include "params.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
-#include "svt.hpp"
 
 // Little function to convert string "0"/"1" to boolean
 bool strToBool(std::string const& s) {return s != "0";};
@@ -126,9 +122,6 @@ int main(int argc, char** argv) {
 	T = (Bs*Bs<T) ? (Bs*Bs)-1 : T;
 	std::string casoratisize = std::to_string(Bs*Bs) + "x" + std::to_string(T);
 
-	// Motion estimation
-	bool MotionEst = (programOptions.count("motion_estimation") == 1) ? strToBool(programOptions.at("motion_estimation")) : true;
-
 	// Noise parameters initialized at -1 unless user-defined
 	double alpha = (programOptions.count("alpha") == 1) ? std::stod(programOptions.at("alpha")) : -1.;
 	double mu = (programOptions.count("mu") == 1) ? std::stod(programOptions.at("mu")) : -1.;
@@ -148,9 +141,6 @@ int main(int argc, char** argv) {
 	}
 
 	// Move onto advanced parameters
-	// Verbosity
-	bool Verbose = (programOptions.count("verbose") == 1) ? strToBool(programOptions.at("verbose")) : false;
-
 	// Motion neigbourhood size
 	int MotionP = (programOptions.count("motion_neighbourhood") == 1) ? std::stoi(programOptions.at("motion_neighbourhood")) : 7;
 
@@ -164,45 +154,9 @@ int main(int argc, char** argv) {
 		double tol;
 		osTol >> tol;
 	}
-
-	// Print parameters and information
-	std::cout<<std::setw(40)<<std::string(40,'-')<<std::endl;
-	std::cout<<std::left<<std::setw(30)<<"Parameters"<<std::setw(10)<<"Value"<<std::endl;
-	std::cout<<std::setw(40)<<std::string(40,'-')<<std::endl;
-	std::cout<<std::left<<std::setw(30)<<"Number of frames"<<std::setw(10)<<num_images<<std::endl;
-	std::cout<<std::left<<std::setw(30)<<"Image patch size"<<std::setw(10)<<Bs<<std::endl;
-	std::cout<<std::left<<std::setw(30)<<"Trajectory length"<<std::setw(10)<<T<<std::endl;
-	std::cout<<std::left<<std::setw(30)<<"Casorati dimensions"<<std::setw(10)<<casoratisize<<std::endl;
-	std::cout<<std::endl;
-	std::cout<<std::left<<std::setw(30)<<"Automatic noise estimation"<<std::setw(10);
-	if(alpha < 0. || mu < 0. || sigma < 0.) {
-		std::cout<<"ON"<<std::endl;
-	}
-	else {
-		std::cout<<"OFF"<<std::endl;
-	}
-	std::cout<<std::left<<std::setw(30)<<"PGURE optimization"<<std::setw(10);
-	if(pgureOpt) {
-		std::cout<<"ON"<<std::endl;
-	}
-	else {
-		std::cout<<"OFF"<<std::endl;
-	}
-	std::cout<<std::left<<std::setw(30)<<"ARPS motion estimation"<<std::setw(10);
-	if(MotionEst) {
-		std::cout<<"ON"<<std::endl;
-	}
-	else {
-		std::cout<<"OFF"<<std::endl;
-	}
-	std::cout<<std::left<<std::setw(30)<<"Verbose output"<<std::setw(10);
-	if(Verbose) {
-		std::cout<<"ON"<<std::endl;
-	}
-	else {
-		std::cout<<"OFF"<<std::endl;
-	}
-	std::cout<<std::setw(40)<<std::string(40,'-')<<std::endl<<std::endl;
+	
+	// Block overlap
+	int Bo = 1;
 
 	/////////////////////////////
 	//						   //
@@ -292,40 +246,6 @@ int main(int argc, char** argv) {
 	int Nx = tiffHeight;
 	int Ny = tiffWidth;
 
-	// Pre-allocate memory for large arrays of Casorati SVDs
-	int aDim, bDim;
-	aDim = Bs*Bs;
-	bDim = T;
-	int vecSize = (Nx-Bs+1)*(Ny-Bs+1);
-	std::vector<arma::mat> Uall, Vall, U1all, V1all, U2pall, V2pall, U2mall, V2mall;
-	std::vector<arma::vec> Sall, S1all, S2pall, S2mall;
-	Uall.resize(vecSize);
-	Vall.resize(vecSize);
-	Sall.resize(vecSize);
-	U1all.resize(vecSize);
-	V1all.resize(vecSize);
-	S1all.resize(vecSize);
-	U2pall.resize(vecSize);
-	V2pall.resize(vecSize);
-	S2pall.resize(vecSize);
-	U2mall.resize(vecSize);
-	V2mall.resize(vecSize);
-	S2mall.resize(vecSize);
-	for(int it = 0; it < vecSize; it++) {
-		Uall[it] = arma::zeros<arma::mat>(aDim,bDim);
-		Sall[it] = arma::zeros<arma::vec>(bDim);
-		Vall[it] = arma::zeros<arma::mat>(bDim,bDim);
-		U1all[it] = arma::zeros<arma::mat>(aDim,bDim);
-		S1all[it] = arma::zeros<arma::vec>(bDim);
-		V1all[it] = arma::zeros<arma::mat>(bDim,bDim);
-		U2pall[it] = arma::zeros<arma::mat>(aDim,bDim);
-		S2pall[it] = arma::zeros<arma::vec>(bDim);
-		V2pall[it] = arma::zeros<arma::mat>(bDim,bDim);
-		U2mall[it] = arma::zeros<arma::mat>(aDim,bDim);
-		S2mall[it] = arma::zeros<arma::vec>(bDim);
-		V2mall[it] = arma::zeros<arma::mat>(bDim,bDim);
-	}
-
 	/////////////////////////////
 	//						   //
 	//     START THE LOOP      //
@@ -384,36 +304,9 @@ int main(int argc, char** argv) {
 		/////////////////////////////
 
 		MotionEstimator *motion = new MotionEstimator;
-		motion->Estimate(ufilter, timeiter, framewindow, num_images, Bs, MotionP);
+		motion->Estimate(ufilter, timeiter, framewindow, num_images, Bs, Bo, MotionP);
 		arma::icube sequencePatches = motion->GetEstimate();
 		delete [] motion;
-
-		/////////////////////////////
-		//						   //
-		//      CASORATI SVDS      //
-		//						   //
-		/////////////////////////////
-
-		// Reshape to (n^2 x T) Casorati matrix
-		arma::mat G(Nx*Ny, T);
-		CubeReshape(&u, &G);
-
-		// Specify perturbations
-		double eps1 = G.max() * 1E-4;
-		double eps2 = G.max() * 1E-2;
-
-		// Generate random samples for stochastic evaluation
-		arma::cube delta1 = GenerateRandomPerturbation(1, Nx, Ny, T);
-		arma::cube delta2 = GenerateRandomPerturbation(2, Nx, Ny, T);
-		arma::cube u1 = u + (delta1 * eps1);
-		arma::cube u2p = u + (delta2 * eps2);
-		arma::cube u2m = u - (delta2 * eps2);
-
-		// Do the block SVDs
-		SVDDecompose(&u, &Uall, &Sall, &Vall, &sequencePatches, Bs, Nx, Ny, T);
-		SVDDecompose(&u1, &U1all, &S1all, &V1all, &sequencePatches, Bs, Nx, Ny, T);
-		SVDDecompose(&u2p, &U2pall, &S2pall, &V2pall, &sequencePatches, Bs, Nx, Ny, T);
-		SVDDecompose(&u2m, &U2mall, &S2mall, &V2mall, &sequencePatches, Bs, Nx, Ny, T);
 
 		/////////////////////////////
 		//						   //
@@ -421,53 +314,19 @@ int main(int argc, char** argv) {
 		//						   //
 		/////////////////////////////
 
-		// Load parameters for optimization routine
-		struct PGureSearchParameters PGUREparams;
-		PGUREparams.Nx = Nx;
-		PGUREparams.Ny = Ny;
-		PGUREparams.Bs = Bs;
-		PGUREparams.T = T;
-
-		// Number of function evaluations
-		PGUREparams.count = 0;
-
-		// Mixed noise parameters
-		PGUREparams.alpha = alpha;
-		PGUREparams.sigma = sigma;
-		PGUREparams.mu = mu;
-
-		// Perturbation amplitudes
-		PGUREparams.eps1 = eps1;
-		PGUREparams.eps2 = eps2;
-
-		// Measured signal as (n^2 x T) Casorati matrix
-		PGUREparams.G = &G;
-
-		// Random samples for stochastic evaluation
-		PGUREparams.delta1 = &delta1;
-		PGUREparams.delta2 = &delta2;
-
-		// SVD results for SVT thresholding and reconstruction
-		PGUREparams.U = &Uall;
-		PGUREparams.S = &Sall;
-		PGUREparams.V = &Vall;
-		PGUREparams.U1 = &U1all;
-		PGUREparams.S1 = &S1all;
-		PGUREparams.V1 = &V1all;
-		PGUREparams.U2p = &U2pall;
-		PGUREparams.S2p = &S2pall;
-		PGUREparams.V2p = &V2pall;
-		PGUREparams.U2m = &U2mall;
-		PGUREparams.S2m = &S2mall;
-		PGUREparams.V2m = &V2mall;
-		PGUREparams.sequencePatches = &sequencePatches;
+		PGURE *optimizer = new PGURE;
+		optimizer->Initialize(u, sequencePatches, Bs, Bo, alpha, sigma, mu);		
 
 		// Determine optimum threshold value (max 1000 evaluations)
 		if(pgureOpt) {
-			double start = (timeiter == 0) ? arma::mean(arma::mean(G)) : lambda;
-			double riskval = 0.;
-			PGUREOptimize(&lambda, &riskval, &PGUREparams, tol, start, G.max(), 1E3);
+			lambda = (timeiter == 0) ? arma::accu(u)/(Nx*Ny*T) : lambda;
+			optimizer->Optimize(tol, lambda, u.max(), 1E3);
+			v = optimizer->Reconstruct();
 		}
+		else {
+			v = optimizer->FixedReconstruct(lambda);
+		}
+		delete [] optimizer;
 
 		/////////////////////////////
 		//						   //
@@ -475,13 +334,10 @@ int main(int argc, char** argv) {
 		//						   //
 		/////////////////////////////
 
-		// Reconstruct the blocks into the denoised sequence
-		SVDReconstruct(lambda, &v, &Uall, &Sall, &Vall, &sequencePatches, Bs, Nx, Ny, T);
-
 		// Rescale back to original range
 		v *= inputmax;
 
-		// Place frame back into sequence
+		// Place frames back into sequence
 		if(timeiter < framewindow) {
 			cleansequence.slice(timeiter) = v.slice(timeiter);
 		}
