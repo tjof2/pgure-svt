@@ -1,17 +1,17 @@
 /***************************************************************************
 
 	Copyright (C) 2015-16 Tom Furnival
-	
+
 	File: pgure.cpp
-	
+
 	Optimization of PGURE between noisy and denoised image sequences.
 	PGURE is an extension of the formula presented in [1].
-	
+
 	References:
-	[1]		"An Unbiased Risk Estimator for Image Denoising in the Presence 
+	[1]		"An Unbiased Risk Estimator for Image Denoising in the Presence
 			of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
-			http://dx.doi.org/10.1109/TIP.2014.2300821 
-			 	
+			http://dx.doi.org/10.1109/TIP.2014.2300821
+
 ***************************************************************************/
 
 #include "pgure.hpp"
@@ -55,7 +55,7 @@ arma::cube GenerateRandomPerturbation(int N, int Nx, int Ny, int T) {
 
 // Calculate PGURE
 double CalculatePGURE(unsigned n, const double *x, double *grad, void *p) {
-	
+
 	struct PGureSearchParameters * params = (struct PGureSearchParameters *)p;
 	int Nx = params->Nx;
 	int Ny = params->Ny;
@@ -70,9 +70,9 @@ double CalculatePGURE(unsigned n, const double *x, double *grad, void *p) {
 	double eps2 = params->eps2;
 
 	arma::mat *G = params->G;
-	
+
 	++params->count;
-	
+
 	std::vector<arma::mat> *U = params->U;
 	std::vector<arma::vec> *S = params->S;
 	std::vector<arma::mat> *V = params->V;
@@ -88,16 +88,16 @@ double CalculatePGURE(unsigned n, const double *x, double *grad, void *p) {
 
 	arma::cube *delta1 = params->delta1;
 	arma::cube *delta2 = params->delta2;
-	
+
 	arma::icube *sequencePatches = params->sequencePatches;
-	
+
 	arma::cube uhat(Nx, Ny, T), u1(Nx, Ny, T), u2p(Nx, Ny, T), u2m(Nx, Ny, T);
 
 	SVDReconstruct(x[0], &uhat, U, S, V, sequencePatches, Bs, Nx, Ny, T);
 	SVDReconstruct(x[0], &u1, U1, S1, V1, sequencePatches, Bs, Nx, Ny, T);
 	SVDReconstruct(x[0], &u2p, U2p, S2p, V2p, sequencePatches, Bs, Nx, Ny, T);
 	SVDReconstruct(x[0], &u2m, U2m, S2m, V2m, sequencePatches, Bs, Nx, Ny, T);
-	
+
 	arma::mat Ghat(Nx*Ny, T), G1(Nx*Ny, T), G2p(Nx*Ny, T), G2m(Nx*Ny, T), Gdelta1(Nx*Ny, T), Gdelta2(Nx*Ny, T);
 	CubeReshape(&uhat, &Ghat);
 	CubeReshape(&u1, &G1);
@@ -110,12 +110,12 @@ double CalculatePGURE(unsigned n, const double *x, double *grad, void *p) {
 	double pgURE;
 	pgURE = arma::mean(arma::mean(arma::square(arma::abs(Ghat - *G))))
 			- (alpha + mu) * arma::mean(arma::mean(*G))
-			+ 2/eps1 * arma::mean(arma::mean(Gdelta1 % (alpha * (*G) - alpha*mu + sigma*sigma) % (G1 - Ghat))) 
-			- 2*sigma*sigma*alpha/(eps2*eps2) * arma::mean(arma::mean(Gdelta2 % (G2p - 2*Ghat + G2m))) 
+			+ 2/eps1 * arma::mean(arma::mean(Gdelta1 % (alpha * (*G) - alpha*mu + sigma*sigma) % (G1 - Ghat)))
+			- 2*sigma*sigma*alpha/(eps2*eps2) * arma::mean(arma::mean(Gdelta2 % (G2p - 2*Ghat + G2m)))
 			+ 2 * mu * arma::mean(arma::mean(Ghat))
 			+ mu/(Nx*Ny*T)
 			- sigma*sigma;
-			
+
 	return pgURE;
 }
 
@@ -131,7 +131,7 @@ void PGUREOptimize(double *lambda, double *risk, void *p, double tol, double sta
 	double lb[1], ub[1], x[1], dx[1], xtolabs[1];
 	lb[0] = 0.;
 	ub[0] = bound;
-	x[0] = start;	
+	x[0] = start;
 	dx[0] = startingStep;
 	xtolabs[0] = 1E-12;
 	nlopt_set_lower_bounds(opt, lb);
@@ -143,7 +143,7 @@ void PGUREOptimize(double *lambda, double *risk, void *p, double tol, double sta
 
 	// Objective value
 	double minf;
-			
+
 	// Run the optimizer
 	int status = nlopt_optimize(opt, x, &minf);
 
@@ -168,10 +168,10 @@ void PGUREOptimize(double *lambda, double *risk, void *p, double tol, double sta
 			// Set new lambda
 			*lambda = x[0];
 			break;
-	}	
-	
+	}
+
 	*risk = minf;
 
-	return;	
+	return;
 }
 

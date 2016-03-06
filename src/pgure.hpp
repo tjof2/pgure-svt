@@ -1,7 +1,7 @@
 /***************************************************************************
 
 	Copyright (C) 2015-16 Tom Furnival
-	
+
 ***************************************************************************/
 
 #ifndef PGURE_H
@@ -9,7 +9,7 @@
 
 // C++ headers
 #include <iostream>
-#include <iomanip> 
+#include <iomanip>
 #include <random>
 #include <stdlib.h>
 #include <vector>
@@ -34,7 +34,7 @@ struct PGureSearchParameters {
 	int Ny;
 	int T;
 	int Bs;
-	
+
 	// Number of function evaluations
 	int count;
 
@@ -46,14 +46,14 @@ struct PGureSearchParameters {
 	// Perturbation amplitudes
 	double eps1;
 	double eps2;
-	
+
 	// Measured signal as (n^2 x T) Casorati matrix
 	arma::mat *G;
 
 	// Random samples for stochastic evaluation
 	arma::cube *delta1;
 	arma::cube *delta2;
-	
+
 	// SVD results for SVT thresholding and reconstruction
 	std::vector<arma::mat> *U;
 	std::vector<arma::vec> *S;
@@ -67,7 +67,7 @@ struct PGureSearchParameters {
 	std::vector<arma::mat> *U2m;
 	std::vector<arma::vec> *S2m;
 	std::vector<arma::mat> *V2m;
-	
+
 	// Patch motions
 	arma::icube *sequencePatches;
 };
