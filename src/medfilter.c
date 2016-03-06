@@ -143,7 +143,7 @@ typedef struct align(16)
 
 #if defined(__SSE2__)
 static inline void histogram_add( const uint16_t x[SQRT_BUCKET_SIZE], uint16_t y[SQRT_BUCKET_SIZE] )
-{   
+{
     int i;
     for (i=0;i<SQRT_BUCKET_SIZE;i+=8) *(__m128i*) &y[i] = _mm_add_epi16( *(__m128i*) &y[i], *(__m128i*) &x[i] );
 }

@@ -34,21 +34,7 @@ pgure                : 0
 # If PGURE is turned off, you MUST specify a threshold
 lambda               : 0.15
 
-# Motion estimation
-#	0 = OFF
-#	1 = ON
-#	Default = ON
-motion_estimation    : 1
-
 ##### ADVANCED #####
-
-# Verbosity
-#	If turned on, returns detailed timing and optimization
-#	information for each step of the algorithm
-#	0 = OFF
-#	1 = ON
-#	Default = OFF
-#verbose              : 0
 
 # Size of ARPS motion estimation neighbourhood
 #	Default = 7 pixels
