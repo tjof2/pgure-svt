@@ -1,6 +1,6 @@
 /***************************************************************************
 
-	Copyright (C) 2015-16 Tom Furnival
+	Copyright (C) 2015 Tom Furnival
 	
 	File: arps.cpp
 	
