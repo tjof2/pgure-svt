@@ -295,7 +295,7 @@ int main(int argc, char** argv) {
 		// Perform noise estimation
 		NoiseEstimator *noise = new NoiseEstimator;
 		noise->Estimate(u, alpha, mu, sigma, 8);
-		delete [] noise;
+		delete noise;
 
 		/////////////////////////////
 		//						   //
@@ -306,7 +306,7 @@ int main(int argc, char** argv) {
 		MotionEstimator *motion = new MotionEstimator;
 		motion->Estimate(ufilter, timeiter, framewindow, num_images, Bs, Bo, MotionP);
 		arma::icube sequencePatches = motion->GetEstimate();
-		delete [] motion;
+		delete motion;
 
 		/////////////////////////////
 		//						   //
@@ -315,8 +315,7 @@ int main(int argc, char** argv) {
 		/////////////////////////////
 
 		PGURE *optimizer = new PGURE;
-		optimizer->Initialize(u, sequencePatches, Bs, Bo, alpha, sigma, mu);		
-
+		optimizer->Initialize(u, sequencePatches, Bs, Bo, alpha, sigma, mu);	
 		// Determine optimum threshold value (max 1000 evaluations)
 		if(pgureOpt) {
 			lambda = (timeiter == 0) ? arma::accu(u)/(Nx*Ny*T) : lambda;
@@ -326,7 +325,7 @@ int main(int argc, char** argv) {
 		else {
 			v = optimizer->FixedReconstruct(lambda);
 		}
-		delete [] optimizer;
+		delete optimizer;
 
 		/////////////////////////////
 		//						   //

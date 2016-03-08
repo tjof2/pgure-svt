@@ -58,23 +58,24 @@ class SVT {
 		// Perform SVD on each block in the image sequence
 		void Decompose(const arma::cube &u) {
 			// Do the local SVDs
-			arma::mat block, Ublock, Vblock;
+			arma::mat Ublock, Vblock;
 			arma::vec Sblock;
-		
-			block.set_size(Bs*Bs,T);
+
 			Ublock.set_size(Bs*Bs,T);
 			Sblock.set_size(T);
 			Vblock.set_size(T,T); 
-			
-			#pragma omp parallel for private(block, Ublock, Sblock, Vblock)
+
+			#pragma omp parallel for private(Ublock, Sblock, Vblock)
 			for(int it = 0; it < vecSize; it++) {
+			    arma::mat block(Bs*Bs,T);
+			
 				// Extract block
 				for(int k = 0; k < T; k++) {
 					int newy = patches(0,it,k);
 					int newx = patches(1,it,k);
 					block.col(k) = arma::vectorise(u(arma::span(newy,newy+Bs-1),arma::span(newx,newx+Bs-1),arma::span(k)));
 				}
-
+				
 				// Do the SVD
 				arma::svd_econ(Ublock, Sblock, Vblock, block);
 				U[it] = Ublock;

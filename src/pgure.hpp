@@ -40,10 +40,10 @@ class PGURE {
 			svt2m = new SVT;
 		};
 		~PGURE() {
-			delete [] svt0;
-			delete [] svt1;
-			delete [] svt2p;
-			delete [] svt2m;		
+			delete svt0;
+			delete svt1;
+			delete svt2p;
+			delete svt2m;		
 		};
 		
 		void Initialize(const arma::cube &u, const arma::icube patches, int blocksize, int blockoverlap, double alphaIn, double muIn, double sigmaIn) {
@@ -76,11 +76,13 @@ class PGURE {
 			U2p = U + (delta2 * eps2);
 			U2m = U - (delta2 * eps2);
 	
-			// Do the block SVDs
+			// Initialize the block SVDs
 			svt0->Initialize(patches, Nx, Ny, T, Bs, Bo);
 			svt1->Initialize(patches, Nx, Ny, T, Bs, Bo);
 			svt2p->Initialize(patches, Nx, Ny, T, Bs, Bo);
 			svt2m->Initialize(patches, Nx, Ny, T, Bs, Bo);		
+			
+			// Initialize the block SVDs
 			svt0->Decompose(U);
 			svt1->Decompose(U1);
 			svt2p->Decompose(U2p);
@@ -95,9 +97,7 @@ class PGURE {
 		arma::cube FixedReconstruct(double user_lambda) {
 			return svt0->Reconstruct(user_lambda);
 		}
-		
-		//friend double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad, void *data);
-				
+	
 		double CalculatePGURE(const std::vector<double> &x, std::vector<double> &grad, void *data) {
 			Uhat = svt0->Reconstruct(x[0]);
 			U1 = svt1->Reconstruct(x[0]);
@@ -176,35 +176,34 @@ double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad, void
   return obj->CalculatePGURE(x, grad, data);
 }
 
-		// Optimization function using NLopt and BOBYQA gradient-free algorithm
-		void PGURE::Optimize(double tol, double start, double bound, int eval) {
-			double startingStep = start / 2;
+// Optimization function using NLopt and BOBYQA gradient-free algorithm
+void PGURE::Optimize(double tol, double start, double bound, int eval) {
+	double startingStep = start / 2;
 
-			// Optimize PGURE
-			nlopt::opt opt(nlopt::LN_BOBYQA, 1);
-			opt.set_min_objective(obj_wrapper, this);
-			opt.set_maxeval(eval);
-			opt.set_lower_bounds(0.);
-			opt.set_upper_bounds(bound);
-			opt.set_ftol_rel(tol);
-			opt.set_xtol_abs(1E-12);
-			opt.set_initial_step(startingStep);
+	// Optimize PGURE
+	nlopt::opt opt(nlopt::LN_BOBYQA, 1);
+	opt.set_min_objective(obj_wrapper, this);
+	opt.set_maxeval(eval);
+	opt.set_lower_bounds(0.);
+	opt.set_upper_bounds(bound);
+	opt.set_ftol_rel(tol);
+	opt.set_xtol_abs(1E-12);
+	opt.set_initial_step(startingStep);
 
-			std::vector<double> x(1);
-			x[0] = start;
+	std::vector<double> x(1);
+	x[0] = start;
 
-			// Objective value
-			double minf;
+	// Objective value
+	double minf;
 
-			// Run the optimizer
-			nlopt::result status = opt.optimize(x, minf);
+	// Run the optimizer
+	nlopt::result status = opt.optimize(x, minf);
 
-			std::cout<<status<<std::endl;
+	std::cout<<status<<std::endl;
 
-			// Set new lambda
-			lambda = x[0];
-
-			return;
-		};
+    // Set new lambda
+	lambda = x[0];
+	return;
+};
 
 #endif

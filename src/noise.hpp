@@ -32,6 +32,7 @@ class NoiseEstimator {
 			// Set Laplacian kernel to 3x3
 			laplacian = 1/8 * arma::ones<arma::mat>(3,3);
 			laplacian(1,1) = -1;
+			treeDelete.resize(2);
 		};
 
 		~NoiseEstimator() {};
@@ -56,31 +57,28 @@ class NoiseEstimator {
 
 			// Perform quadtree decomposition of frames
 			// to generate patches for noise estimation
-			int maxVsize = (Nx/size)*(Nx/size);
+			int maxVsize = (Nx/size)*(Ny/size);
 			arma::vec means = -1 * arma::ones<arma::vec>(T*maxVsize);
 			arma::vec vars = -1 * arma::ones<arma::vec>(T*maxVsize);
 			arma::vec minslice(T);
 
 			// Perform quadtree decomposition of frames
 			// to generate patches for noise estimation
-			#pragma omp parallel for
-			for(int i=0; i<T; i++) {
-				std::vector<arma::umat> treeDelete;
-				treeDelete.resize(2);
+			for(int i=0; i<T-1; i++) {				
 				treeDelete[0] = arma::zeros<arma::umat>(3,1);
 				treeDelete[0](2,0) = Nx;
 				treeDelete[1] = arma::zeros<arma::umat>(0,0);
 
-				treeDelete = QuadTree(input.slice(i).eval(), treeDelete, 0);
+				QuadTree(input.slice(i).eval(), 0);
+				
 				arma::umat tree = treeDelete[0];
 				arma::umat dele = arma::unique(arma::sort(treeDelete[1]));
 
-				// Shed parents from Quadtree
-				for(int k=0; k<(int)dele.n_elem; k++) {
+				// Shed parents from quadtree
+				for(int k=(int)dele.n_elem-1; k>=0; k--) {
 					tree.shed_col(dele(0,k));
-					dele -= 1;
 				}
-
+				
 				// Extract patches for robust estimation
 				for(int n=0; n<(int)tree.n_cols; n++) {
 					int x = tree(0,n);
@@ -104,7 +102,7 @@ class NoiseEstimator {
 					patch.reshape(s*s,1);
 					col = patch.col(0);
 
-					// Set robust mean estimate
+                   	// Set robust mean estimate
 					means(i*maxVsize + n) = meanEst;
 
 					// Set robust variance estimate
@@ -172,12 +170,13 @@ class NoiseEstimator {
 			alphaIn = alpha;
 			muIn = mu;
 			sigmaIn = sigma;
-
 			return;
 		};
 
 	private:
 		int Nx, Ny, T, wtype, size;
+		
+		std::vector<arma::umat> treeDelete;
 
 		double alpha, sigma, mu, dSi;
 
@@ -414,7 +413,7 @@ class NoiseEstimator {
 		};
 
 		// Recursive quadtree function
-		std::vector<arma::umat> QuadTree(const arma::mat &A, std::vector<arma::umat> treeDelete, int part) {
+		void QuadTree(const arma::mat &A, int part) {
 
 			int i = treeDelete[0](0, part);
 			int j = treeDelete[0](1, part);
@@ -423,7 +422,7 @@ class NoiseEstimator {
 			// Test if block should be split
 			arma::mat patch = A.submat(arma::span(i, i+s-1), arma::span(j, j+s-1));
 			if(!SplitBlockQ(patch)) {
-				return treeDelete;
+				return;
 			}
 
 			// If test returns TRUE, split
@@ -440,18 +439,18 @@ class NoiseEstimator {
 			newdeleteadd << part << arma::endr;
 			arma::umat newdelete = arma::join_horiz(treeDelete[1], newdeleteadd);
 
-			std::vector<arma::umat> newtreeDelete;
-			newtreeDelete.resize(2);
-			newtreeDelete[0] = newtree;
-			newtreeDelete[1] = newdelete;
+            treeDelete[0].set_size(arma::size(newtree));
+            treeDelete[1].set_size(arma::size(newdelete));
+			treeDelete[0] = newtree;
+			treeDelete[1] = newdelete;
 
 			int iter = n;
 			do {
-				newtreeDelete = QuadTree(A, newtreeDelete, iter);
+				QuadTree(A, iter);
 				iter++;
 			} while(iter < n+4);
 
-			return newtreeDelete;
+			return;
 		};
 
 };
