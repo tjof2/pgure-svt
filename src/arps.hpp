@@ -124,15 +124,15 @@ class MotionEstimator {
 				arma::umat chkMat = arma::zeros<arma::umat>(2*wind+1, 2*wind+1);
 				arma::imat LDSP = arma::zeros<arma::imat>(6, 2);
 				arma::imat SDSP = arma::zeros<arma::imat>(5, 2);
-				SDSP(0,0) = 0; 
+				SDSP(0,0) = 0;
 				SDSP(0,1) = -1;
-				SDSP(1,0) = -1; 
+				SDSP(1,0) = -1;
 				SDSP(1,1) = 0;
-				SDSP(2,0) = 0; 
+				SDSP(2,0) = 0;
 				SDSP(2,1) = 0;
-				SDSP(3,0) = 1; 
+				SDSP(3,0) = 1;
 				SDSP(3,1) = 0;
-				SDSP(4,0) = 0; 
+				SDSP(4,0) = 0;
 				SDSP(4,1) = 1;
 				LDSP.rows(arma::span(0,4)) = SDSP;
 
@@ -161,7 +161,7 @@ class MotionEstimator {
 					}
 					else {
 						maxIdx = 6;
-						LDSP(5,0) = motions(1,it,iARPS1); 
+						LDSP(5,0) = motions(1,it,iARPS1);
 						LDSP(5,1) = motions(0,it,iARPS1);
 					}
 				}

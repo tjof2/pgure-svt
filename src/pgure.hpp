@@ -115,6 +115,8 @@ class PGURE {
 				+ mu/NxNyT
 				- sigma*sigma;
 
+            std::cout<<x[0]<<","<<pgURE<<std::endl;
+
 			return pgURE;
 		};
 		
@@ -172,7 +174,7 @@ class PGURE {
 
 
 double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad, void *data) {
-  PGURE *obj = static_cast<PGURE *>(data);   
+  PGURE *obj = static_cast<PGURE *>(data);
   return obj->CalculatePGURE(x, grad, data);
 }
 
@@ -199,7 +201,10 @@ void PGURE::Optimize(double tol, double start, double bound, int eval) {
 	// Run the optimizer
 	nlopt::result status = opt.optimize(x, minf);
 
-	std::cout<<status<<std::endl;
+	if(status <= 0) {
+	    // TODO:tjof2
+	    // Need to implement warnings
+	}
 
     // Set new lambda
 	lambda = x[0];

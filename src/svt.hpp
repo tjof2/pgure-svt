@@ -63,7 +63,7 @@ class SVT {
 
 			Ublock.set_size(Bs*Bs,T);
 			Sblock.set_size(T);
-			Vblock.set_size(T,T); 
+			Vblock.set_size(T,T);
 
 			#pragma omp parallel for private(Ublock, Sblock, Vblock)
 			for(int it = 0; it < vecSize; it++) {
@@ -96,7 +96,7 @@ class SVT {
 			block.set_size(Bs*Bs,T);
 			Ublock.set_size(Bs*Bs,T);
 			Sblock.set_size(T);
-			Vblock.set_size(T,T); 
+			Vblock.set_size(T,T);
 			
 			#pragma omp parallel for shared(v, weights) private(block, Ublock, Sblock, Vblock)
 			for(int it = 0; it < vecSize; it++) {
