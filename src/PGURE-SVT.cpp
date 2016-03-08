@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
 	}
 	
 	// Block overlap
-	int Bo = 1;
+	int Bo = 4;
 
 	/////////////////////////////
 	//						   //
@@ -280,7 +280,7 @@ int main(int argc, char** argv) {
 			u = noisysequence.slices(timeiter - framewindow, timeiter + framewindow);
 			ufilter = filteredsequence.slices(timeiter - framewindow, timeiter + framewindow);
 		}
-
+		 
 		// Basic sequence normalization
 		double inputmax = u.max();
 		u /= inputmax;
@@ -319,14 +319,14 @@ int main(int argc, char** argv) {
 		// Determine optimum threshold value (max 1000 evaluations)
 		if(pgureOpt) {
 			lambda = (timeiter == 0) ? arma::accu(u)/(Nx*Ny*T) : lambda;
-			optimizer->Optimize(tol, lambda, u.max(), 1E3);
-			v = optimizer->Reconstruct();
+			lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
+			v = optimizer->Reconstruct(lambda);
 		}
 		else {
-			v = optimizer->FixedReconstruct(lambda);
+			v = optimizer->Reconstruct(lambda);
 		}
 		delete optimizer;
-
+        
 		/////////////////////////////
 		//						   //
 		// SEQUENCE RECONSTRUCTION //

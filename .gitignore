@@ -65,4 +65,10 @@ test
 extra
 results
 report
-wnnm
+
+# CPP Lint
+src/cpplint*
+
+# Backups
+*.bak
+

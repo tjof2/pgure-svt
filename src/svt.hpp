@@ -39,8 +39,7 @@ class SVT {
 			T = l;
 			
 			Bs = blocksize;
-			Bo = blockoverlap;
-			
+			Bo = blockoverlap;			
 			vecSize = (1+(Nx-Bs)/Bo)*(1+(Ny-Bs)/Bo);
 			
 			// Memory allocation			

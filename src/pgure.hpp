@@ -32,8 +32,8 @@
 #include "svt.hpp"
 
 class PGURE {
-	public:
-		PGURE() {
+ public:
+	    PGURE() {
 			svt0 = new SVT;
 			svt1 = new SVT;
 			svt2p = new SVT;
@@ -90,11 +90,8 @@ class PGURE {
 	
 			return;	
 		};
-		arma::cube Reconstruct() {
-			return svt0->Reconstruct(lambda);
-		}
 		
-		arma::cube FixedReconstruct(double user_lambda) {
+		arma::cube Reconstruct(double user_lambda) {
 			return svt0->Reconstruct(user_lambda);
 		}
 	
@@ -115,12 +112,13 @@ class PGURE {
 				+ mu/NxNyT
 				- sigma*sigma;
 
-            std::cout<<x[0]<<","<<pgURE<<std::endl;
+            // Set new lambda
+	        lambda = x[0];
 
 			return pgURE;
 		};
 		
-		void Optimize(double tol, double start, double bound, int eval);
+		double Optimize(double tol, double start, double bound, int eval);
 			
 	private:
 		int Nx, Ny, T, Bs, Bo;
@@ -179,7 +177,7 @@ double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad, void
 }
 
 // Optimization function using NLopt and BOBYQA gradient-free algorithm
-void PGURE::Optimize(double tol, double start, double bound, int eval) {
+double PGURE::Optimize(double tol, double start, double bound, int eval) {
 	double startingStep = start / 2;
 
 	// Optimize PGURE
@@ -205,10 +203,7 @@ void PGURE::Optimize(double tol, double start, double bound, int eval) {
 	    // TODO:tjof2
 	    // Need to implement warnings
 	}
-
-    // Set new lambda
-	lambda = x[0];
-	return;
+	return lambda;
 };
 
 #endif
