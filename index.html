@@ -42,7 +42,7 @@ robust noise and motion estimation maintain broad applicability to many differen
 described in detail in: </p>
 
 <blockquote>
-<p>Furnival T, Leary R, Midgley PA. (2015). Denoising time-resolved microscopy sequences with singular 
+<p>Furnival T, Leary R, Midgley PA. (2016). Denoising time-resolved microscopy sequences with singular 
 value thresholding. <em>Manuscript in preparation.</em></p>
 </blockquote>
 
@@ -66,49 +66,38 @@ value thresholding. <em>Manuscript in preparation.</em></p>
 
 <ul>
 <li>
-<p><strong><a href="http://www.cmake.org">CMake</a></strong> </p>
-
-<p>CMake is used to configure the build before compilation.</p>
+<strong><a href="http://www.cmake.org">CMake</a></strong> (>=2.8)
 </li>
 <li>
-<p><strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a></strong> </p>
-
-<p>PGURE-SVT currently only supports TIFF image stacks.</p>
+<strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a></strong>
 </li>
 <li>
-<p><strong><a href="http://arma.sourceforge.net">Armadillo</a></strong></p>
-
-<p>Armadillo is a C++ linear algebra library, and is heavily used in PGURE-SVT to handle the image
-sequences. The latest version (6.400) is recommended.</p>
+<strong><a href="http://arma.sourceforge.net">Armadillo</a></strong> (>=6.400)
 </li>
 <li>
-<p><strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> </p>
-
-<p>NLopt is a non-linear optimization library, implementing several different optimization algorithms.
-The latest version (2.4.2) is recommended.</p>
+<strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> (>=2.4.2)
 </li>
 </ul>
 
 <h4>
 <a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compiling from source</h4>
 
-<p>To build PGURE-SVT, unpack the source and <code>cd</code> into the unpacked directory:</p>
+<p>
+To build PGURE-SVT, unpack the source and <code>cd</code> into the unpacked directory.
+You will then need to configure the build (which will check for the required libraries),
+and finally compile.  This will generate an executable file in the <code>bin/</code> directory.
+</p>
 
 <pre><code>$ tar -xzf pgure-svt.tar.gz
 $ cd pgure-svt
-</code></pre>
-
-<p>The next step is to configure the build, and then finally compile it. This will generate 
-an executable file in the <code>bin/</code> directory. </p>
-
-<pre><code>$ cmake .
+$ cmake .
 $ make
 </code></pre>
 
 <p>To run PGURE-SVT from any directory, add the following line to your <code>.bashrc</code> file including
 the full path to the <code>bin/</code> directory:</p>
 
-<pre><code>$ echo alias PGURE-SVT='/path/to/directory/PGURE-SVT' &gt;&gt; ~/.bashrc
+<pre><code>$ echo alias PGURE-SVT='/path/to/directory/bin/PGURE-SVT' &gt;&gt; ~/.bashrc
 $ source ~/.bashrc
 </code></pre>
 
