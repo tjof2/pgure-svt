@@ -243,8 +243,8 @@ void EstimateNoiseParams(arma::cube *input, arma::cube *quadtree, double *alpha,
 	
 	// Perform quadtree decomposition of frames
 	// to generate patches for noise estimation
-#pragma omp parallel for
-	for(int i=0; i<T; i++) {	
+//#pragma omp parallel for
+	for(int i=0; i<T-1; i++) {	
 		std::vector<arma::umat> treeDelete;
 		treeDelete.resize(2);
 		treeDelete[0] = arma::zeros<arma::umat>(3,1);
