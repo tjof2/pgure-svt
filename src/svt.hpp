@@ -32,6 +32,7 @@ class SVT {
         SVT() {}
         ~SVT() {}
 
+        // Allocate memory for SVD step
         void Initialize(const arma::icube &sequencePatches,
                         int w,
                         int h,
@@ -78,9 +79,11 @@ class SVT {
                 for (int k = 0; k < T; k++) {
                     int newy = patches(0, it, k);
                     int newx = patches(1, it, k);
-                    block.col(k) = arma::vectorise(u(arma::span(newy, newy+Bs-1),
-                                                     arma::span(newx, newx+Bs-1),
-                                                     arma::span(k)));
+                    block.col(k) = arma::vectorise(
+                                     u(arma::span(newy, newy+Bs-1),
+                                       arma::span(newx, newx+Bs-1),
+                                       arma::span(k))
+                                   );
                 }
 
                 // Do the SVD
@@ -105,24 +108,31 @@ class SVT {
             Sblock.set_size(T);
             Vblock.set_size(T, T);
 
-            #pragma omp parallel for shared(v, weights) private(block, Ublock, Sblock, Vblock)
+            #pragma omp parallel for shared(v, weights) \
+                        private(block, Ublock, Sblock, Vblock)
             for (int it = 0; it < vecSize; it++) {
                 Ublock = U[it];
                 Sblock = S[it];
                 Vblock = V[it];
 
                 // Basic singular value thresholding
-                // arma::vec Snew = arma::sign(Sblock) % arma::max(arma::abs(Sblock) - lambda, arma::zeros<arma::vec>(T));
+                // arma::vec Snew = arma::sign(Sblock)
+                //                      % arma::max(
+                //                          arma::abs(Sblock) - lambda,
+                //                          arma::zeros<arma::vec>(T));
 
                 // Gaussian-weighted singular value thresholding
                 arma::vec wvec = arma::abs(Sblock.max()
                                            * arma::exp(-1
-                                                       * lambda
-                                                       * arma::square(Sblock)/2));
+                                                * lambda
+                                                * arma::square(Sblock)/2));
 
                 // Apply threshold
-                arma::vec Snew = arma::sign(Sblock) % arma::max(arma::abs(Sblock) - wvec,
-                                                                arma::zeros<arma::vec>(T));
+                arma::vec Snew = arma::sign(Sblock)
+                                   % arma::max(
+                                        arma::abs(Sblock) - wvec,
+                                        arma::zeros<arma::vec>(T)
+                                        );
 
                 // Reconstruct from SVD
                 block = Ublock * diagmat(Snew) * Vblock.t();
@@ -131,12 +141,16 @@ class SVT {
                 for (int k = 0; k < T; k++) {
                     int newy = patches(0, it, k);
                     int newx = patches(1, it, k);
-                    v(arma::span(newy, newy+Bs-1), arma::span(newx, newx+Bs-1), arma::span(k, k)) += arma::reshape(block.col(k), Bs, Bs);
-                    weights(arma::span(newy, newy+Bs-1), arma::span(newx, newx+Bs-1), arma::span(k, k)) += arma::ones<arma::mat>(Bs, Bs);
+                    v(arma::span(newy, newy+Bs-1),
+                      arma::span(newx, newx+Bs-1),
+                      arma::span(k, k)) += arma::reshape(block.col(k), Bs, Bs);
+                    weights(arma::span(newy, newy+Bs-1), 
+                            arma::span(newx, newx+Bs-1), 
+                            arma::span(k, k)) += arma::ones<arma::mat>(Bs, Bs);
                 }
             }
 
-            // Include the weighting (avoid errors dividing by zero for blocks that aren't used)
+            // Include the weighting
             v /= weights;
             v.elem(find_nonfinite(v)).zeros();
             return v;
