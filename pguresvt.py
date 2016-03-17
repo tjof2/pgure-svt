@@ -12,20 +12,19 @@
 
 	References:
 	[1] 	"Unbiased Risk Estimates for Singular Value Thresholding and
-			Spectral Estimators", (2013), Candes, EJ et al.
-			http://dx.doi.org/10.1109/TSP.2013.2270464
+		Spectral Estimators", (2013), Candes, EJ et al.
+		http://dx.doi.org/10.1109/TSP.2013.2270464
 
-	[2]		"An Unbiased Risk Estimator for Image Denoising in the Presence
-			of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
-			http://dx.doi.org/10.1109/TIP.2014.2300821
+	[2]	"An Unbiased Risk Estimator for Image Denoising in the Presence
+		of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
+		http://dx.doi.org/10.1109/TIP.2014.2300821
 """
 
 import ctypes, os
 import numpy as np
 from numpy.ctypeslib import ndpointer
 
-class PGURESVT(object):
-
+class SVT(object):
     """       
     Parameters
     ----------
@@ -69,9 +68,8 @@ class PGURESVT(object):
         Size of initial median filter
         (default = 5 pixels)
     
-    Attributes
-    ----------
     """
+    
     def __init__(self, 
                 patchsize=4, 
                 length=15,
@@ -84,14 +82,97 @@ class PGURESVT(object):
                 tol=1e-7,
                 median=5
                 ):
+                    
+        self.patchsize =4
+        self.length = 15
+        self.optimize = optimize
+        self.threshold = threshold
+        self.alpha = alpha
+        self.mu = mu
+        self.sigma = sigma
+        self.arpssize = arpssize
+        self.tol = tol
+        self.median = median
         
         # Setup ctypes function
-        libpath = os.path.dirname(os.path.abspath(__file__)) + '/pguresvt.so'
+        libpath = os.path.dirname(os.path.abspath(__file__)) + '/bin/libpguresvt.so'
         self._PGURESVT = ctypes.cdll.LoadLibrary(libpath).PGURE_SVT
         self._PGURESVT.restype = ctypes.c_int
-        self._PGURESVT.argtypes = []
-                          
+        self._PGURESVT.argtypes = [
+                                    ndpointer(ctypes.c_double, flags="F_CONTIGUOUS"),
+                                    ndpointer(ctypes.c_double, flags="F_CONTIGUOUS"),
+                                    ctypes.c_int, ctypes.c_int,
+                                    ctypes.c_bool, ctypes.c_double,
+                                    ctypes.c_double, ctypes.c_double, ctypes.c_double,
+                                    ctypes.c_int, ctypes.c_int,
+                                    ctypes.c_double, ctypes.c_int]
+                                    
+        self.Y = None
+        
+    def denoise(self, X):
+        """Denoise the data X
+        
+        Parameters
+        ----------
+        X : array [nx, ny, time]
+            The image sequence to be denoised
+            
+        Returns
+        -------
+        self : object
+            Returns the instance itself
+        
+        """   
+        
+        self._denoise(X)
+        return self
+        
+    def _denoise(self, X):
+        """Denoise the data X
+        
+        Parameters
+        ----------
+        X : array [nx, ny, time]
+            The image sequence to be denoised
+            
+        Returns
+        -------
+        Y : array [nx, ny, time]
+            Returns the denoised object
+        
+        """
+        X = self._check_array(X)
+        Y = np.zeros(X.shape, dtype=np.double, order='F')
+        result = self._PGURESVT(X,
+                                Y,
+                                self.patchsize
+                                self.length
+                                self.optimize,
+                                self.threshold,
+                                self.alpha,
+                                self.mu,
+                                self.sigma,
+                                self.arpssize,
+                                self.tol,
+                                self.median)
+        self.Y = Y
+        return Y
 
-  
+    def _check_array(self, X):
+        """Sanity-checks the data and parameters.
+        
+        Parameters
+        ----------
+        X : array [nx, ny, time]
+            The data as an array
+            
+        Returns
+        -------
+        x : array [nx, ny, time]
+            Returns the array in Fortran-order (column-major)
+        
+        """  
+        x = np.copy(X.astype(float64), order='F')
+        return x
    
 

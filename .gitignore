@@ -42,6 +42,10 @@
 # TIF files
 *.tif
 
+# DM files
+*.dm3
+*.dm4
+
 # Archives
 *.tar
 *.gz
