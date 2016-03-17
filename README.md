@@ -11,6 +11,8 @@ described in detail in:
 > Furnival T, Leary R, Midgley PA. (2015). Denoising time-resolved  microscopy sequences with singular 
 > value thresholding. *Manuscript in preparation.*
 
+[![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
+
 ---
 
 ## Contents
