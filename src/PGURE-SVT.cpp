@@ -296,7 +296,7 @@ int main(int argc, char** argv) {
 		NoiseEstimator *noise = new NoiseEstimator;
 		noise->Estimate(u, alpha, mu, sigma, 8);
 		delete noise;
-
+		
 		/////////////////////////////
 		//						   //
 		//    MOTION ESTIMATION    //

@@ -64,6 +64,7 @@ class NoiseEstimator {
 
             // Perform quadtree decomposition of frames
             // to generate patches for noise estimation
+            // TODO:tjof2 fix this T-1 problem
             for (int i=0; i<T-1; i++) {                
                 treeDelete[0] = arma::zeros<arma::umat>(3, 1);
                 treeDelete[0](2, 0) = Nx;
@@ -75,7 +76,7 @@ class NoiseEstimator {
                 arma::umat dele = arma::unique(arma::sort(treeDelete[1]));
 
                 // Shed parents from quadtree
-                for (size_t k=dele.n_elem-1; k>=0; k--) {
+                for (size_t k=dele.n_elem-1; k>0; k--) {
                     tree.shed_col(dele(0, k));
                 }
                 
@@ -105,7 +106,7 @@ class NoiseEstimator {
                     patch = ConvolveFIR(patch);
                     patch.reshape(s*s, 1);
                     col = patch.col(0);
-
+                    
                     // Set robust mean estimate
                     means(i*maxVsize + n) = meanEst;
 
