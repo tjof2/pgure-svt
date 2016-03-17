@@ -7,7 +7,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Module
 
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
-
 project (PGURE-SVT CXX)
 
 message(STATUS "CMAKE_SYSTEM_NAME          = ${CMAKE_SYSTEM_NAME}"         )
@@ -19,6 +18,7 @@ message(STATUS "CMAKE_COMPILER_IS_GNUCXX   = ${CMAKE_COMPILER_IS_GNUCXX}"  )
 
 set(OS unix)
 
+find_package(OpenMP)
 include(FindArmadillo)
 include(FindTiff)
 include(FindOpenBLAS)
@@ -28,12 +28,13 @@ include(FindLAPACK)
 include(FindNLOPT)
 
 message(STATUS "")
-message(STATUS "    NLopt_FOUND = ${NLOPT_FOUND}")
-message(STATUS "  LibTIFF_FOUND = ${TIFF_FOUND}")
-message(STATUS " OpenBLAS_FOUND = ${OpenBLAS_FOUND}")
-message(STATUS "    ATLAS_FOUND = ${ATLAS_FOUND}"   )
-message(STATUS "     BLAS_FOUND = ${BLAS_FOUND}"    )
-message(STATUS "   LAPACK_FOUND = ${LAPACK_FOUND}"  )
+message(STATUS "   OPENMP_FOUND = ${OPENMP_FOUND}   ")
+message(STATUS "    NLopt_FOUND = ${NLOPT_FOUND}    ")
+message(STATUS "  LibTIFF_FOUND = ${TIFF_FOUND}     ")
+message(STATUS " OpenBLAS_FOUND = ${OpenBLAS_FOUND} ")
+message(STATUS "    ATLAS_FOUND = ${ATLAS_FOUND}    ")
+message(STATUS "     BLAS_FOUND = ${BLAS_FOUND}     ")
+message(STATUS "   LAPACK_FOUND = ${LAPACK_FOUND}   ")
 message(STATUS "Armadillo_FOUND = ${ARMADILLO_FOUND}")
 message(STATUS "")
 
@@ -79,7 +80,12 @@ endif()
 
 ###########################
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -fopenmp -march=native -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -march=native -std=c++11")
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 message(STATUS "")
 message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 message(STATUS "")
