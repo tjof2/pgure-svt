@@ -1,7 +1,5 @@
 # PGURE-SVT
 
-**Singular value thresholding for denoising video microscopy data**
-
 PGURE-SVT is an algorithm designed to denoise image sequences acquired in microscopy. It exploits the correlations between
 consecutive frames to form low-rank matrices, which are then recovered using a technique known as nuclear norm minimization.
 An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate the selection of the regularization parameter, while
