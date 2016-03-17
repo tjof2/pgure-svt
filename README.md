@@ -31,43 +31,54 @@ PGURE-SVT makes use of several 3rd-party libraries, which need to be installed f
 
 #### Compiling from source
 
-To build PGURE-SVT, unpack the source and `cd` into the unpacked directory:
+To build PGURE-SVT, unpack the source and use the following commands
 
 ```bash
 $ tar -xzf pgure-svt.tar.gz
 $ cd pgure-svt
-```
-
-The next step is to configure the build, and then finally compile it. This will generate 
-an executable file in the `bin/` directory. 
-
-```bash
 $ cmake .
 $ make
 ```
 
-To run PGURE-SVT from any directory, add the following line to your `.bashrc` file including
-the full path to the `bin/` directory:
-
-```bash
-$ echo alias PGURE-SVT='/path/to/directory/PGURE-SVT' >> ~/.bashrc
-$ source ~/.bashrc
-```
-
-You can now run the program by typing `PGURE-SVT` in the terminal.
+This will generate an executable called `PGURE-SVT` in the `bin` directory.
 
 ## Using PGURE-SVT
+
+For an in-depth explanation of the options, users are referred to the
+paper describing the algorithm.
+
+### Python
+
+An example file, `demo.py`, is provided to show users how the algorithm can
+be linked with the [HyperSpy](http://hyperspy.org) multi-dimensional data analysis toolbox,
+which provides a number of useful features including:
+- Data visualization
+- Import from a number of microscopy formats
+
+The basic workflow is:
+
+```python
+import pguresvt
+
+# Initialize with default parameters
+svt = pguresvt.SVT()
+
+# Run the algorithm on the data X
+# and get the denoised output Y
+Y = SVT.denoise(X)
+```
+
+### Standalone
 
 PGURE-SVT uses a simple command-line interface along with a separate parameter file.
 
 ```bash
-$ PGURE-SVT param.svt
+$ ./PGURE-SVT param.svt
 ```
 
 The parameter file allows the user to customize various options of the PGURE-SVT
-algorithm. An example is provided, with short comments to explain the effects of
-each option. For an in-depth explanation of the options, users are referred to the
-paper describing the algorithm.
+algorithm. An example file, `param.svt` is provided, with short comments to explain 
+the effects of each option.
 
 
 
