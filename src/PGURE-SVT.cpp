@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
 	}
 	
 	// Block overlap
-	int Bo = 4;
+	int Bo = 1;
 
 	/////////////////////////////
 	//						   //
