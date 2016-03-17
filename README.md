@@ -6,10 +6,10 @@ An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate 
 robust noise and motion estimation maintain broad applicability to many different types of microscopy. The algorithm is
 described in detail in: 
 
-> Furnival T, Leary R, Midgley PA. (2015). Denoising time-resolved  microscopy sequences with singular 
+> Furnival T, Leary R, Midgley PA. (2016). Denoising time-resolved  microscopy sequences with singular 
 > value thresholding. *Manuscript in preparation.*
 
-[![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
+[![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=pgure-svt-dev)](https://travis-ci.org/tjof2/pgure-svt)
 
 ---
 
@@ -24,22 +24,10 @@ described in detail in:
 
 PGURE-SVT makes use of several 3rd-party libraries, which need to be installed first.
 
-+ **[CMake](http://www.cmake.org)** 
-
-   CMake is used to configure the build before compilation.
-
++ **[CMake](http://www.cmake.org)** (>=2.8)
 + **[LibTIFF](http://www.remotesensing.org/libtiff/)** 
-
-   PGURE-SVT currently only supports TIFF image stacks.
-
-+ **[Armadillo](http://arma.sourceforge.net)**
-
-   Armadillo is a C++ linear algebra library, and is used extensively in PGURE-SVT. The latest version (6.500) is recommended.
-   
-+ **[NLopt](http://ab-initio.mit.edu/wiki/index.php/NLopt)** 
-
-   NLopt is a non-linear optimization library, implementing several different optimization algorithms.
-   The latest version (2.4.2) is recommended.
++ **[Armadillo](http://arma.sourceforge.net)** (>=6.400)
++ **[NLopt](http://ab-initio.mit.edu/wiki/index.php/NLopt)** (>=2.4.2)
 
 #### Compiling from source
 

@@ -1,0 +1,40 @@
+# Travis file
+
+language: generic
+    
+before_install:
+  - sudo apt-get update -qq
+  - ./install-dependencies.sh > log-file 2>&1
+  
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-4.8', 'libblas-dev', 'liblapack-dev', 'libtiff4']
+      env: COMPILER_NAME=gcc CXX=g++-4.8 CC=gcc-4.8
+
+    - os: linux
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-4.9', 'libblas-dev', 'liblapack-dev', 'libtiff4']
+      env: COMPILER_NAME=gcc CXX=g++-4.9 CC=gcc-4.9
+
+    - os: linux
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-5', 'libblas-dev', 'liblapack-dev', 'libtiff4']
+      env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
+     
+script:
+  - mkdir bin
+  - cmake -DCMAKE_CXX_COMPILER=$CXXOMP -DCMAKE_CC_COMPILER=$CCOMP .
+  - make
+
+notifications:
+  email: false
+  
+
