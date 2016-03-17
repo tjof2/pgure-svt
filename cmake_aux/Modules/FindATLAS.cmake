@@ -42,7 +42,7 @@ else()
   set(ATLAS_FOUND "FALSE")
 endif()
 
-
+set(ATLAS_FIND_QUIETLY "TRUE")
 if(ATLAS_FOUND)
   if(NOT ATLAS_FIND_QUIETLY)
     message(STATUS "Found ATLAS: ${ATLAS_LIBRARIES}")
