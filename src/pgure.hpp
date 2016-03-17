@@ -16,10 +16,10 @@
 #define PGURE_H
 
 // C++ headers
+#include <cstdlib>
 #include <iostream>
 #include <iomanip>
 #include <random>
-#include <stdlib.h>
 #include <vector>
 
 // Armadillo library
@@ -46,7 +46,13 @@ class PGURE {
 			delete svt2m;		
 		};
 		
-		void Initialize(const arma::cube &u, const arma::icube patches, int blocksize, int blockoverlap, double alphaIn, double muIn, double sigmaIn) {
+		void Initialize(const arma::cube &u,
+		                const arma::icube patches,
+		                int blocksize,
+		                int blockoverlap,
+		                double alphaIn,
+		                double muIn,
+		                double sigmaIn) {
 			U = u;
 	
 			Nx = u.n_rows;
@@ -59,18 +65,18 @@ class PGURE {
 			mu = muIn;
 			sigma = sigmaIn;
 		
-			Uhat.set_size(Nx,Ny,T);
-			U1.set_size(Nx,Ny,T);
-			U2p.set_size(Nx,Ny,T);
-			U2m.set_size(Nx,Ny,T);
+			Uhat.set_size(Nx, Ny, T);
+			U1.set_size(Nx, Ny, T);
+			U2p.set_size(Nx, Ny, T);
+			U2m.set_size(Nx, Ny, T);
 		
 			// Specify perturbations
 			eps1 = U.max() * 1E-4;
 			eps2 = U.max() * 1E-2;
 		
 			// Generate random samples for stochastic evaluation
-			delta1.set_size(Nx,Ny,T);
-			delta2.set_size(Nx,Ny,T);
+			delta1.set_size(Nx, Ny, T);
+			delta2.set_size(Nx, Ny, T);
 			GenerateRandomPerturbations();	
 			U1 = U + (delta1 * eps1);
 			U2p = U + (delta2 * eps2);
@@ -95,7 +101,9 @@ class PGURE {
 			return svt0->Reconstruct(user_lambda);
 		}
 	
-		double CalculatePGURE(const std::vector<double> &x, std::vector<double> &grad, void *data) {
+		double CalculatePGURE(const std::vector<double> &x,
+		                      std::vector<double> &grad,
+		                      void *data) {
 			Uhat = svt0->Reconstruct(x[0]);
 			U1 = svt1->Reconstruct(x[0]);
 			U2p = svt2p->Reconstruct(x[0]);
@@ -106,8 +114,11 @@ class PGURE {
 			double pgURE;
 			pgURE = arma::accu(arma::square(arma::abs(Uhat - U)))/NxNyT
 				- (alpha + mu) * arma::accu(U)/NxNyT
-				+ 2/eps1 * arma::accu(delta1 % (alpha * U - alpha*mu + sigma*sigma) % (U1 - Uhat))/NxNyT
-				- 2*sigma*sigma*alpha/(eps2*eps2) * arma::accu(delta2 % (U2p - 2*Uhat + U2m))/NxNyT
+				+ 2/eps1 * arma::accu(delta1
+				            % (alpha * U - alpha*mu + sigma*sigma) 
+				            % (U1 - Uhat))/NxNyT
+				- 2*sigma*sigma*alpha/(eps2*eps2)
+				            * arma::accu(delta2 % (U2p - 2*Uhat + U2m))/NxNyT
 				+ 2 * mu * arma::accu(Uhat)/NxNyT
 				+ mu/NxNyT
 				- sigma*sigma;
@@ -118,7 +129,10 @@ class PGURE {
 			return pgURE;
 		};
 		
-		double Optimize(double tol, double start, double bound, int eval);
+		double Optimize(double tol,
+		                double start,
+		                double bound,
+		                int eval);
 			
 	private:
 		int Nx, Ny, T, Bs, Bo;
@@ -145,7 +159,7 @@ class PGURE {
 			std::bernoulli_distribution binary_dist1(0.5);
 			delta1.imbue( [&]() {
 				bool bernRand = binary_dist1(rand_engine);
-				if( bernRand == true ) {
+				if (bernRand == true) {
 					return -1;
 				}
 				else {
@@ -159,7 +173,7 @@ class PGURE {
 			std::bernoulli_distribution binary_dist2(vP);
 			delta2.imbue( [&]() {
 				bool bernRand = binary_dist2(rand_engine);
-				if( bernRand == true ) {
+				if (bernRand == true) {
 					return -1 * std::sqrt(vQ/vP);
 				}
 				else {
@@ -170,14 +184,20 @@ class PGURE {
 		};
 };
 
-
-double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad, void *data) {
+// Wrapper for the PGURE optimization function
+double obj_wrapper(const std::vector<double> &x, 
+                   std::vector<double> &grad,
+                   void *data) {
   PGURE *obj = static_cast<PGURE *>(data);
   return obj->CalculatePGURE(x, grad, data);
 }
 
-// Optimization function using NLopt and BOBYQA gradient-free algorithm
-double PGURE::Optimize(double tol, double start, double bound, int eval) {
+// Optimization function using NLopt and 
+// BOBYQA gradient-free algorithm
+double PGURE::Optimize(double tol,
+                       double start,
+                       double bound,
+                       int eval) {
 	double startingStep = start / 2;
 
 	// Optimize PGURE
