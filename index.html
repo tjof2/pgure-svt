@@ -43,9 +43,11 @@ described in detail in: </p>
 value thresholding. <em>Manuscript in preparation.</em></p>
 </blockquote>
 
-<a href="https://travis-ci.org/tjof2/pgure-svt"><img border="0" src="https://travis-ci.org/tjof2/pgure-svt.svg?branch=master"></a>
-
-<hr>
+<p>
+    <a href="https://travis-ci.org/tjof2/pgure-svt">
+        <img src="https://travis-ci.org/tjof2/pgure-svt.svg?branch=master"/>
+    </a>
+</p>
 
 <h2>
 <a id="contents" class="anchor" href="#contents" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contents</h2>
@@ -82,9 +84,7 @@ value thresholding. <em>Manuscript in preparation.</em></p>
 <a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compiling from source</h4>
 
 <p>
-To build PGURE-SVT, unpack the source and <code>cd</code> into the unpacked directory.
-You will then need to configure the build (which will check for the required libraries),
-and finally compile.  This will generate an executable file in the <code>bin/</code> directory.
+To build PGURE-SVT, unpack the source and use the following commands
 </p>
 
 <pre><code>$ tar -xzf pgure-svt.tar.gz
@@ -93,27 +93,49 @@ $ cmake .
 $ make
 </code></pre>
 
-<p>To run PGURE-SVT from any directory, add the following line to your <code>.bashrc</code> file including
-the full path to the <code>bin/</code> directory:</p>
-
-<pre><code>$ echo alias PGURE-SVT='/path/to/directory/bin/PGURE-SVT' &gt;&gt; ~/.bashrc
-$ source ~/.bashrc
-</code></pre>
-
-<p>You can now run the program by typing <code>PGURE-SVT</code> in the terminal.</p>
+<p>This will generate an executable called <code>PGURE-SVT</code> in the <code>bin</code> directory.</p>
 
 <h2>
 <a id="using-pgure-svt" class="anchor" href="#using-pgure-svt" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using PGURE-SVT</h2>
 
-<p>PGURE-SVT uses a simple command-line interface along with a separate parameter file.</p>
+<p>For an in-depth explanation of the options, users are referred to the paper describing the algorithm.</p>
 
-<pre><code>$ PGURE-SVT param.svt
+<h3>Python</h3>
+
+An example file, <code>demo.py</code>, is provided to show users how the algorithm can be linked with the <a href="http://hyperspy.org">HyperSpy</a> multi-dimensional data analysis toolbox, which provides a number of useful features including:
+
+    <ul>
+     <li>
+    Data visualization
+    </li>
+    <li>
+    Import from a number of microscopy formats
+    </li>
+    </ul>
+
+The basic workflow is:
+
+<pre><code>import pguresvt
+
+# Initialize with default parameters
+svt = pguresvt.SVT()
+
+# Run the algorithm on the data X
+# and get the denoised output Y
+Y = SVT.denoise(X)
 </code></pre>
 
-<p>The parameter file allows the user to customize various options of the PGURE-SVT
-algorithm. An example is provided, with short comments to explain the effects of
-each option. For an in-depth explanation of the options, users are referred to the
-paper describing the algorithm.</p>
+<h3>Command-line</h3>
+
+<p>PGURE-SVT uses a simple command-line interface along with a separate parameter file.
+The parameter file allows the user to customize various options of the PGURE-SVT algorithm. An example file, param.svt is provided, with short comments to explain the effects of each option.
+</p>
+
+<pre><code>$ ./PGURE-SVT param.svt
+</code></pre>
+
+
+
       </section>
       <footer>
         <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
