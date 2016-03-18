@@ -30,22 +30,6 @@
 # Temp files
 *~
 
-# MX files
-*.mx
-
-# CSV files
-*.csv
-
-# NB files
-*.nb
-
-# TIF files
-*.tif
-
-# DM files
-*.dm3
-*.dm4
-
 # Archives
 *.tar
 *.gz
@@ -63,12 +47,6 @@ PGURE-SVT
 
 # Directories
 bin
-build
-images
-test
-extra
-results
-report
 
 # CPP Lint
 src/cpplint*
