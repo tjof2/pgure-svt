@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project (PGURE-SVT)
 
-include_directories(${CMAKETEST_SOURCE_DIR}/src)
+include_directories(${CMAKETEST_BINARY_DIR}/src)
 link_directories(${CMAKETEST_BINARY_DIR}/src)
 
-add_executable(PGURE-SVT medfilter.c params.cpp PGURE-SVT.cpp)
+add_executable(PGURE-SVT medfilter.c PGURE-SVT.cpp)
 set_target_properties(PGURE-SVT
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
