@@ -8,7 +8,7 @@
 set -ex
 ##########################################
 wget http://github.com/xianyi/OpenBLAS/archive/v0.2.16.tar.gz
-tar -xzvf OpenBLAS-0.2.16.tar.gz
+tar -xzvf v0.2.16.tar.gz
 cd OpenBLAS-0.2.16
 make
 sudo make install
