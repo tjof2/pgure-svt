@@ -280,7 +280,7 @@ int main(int argc, char** argv) {
 			u = noisysequence.slices(timeiter - framewindow, timeiter + framewindow);
 			ufilter = filteredsequence.slices(timeiter - framewindow, timeiter + framewindow);
 		}
-		 
+		
 		// Basic sequence normalization
 		double inputmax = u.max();
 		u /= inputmax;
@@ -326,7 +326,7 @@ int main(int argc, char** argv) {
 			v = optimizer->Reconstruct(lambda);
 		}
 		delete optimizer;
-        
+
 		/////////////////////////////
 		//						   //
 		// SEQUENCE RECONSTRUCTION //

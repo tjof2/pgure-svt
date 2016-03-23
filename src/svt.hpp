@@ -82,8 +82,7 @@ class SVT {
                     block.col(k) = arma::vectorise(
                                      u(arma::span(newy, newy+Bs-1),
                                        arma::span(newx, newx+Bs-1),
-                                       arma::span(k))
-                                   );
+                                       arma::span(k)));
                 }
 
                 // Do the SVD
@@ -131,8 +130,7 @@ class SVT {
                 arma::vec Snew = arma::sign(Sblock)
                                    % arma::max(
                                         arma::abs(Sblock) - wvec,
-                                        arma::zeros<arma::vec>(T)
-                                        );
+                                        arma::zeros<arma::vec>(T));
 
                 // Reconstruct from SVD
                 block = Ublock * diagmat(Snew) * Vblock.t();
@@ -144,8 +142,8 @@ class SVT {
                     v(arma::span(newy, newy+Bs-1),
                       arma::span(newx, newx+Bs-1),
                       arma::span(k, k)) += arma::reshape(block.col(k), Bs, Bs);
-                    weights(arma::span(newy, newy+Bs-1), 
-                            arma::span(newx, newx+Bs-1), 
+                    weights(arma::span(newy, newy+Bs-1),
+                            arma::span(newx, newx+Bs-1),
                             arma::span(k, k)) += arma::ones<arma::mat>(Bs, Bs);
                 }
             }

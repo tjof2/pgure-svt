@@ -65,13 +65,13 @@ class NoiseEstimator {
             // Perform quadtree decomposition of frames
             // to generate patches for noise estimation
             // TODO:tjof2 fix this T-1 problem
-            for (int i=0; i<T-1; i++) {                
+            for (int i=0; i<T-1; i++) {
                 treeDelete[0] = arma::zeros<arma::umat>(3, 1);
                 treeDelete[0](2, 0) = Nx;
                 treeDelete[1] = arma::zeros<arma::umat>(0, 0);
 
                 QuadTree(input.slice(i).eval(), 0);
-                
+
                 arma::umat tree = treeDelete[0];
                 arma::umat dele = arma::unique(arma::sort(treeDelete[1]));
 
@@ -79,7 +79,7 @@ class NoiseEstimator {
                 for (size_t k=dele.n_elem-1; k>0; k--) {
                     tree.shed_col(dele(0, k));
                 }
-                
+
                 // Extract patches for robust estimation
                 for (size_t n=0; n<tree.n_cols; n++) {
                     int x = tree(0, n);
@@ -106,7 +106,7 @@ class NoiseEstimator {
                     patch = ConvolveFIR(patch);
                     patch.reshape(s*s, 1);
                     col = patch.col(0);
-                    
+
                     // Set robust mean estimate
                     means(i*maxVsize + n) = meanEst;
 
@@ -152,7 +152,7 @@ class NoiseEstimator {
                         mu = (mu >= 0.) ? mu : ComputeMode(rmeans);
                         dSi = ComputeMode(rvars);
                         sigma = (sigma >= 0.) ? sigma : std::sqrt(
-                                   std::max(dSi, 
+                                   std::max(dSi,
                                         std::max(
                                             alphaBeta(1)+alphaBeta(0)*dSi, 0.
                                             )
@@ -175,7 +175,7 @@ class NoiseEstimator {
                 default:
                     {
                         // (Method 4 - tjof2@cam.ac.uk)
-                        // This assumes that the DC offset is the min 
+                        // This assumes that the DC offset is the min
                         // of the means, and thus trys to avoid filtering
                         // out actual information (e.g. an amorphous
                         // substrate) during the SVT step
@@ -196,14 +196,14 @@ class NoiseEstimator {
 
  private:
         int Nx, Ny, T, wtype, size;
-        
+
         std::vector<arma::umat> treeDelete;
 
         double alpha, sigma, mu, dSi;
 
         // F-test lookup tables
         // Default goes wth 2.5%
-        const arma::uvec DegOFreePlus1 = {2, 4, 8, 16, 
+        const arma::uvec DegOFreePlus1 = {2, 4, 8, 16,
                                           32, 64, 128,
                                           256, 512, 1024};
         const arma::vec Ftest0100 = {5.39077,1.97222,1.38391,
@@ -246,7 +246,7 @@ class NoiseEstimator {
                     int xm = ((x-1) < 0) ? (N-2) : (x-1);
                     int yp = ((y+1) == N) ? 1 : (y+1);
                     int ym = ((y-1) < 0) ? (N-2) : (y-1);
-                    resids(y,x) = l*A(y,x) - (A(yp,x) 
+                    resids(y,x) = l*A(y,x) - (A(yp,x)
                                     + A(ym,x) + A(y,xm) + A(y,xp));
                 }
             }
@@ -409,8 +409,8 @@ class NoiseEstimator {
                 r = y - f;
                 e = arma::mean(arma::abs(r));
 
-                if ((std::abs(a0 - params(0)) < tol 
-                        && std::abs(b0 - params[1]) < tol) 
+                if ((std::abs(a0 - params(0)) < tol
+                        && std::abs(b0 - params[1]) < tol)
                     || e < tol ) {
                     break;
                 }
@@ -443,7 +443,7 @@ class NoiseEstimator {
                     int xm = ((x-1) < 0) ? (N-2) : (x-1);
                     int yp = ((y+1) == N) ? 1 : (y+1);
                     int ym = ((y-1) < 0) ? (N-2) : (y-1);
-                    neigh << in(xm,ym) << in(x,ym) << in(xp,ym) 
+                    neigh << in(xm,ym) << in(x,ym) << in(xp,ym)
                           << arma::endr
                           << in(xm,y)  << in(x,y)  << in(xp,y)
                           << arma::endr

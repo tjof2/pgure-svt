@@ -47,6 +47,7 @@ PGURE-SVT
 
 # Directories
 bin
+dev
 
 # CPP Lint
 src/cpplint*
