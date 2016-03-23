@@ -21,22 +21,24 @@
           <li class="download"><a class="buttons" href="https://github.com/tjof2/pgure-svt/archive/v0.2.2.tar.gz">Download v0.2.2</a></li>
           <li><a class="buttons github" href="https://github.com/tjof2/pgure-svt">View On GitHub</a></li>
         </ul>
-
-        <p class="header">This project is maintained by <a class="header name" href="https://github.com/tjof2">tjof2</a></p>
+       <p class="header">This project is maintained by <a class="header name" href="https://github.com/tjof2">tjof2</a></p>
 
 
       </header>
       <section>
-        <h1>
-<a id="pgure-svt" class="anchor" href="#pgure-svt" aria-hidden="true"><span class="octicon octicon-link"></span></a>PGURE-SVT</h1>
+<h1>
+<a id="pgure-svt" class="anchor" href="#pgure-svt" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>PGURE-SVT</h1>
 
 <p><strong>Singular value thresholding for denoising video microscopy data</strong></p>
 
-<p>PGURE-SVT is an algorithm designed to denoise image sequences acquired in microscopy. It exploits the correlations between
-consecutive frames to form low-rank matrices, which are then recovered using a technique known as nuclear norm minimization.
-An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate the selection of the regularization parameter, while
-robust noise and motion estimation maintain broad applicability to many different types of microscopy. The algorithm is
-described in detail in: </p>
+<p>PGURE-SVT is an algorithm designed to denoise image sequences acquired in microscopy.
+It exploits the correlations between consecutive frames to form low-rank matrices, which 
+are then recovered using a technique known as nuclear norm minimization. An unbiased risk 
+estimator for mixed Poisson-Gaussian noise is used to automate the selection of the 
+regularization parameter, while robust noise and motion estimation maintain broad 
+applicability to many different types of microscopy. The algorithm is described in detail in: 
+</p>
 
 <blockquote>
 <p>Furnival T, Leary R, Midgley PA. (2016). Denoising time-resolved microscopy sequences with singular 
@@ -44,9 +46,9 @@ value thresholding. <em>Manuscript in preparation.</em></p>
 </blockquote>
 
 <p>
-    <a href="https://travis-ci.org/tjof2/pgure-svt">
-        <img src="https://travis-ci.org/tjof2/pgure-svt.svg?branch=master"/>
-    </a>
+<a href="https://travis-ci.org/tjof2/pgure-svt">
+<img src="https://travis-ci.org/tjof2/pgure-svt.svg?branch=master"/>
+</a>
 </p>
 
 <h2>
@@ -54,7 +56,8 @@ value thresholding. <em>Manuscript in preparation.</em></p>
 
 <ul>
 <li><a href="#installation">Installation</a></li>
-<li><a href="#using-pgure-svt">Using PGURE-SVT</a></li>
+<li><a href="#python">Using PGURE-SVT with Python</a></li>
+<li><a href="#command-line">Using PGURE-SVT from the command line</a></li>
 </ul>
 
 <h2>
@@ -93,48 +96,46 @@ $ cmake .
 $ make
 </code></pre>
 
-<p>This will generate an executable called <code>PGURE-SVT</code> in the <code>bin</code> directory.</p>
+<p>This will generate an executable called <code>PGURE-SVT</code> in the <code>bin</code>
+directory, as well as the appropriate library for the Python wrapper.</p>
 
 <h2>
-<a id="using-pgure-svt" class="anchor" href="#using-pgure-svt" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using PGURE-SVT</h2>
+<a id="python" class="anchor" href="#python" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>Using PGURE-SVT with Python</h2>
 
-<p>For an in-depth explanation of the options, users are referred to the paper describing the algorithm.</p>
-
-<h3>Python</h3>
-
-An example file, <code>demo.py</code>, is provided to show users how the algorithm can be linked with the <a href="http://hyperspy.org">HyperSpy</a> multi-dimensional data analysis toolbox, which provides a number of useful features including:
-
-    <ul>
-     <li>
-    Data visualization
-    </li>
-    <li>
-    Import from a number of microscopy formats
-    </li>
-    </ul>
-
-<p>The basic workflow is:</p>
+<p>An example file, <a href="https://github.com/tjof2/pgure-svt/blob/master/demo.py"><code>demo.py</code></a>, 
+is provided to show users how the algorithm can be linked with the 
+<a href="http://hyperspy.org">HyperSpy</a> multi-dimensional data analysis toolbox, 
+which provides a number of useful features including data visualization and data import
+from a number of microscopy file formats.</p>
 
 <pre><code>import pguresvt
 
-# Initialize with default parameters
-svt = pguresvt.SVT()
+# Initialize the algorithm
+svt = pguresvt.SVT(patchsize=4,
+                   length=15,
+                   optimize=True,
+                   tol=1e-6)
 
 # Run the algorithm on the data X
 # and get the denoised output Y
 Y = SVT.denoise(X)
 </code></pre>
 
-<h3>Command-line</h3>
+<h2>
+<a id="command-line" class="anchor" href="#command-line" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>Using PGURE-SVT from the command line</h2>
 
-<p>PGURE-SVT uses a simple command-line interface along with a separate parameter file.
-The parameter file allows the user to customize various options of the PGURE-SVT algorithm. An example file, param.svt is provided, with short comments to explain the effects of each option.
+
+<p>The <code>PGURE-SVT</code> executable uses a simple command-line interface along 
+with a separate parameter file. The parameter file allows the user to customize various
+options of the PGURE-SVT algorithm. An example file, 
+<a href="https://github.com/tjof2/pgure-svt/blob/master/param.svt"><code>param.svt</code></a>
+is provided, with short comments to explain the effects of each option.
 </p>
 
 <pre><code>$ ./PGURE-SVT param.svt
 </code></pre>
-
-
 
       </section>
       <footer>
