@@ -164,8 +164,8 @@ class SVT(object):
         Y = np.zeros(X.shape, dtype=np.double, order='F')
         result = self._PGURESVT(X,
                                 Y,
-                                self.patchsize
-                                self.length
+                                self.patchsize,
+                                self.length,
                                 self.optimize,
                                 self.threshold,
                                 self.alpha,

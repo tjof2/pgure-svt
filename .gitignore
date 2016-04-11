@@ -55,3 +55,6 @@ src/cpplint*
 # Backups
 *.bak
 
+# PyCharm files
+.idea/
+__pycache__
