@@ -6,8 +6,9 @@ project (PGURE-SVT CXX)
 set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
 
-option(BUILD_STATIC_LIBS "Build the static library" OFF)
-option(BUILD_SHARED_LIBS "Build the shared library" ON)
+option(BUILD_STATIC "Build the static library" ON)
+option(BUILD_SHARED "Build the shared library" OFF)
+option(BUILD_STANDALONE "Build a standalone executable" ON)
 
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
@@ -69,12 +70,20 @@ endif()
 include_directories(${CMAKETEST_BINARY_DIR}/src)
 link_directories(${CMAKETEST_BINARY_DIR}/src)
 
-add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
-set_target_properties(PGURE-SVT
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-target_link_libraries(PGURE-SVT ${SVT_LIBS})
+if(BUILD_STANDALONE)
+    add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
+    target_link_libraries(PGURE-SVT ${SVT_LIBS})
+endif()
+
+if(BUILD_SHARED)
+    add_library(libpguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
+    target_link_libraries(libpguresvt ${SVT_LIBS})
+endif()
+
+if(BUILD_STATIC)
+    add_library(libpguresvt STATIC src/medfilter.c src/lib-PGURE-SVT.cpp)
+    target_link_libraries(libpguresvt ${SVT_LIBS})
+endif()
 
 
 

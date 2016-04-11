@@ -38,15 +38,12 @@
 CMakeCache.txt
 CMakeFiles/
 Makefile
-src/CMakeCache.txt
-src/CMakeFiles/
 cmake_install.cmake
 
 # Programs
 PGURE-SVT
 
 # Directories
-bin
 dev
 
 # CPP Lint
