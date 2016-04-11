@@ -112,14 +112,19 @@ class SVT(object):
         libpath = os.path.dirname(os.path.abspath(__file__)) + '/bin/libpguresvt.so'
         self._PGURESVT = ctypes.cdll.LoadLibrary(libpath).PGURE_SVT
         self._PGURESVT.restype = ctypes.c_int
-        self._PGURESVT.argtypes = [
+        self._PGURESVT.argtypes = [ ndpointer(ctypes.c_double, flags="F_CONTIGUOUS"),
                                     ndpointer(ctypes.c_double, flags="F_CONTIGUOUS"),
-                                    ndpointer(ctypes.c_double, flags="F_CONTIGUOUS"),
-                                    ctypes.c_int, ctypes.c_int,
-                                    ctypes.c_bool, ctypes.c_double,
-                                    ctypes.c_double, ctypes.c_double, ctypes.c_double,
-                                    ctypes.c_int, ctypes.c_int,
-                                    ctypes.c_double, ctypes.c_int]
+                                    ctypes.c_int, 
+                                    ctypes.c_int,
+                                    ctypes.c_bool,
+                                    ctypes.c_double,
+                                    ctypes.c_double, 
+                                    ctypes.c_double, 
+                                    ctypes.c_double,
+                                    ctypes.c_int, 
+                                    ctypes.c_int,
+                                    ctypes.c_double,
+                                    ctypes.c_int]
                                     
         self.Y = None
         
