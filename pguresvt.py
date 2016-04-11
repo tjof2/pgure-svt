@@ -1,24 +1,38 @@
-"""	PGURE-SVT Denoising
-
-	Author:	Tom Furnival
-	Email:	tjof2@cam.ac.uk
-
-	Copyright (C) 2015-16 Tom Furnival
-
-	This program uses Singular Value Thresholding (SVT) [1], combined
-	with an unbiased risk estimator (PGURE) to denoise a video sequence
-	of microscopy images [2]. Noise parameters for a mixed Poisson-Gaussian
-	noise model are automatically estimated during the denoising.
-
-	References:
-	[1] 	"Unbiased Risk Estimates for Singular Value Thresholding and
-		Spectral Estimators", (2013), Candes, EJ et al.
-		http://dx.doi.org/10.1109/TSP.2013.2270464
-
-	[2]	"An Unbiased Risk Estimator for Image Denoising in the Presence
-		of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
-		http://dx.doi.org/10.1109/TIP.2014.2300821
-"""
+# PGURE-SVT Denoising
+#
+#	Author:	Tom Furnival
+#	Email:	tjof2@cam.ac.uk
+#
+#	Copyright (C) 2015-16 Tom Furnival
+#
+#	This program uses Singular Value Thresholding (SVT) [1], combined
+#	with an unbiased risk estimator (PGURE) to denoise a video sequence
+#	of microscopy images [2]. Noise parameters for a mixed Poisson-Gaussian
+#	noise model are automatically estimated during the denoising.
+#
+#	References:
+#	[1] "Unbiased Risk Estimates for Singular Value Thresholding and
+#		Spectral Estimators", (2013), Candes, EJ et al.
+#		http://dx.doi.org/10.1109/TSP.2013.2270464
+#
+#	[2]	"An Unbiased Risk Estimator for Image Denoising in the Presence
+#		of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
+#		http://dx.doi.org/10.1109/TIP.2014.2300821
+#
+#   This file is part of PGURE-SVT.
+#
+#   PGURE-SVT is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   PGURE-SVT is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 import ctypes, os
 import numpy as np
