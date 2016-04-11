@@ -6,8 +6,8 @@ project (PGURE-SVT CXX)
 set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
 
-option(BUILD_SHARED "Build the shared library" ON)
-option(BUILD_STANDALONE "Build a standalone executable" ON)
+option(BUILD_LIBRARY "Build the shared library" ON)
+option(BUILD_EXECUTABLE "Build a standalone executable" ON)
 
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
@@ -36,7 +36,7 @@ if(NLOPT_FOUND)
 endif()
 
 if(!TIFF_FOUND)
-    if(BUILD_STANDALONE)
+    if(BUILD_EXECUTABLE)
         message(SEND_ERROR "*** ERROR: libtiff not found; Standalone program will not be compiled")
     endif()
 else()
@@ -83,12 +83,12 @@ endif()
 ########################################
 
 # Build libraries and executable
-if(BUILD_SHARED)
+if(BUILD_LIBRARY)
     add_library(pguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
     target_link_libraries(pguresvt ${SVT_LIBS})
 endif()
 
-if(BUILD_STANDALONE AND TIFF_FOUND)
+if(BUILD_EXECUTABLE AND TIFF_FOUND)
     add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
     target_link_libraries(PGURE-SVT ${SVT_LIBS})
 endif()

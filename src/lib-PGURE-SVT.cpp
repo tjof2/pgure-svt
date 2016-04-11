@@ -80,7 +80,7 @@ bool strToBool(std::string const& s) {return s != "0";};
 
 // Main program
 extern "C" int PGURESVT(double *X,
-                        double *Y,
+                        double *Y,               
                         int *dims,                        
                         int Bs,
                         int Bo,
@@ -92,8 +92,7 @@ extern "C" int PGURESVT(double *X,
                         double sigma,
                         int MotionP,
                         double tol,
-                        int MedianSize
-                        ) {
+                        int MedianSize) {
 
 	// Overall program timer
 	auto overallstart = std::chrono::steady_clock::now();
@@ -106,7 +105,7 @@ extern "C" int PGURESVT(double *X,
 	std::cout<<"Version 0.2.3 - April 2016"<<std::endl<<std::endl;
 
     int NoiseMethod = 4;
-    double lambda = 0.;
+    double lambda = (userLambda >= 0.) ? userLambda : 0.;
     
     int Nx = dims[0];
     int Ny = dims[1];
@@ -294,6 +293,9 @@ extern "C" int PGURESVT(double *X,
 	auto overallend = std::chrono::steady_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(overallend - overallstart);
 	std::cout<<"Total time: "<<std::setprecision(5)<<(elapsed.count()/1E6)<<" seconds"<<std::endl<<std::endl;
+
+    // Copy back to Python
+    memcpy(Y, cleansequence.memptr(), cleansequence.n_elem*sizeof(double));
 
 	return 0;
 }

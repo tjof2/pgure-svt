@@ -1,23 +1,9 @@
-# PGURE-SVT Denoising
+#   PGURE-SVT Denoising
 #
-#	Author:	Tom Furnival
-#	Email:	tjof2@cam.ac.uk
+#   Author:    Tom Furnival
+#   Email:    tjof2@cam.ac.uk
 #
-#	Copyright (C) 2015-16 Tom Furnival
-#
-#	This program uses Singular Value Thresholding (SVT) [1], combined
-#	with an unbiased risk estimator (PGURE) to denoise a video sequence
-#	of microscopy images [2]. Noise parameters for a mixed Poisson-Gaussian
-#	noise model are automatically estimated during the denoising.
-#
-#	References:
-#	[1] "Unbiased Risk Estimates for Singular Value Thresholding and
-#		Spectral Estimators", (2013), Candes, EJ et al.
-#		http://dx.doi.org/10.1109/TSP.2013.2270464
-#
-#	[2]	"An Unbiased Risk Estimator for Image Denoising in the Presence
-#       of Mixed Poisson-Gaussian Noise", (2014), Le Montagner, Y et al.
-#		http://dx.doi.org/10.1109/TIP.2014.2300821
+#   Copyright (C) 2015-16 Tom Furnival
 #
 #   This file is part of PGURE-SVT.
 #
@@ -89,7 +75,7 @@ class SVT(object):
                 patchoverlap=1,
                 length=15,
                 optimize=True,
-                threshold=0.15,
+                threshold=-1.,
                 alpha=-1., 
                 mu=-1., 
                 sigma=-1.,                
@@ -112,10 +98,10 @@ class SVT(object):
         
         # Setup ctypes function
         libpath = os.path.dirname(os.path.abspath(__file__)) + '/build/libpguresvt.so'
-        self._PGURESVT = ctypes.cdll.LoadLibrary(libpath).PGURESVT
-        self._PGURESVT.restype = ctypes.c_int
-        self._PGURESVT.argtypes = [ndpointer(ctypes.c_double, flags="F_CONTIGUOUS"),
-                                   ndpointer(ctypes.c_double, flags="F_CONTIGUOUS"),
+        self._PGURESVT = ctypes.cdll.LoadLibrary(libpath).PGURESVT 
+        self._PGURESVT.restype = ctypes.c_int      
+        self._PGURESVT.argtypes = [ndpointer(ctypes.c_double, flags="F"),
+                                   ndpointer(ctypes.c_double, flags="F"),
                                    ndpointer(ctypes.c_int),
                                    ctypes.c_int, 
                                    ctypes.c_int,
@@ -164,8 +150,8 @@ class SVT(object):
         
         """
         X = self._check_array(X)
-        Y = np.zeros(X.shape, dtype=np.double, order='F')
         dims = np.asarray(X.shape).astype(np.int32)
+        Y = np.zeros(X.shape, dtype=np.double, order='F')
         result = self._PGURESVT(X,
                                 Y,
                                 dims,

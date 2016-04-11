@@ -1,11 +1,11 @@
-#	PGURE-SVT Denoising
+#   PGURE-SVT Denoising
 #
-#	Author:	Tom Furnival
-#	Email:	tjof2@cam.ac.uk
+#   Author:    Tom Furnival
+#   Email:    tjof2@cam.ac.uk
 #
-#	Copyright (C) 2015-16 Tom Furnival
+#   Copyright (C) 2015-16 Tom Furnival
 #
-#	Demo script showing how to use PGURE-SVT
+#   Demo script showing how to use PGURE-SVT
 #
 #   This file is part of PGURE-SVT.
 #
@@ -26,16 +26,24 @@ import numpy as np
 import pguresvt
 
 # Generate a random array
-X =  np.random.randint(65535, size=(64, 64, 20))
+X =  np.random.randint(255, size=(16, 16, 15))
 
 # Initialize with default parameters
 svt = pguresvt.SVT(patchsize=4,
                    length=15,
                    optimize=False,
-                   threshold=0.1,
+                   threshold=1.,
                    tol=1e-6)
 
 # Run the denoising
-Y = svt.denoise(X)
+svt.denoise(X)
 
+print np.linalg.norm(svt.Y - X)
+
+print X[1:4,1:4,1]
+print " "
+print svt.Y[1:4,1:4,1]
+
+print X.shape
+print svt.Y.shape
 
