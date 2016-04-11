@@ -83,6 +83,7 @@ extern "C" int PGURESVT(double *X,
                         double *Y,
                         int *dims,                        
                         int Bs,
+                        int Bo,
                         int T,
                         bool pgureOpt,
                         double userLambda,
@@ -105,7 +106,6 @@ extern "C" int PGURESVT(double *X,
 	std::cout<<"Version 0.2.3 - April 2016"<<std::endl<<std::endl;
 
     int NoiseMethod = 4;
-    int Bo = 1;
     double lambda = 0.;
     
     int Nx = dims[0];
@@ -118,6 +118,9 @@ extern "C" int PGURESVT(double *X,
     // Generate the clean and filtered sequences
     arma::cube cleansequence(Nx, Ny, num_images);
     arma::cube filteredsequence(Nx, Ny, num_images);
+    
+    cleansequence.zeros();
+    filteredsequence.zeros();
     
     // Parameters for median filter
     unsigned short *Buffer = new unsigned short[Nx*Ny];

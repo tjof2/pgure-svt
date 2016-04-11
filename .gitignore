@@ -44,6 +44,7 @@ cmake_install.cmake
 PGURE-SVT
 
 # Directories
+build
 dev
 
 # CPP Lint
@@ -52,3 +53,5 @@ src/cpplint*
 # Backups
 *.bak
 
+# PYC
+*.pyc

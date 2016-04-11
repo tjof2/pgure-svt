@@ -6,8 +6,7 @@ project (PGURE-SVT CXX)
 set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
 
-option(BUILD_STATIC "Build the static library" ON)
-option(BUILD_SHARED "Build the shared library" OFF)
+option(BUILD_SHARED "Build the shared library" ON)
 option(BUILD_STANDALONE "Build a standalone executable" ON)
 
 include(CheckIncludeFileCXX)
@@ -85,13 +84,8 @@ endif()
 
 # Build libraries and executable
 if(BUILD_SHARED)
-    add_library(libpguresvt-shared SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
-    target_link_libraries(libpguresvt-shared ${SVT_LIBS})
-endif()
-
-if(BUILD_STATIC)
-    add_library(libpguresvt-static STATIC src/medfilter.c src/lib-PGURE-SVT.cpp)
-    target_link_libraries(libpguresvt-static ${SVT_LIBS})
+    add_library(pguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
+    target_link_libraries(pguresvt ${SVT_LIBS})
 endif()
 
 if(BUILD_STANDALONE AND TIFF_FOUND)
