@@ -79,7 +79,20 @@ extern "C" {
 bool strToBool(std::string const& s) {return s != "0";};
 
 // Main program
-extern "C" int PGURESVT(int argc, const char * argv[]) {
+extern "C" int PGURESVT(double *X,
+                        double *Y,
+                        int *dims,                        
+                        int Bs,
+                        int T,
+                        bool pgureOpt,
+                        double userLambda,
+                        double alpha,
+                        double mu,
+                        double sigma,
+                        int MotionP,
+                        double tol,
+                        int MedianSize
+                        ) {
 
 	// Overall program timer
 	auto overallstart = std::chrono::steady_clock::now();
@@ -91,175 +104,43 @@ extern "C" int PGURESVT(int argc, const char * argv[]) {
 	std::cout<<"Email:  tjof2@cam.ac.uk"<<std::endl<<std::endl;
 	std::cout<<"Version 0.2.3 - April 2016"<<std::endl<<std::endl;
 
-	/////////////////////////////
-	//						   //
-	//    PARAMETER IMPORT     //
-	//						   //
-	/////////////////////////////
+    int NoiseMethod = 4;
+    int Bo = 1;
+    double lambda = 0.;
+    
+    int Nx = dims[0];
+    int Ny = dims[1];
+    int num_images = dims[2];
 
-	// Read in the parameter file name
-    if( argc != 2) {
-		std::cout<<"  Usage: ./PGURE-SVT paramfile"<<std::endl;
-		return -1;
+    // Copy the image sequence into the a cube
+    arma::cube noisysequence(X, Nx, Ny, num_images);
+    
+    // Generate the clean and filtered sequences
+    arma::cube cleansequence(Nx, Ny, num_images);
+    arma::cube filteredsequence(Nx, Ny, num_images);
+    
+    // Parameters for median filter
+    unsigned short *Buffer = new unsigned short[Nx*Ny];
+    unsigned short *FilteredBuffer = new unsigned short[Nx*Ny];
+    int memsize = 512 * 1024;	// L2 cache size
+    int filtsize = MedianSize;	// Median filter size in pixels
+    
+    // Perform the initial median filtering
+    for (int i = 0; i < num_images; i++) {
+        arma::Mat<unsigned short> curslice = arma::conv_to<arma::Mat<unsigned short>>::from(noisysequence.slice(i).eval());
+        inplace_trans(curslice);
+        Buffer = curslice.memptr();
+        ConstantTimeMedianFilter(Buffer, 
+                                 FilteredBuffer,
+                                 Nx, Ny, Nx, Ny,
+                                 filtsize, 1, memsize);
+		arma::Mat<unsigned short> filslice(FilteredBuffer, Nx, Ny);
+		inplace_trans(filslice);
+		filteredsequence.slice(i) = arma::conv_to<arma::mat>::from(filslice);       			
     }
-    std::map<std::string, std::string> programOptions;
-	std::ifstream paramFile(argv[1], std::ios::in);
-
-	// Parse the parameter file
-	ParseParameters(paramFile, programOptions);
-
-	// Check all required parameters are specified
-	if(programOptions.count("filename") == 0 || programOptions.count("start_image") == 0 || programOptions.count("end_image") == 0) {
-		std::cout<<"**WARNING** Required parameters not specified"<<std::endl;
-		std::cout<<"            You must specify filename, start and end frame"<<std::endl;
-		return -1;
-	}
-
-	// Extract parameters
-	// File path
-	std::string filename = programOptions.at("filename");
-	int lastindex = filename.find_last_of(".");
-	std::string filestem = filename.substr(0, lastindex);
-
-	// Frames to process
-	int startimg = std::stoi(programOptions.at("start_image"));
-	int endimg = std::stoi(programOptions.at("end_image"));
-	int num_images = endimg - startimg + 1;
-
-	// Move onto optional parameters
-	// Patch size and trajectory length
-	// Check sizes to ensure SVD is done right way round
-	int Bs = (programOptions.count("patch_size") == 1) ? std::stoi(programOptions.at("patch_size")) : 4;
-	//int Overlap = (programOptions.count("patch_overlap") == 1) ? std::stoi(programOptions.at("patch_overlap")) : 1;
-	int T = (programOptions.count("trajectory_length") == 1) ? std::stoi(programOptions.at("trajectory_length")) : 15;
-	T = (Bs*Bs<T) ? (Bs*Bs)-1 : T;
-	std::string casoratisize = std::to_string(Bs*Bs) + "x" + std::to_string(T);
-
-	// Noise parameters initialized at -1 unless user-defined
-	double alpha = (programOptions.count("alpha") == 1) ? std::stod(programOptions.at("alpha")) : -1.;
-	double mu = (programOptions.count("mu") == 1) ? std::stod(programOptions.at("mu")) : -1.;
-	double sigma = (programOptions.count("sigma") == 1) ? std::stod(programOptions.at("sigma")) : -1.;
-
-	// SVT thresholds and noise parameters initialized at -1 unless user-defined
-	bool pgureOpt = (programOptions.count("pgure") == 1) ? strToBool(programOptions.at("pgure")) : true;
-	double lambda;
-	if(!pgureOpt) {
-		if(programOptions.count("lambda") == 1) {
-			lambda = std::stod(programOptions.at("lambda"));
-		}
-		else {
-			std::cout<<"**WARNING** PGURE optimization is turned OFF but no lambda specified in parameter file"<<std::endl;
-			return -1;
-		}
-	}
-
-	// Move onto advanced parameters
-	// Motion neigbourhood size
-	int MotionP = (programOptions.count("motion_neighbourhood") == 1) ? std::stoi(programOptions.at("motion_neighbourhood")) : 7;
-
-	// Size of median filter
-	int MedianSize = (programOptions.count("median_filter") == 1) ? std::stoi(programOptions.at("median_filter")) : 5;
-
-	// PGURE tolerance
-	double tol = 1E-7;
-	if(programOptions.count("tolerance") == 1) {
-		std::istringstream osTol(programOptions.at("tolerance"));
-		double tol;
-		osTol >> tol;
-	}
-	
-	// Block overlap
-	int Bo = (programOptions.count("patch_overlap") == 1) ? std::stoi(programOptions.at("patch_overlap")) : 1;
-
-    // Noise method
-    // TODO:tjof2 document this option
-    int NoiseMethod = (programOptions.count("noise_method") == 1) ? std::stoi(programOptions.at("noise_method")) : 4;
-
-
-	/////////////////////////////
-	//						   //
-	//     SEQUENCE IMPORT     //
-	//						   //
-	/////////////////////////////
-
-	// Check file exists
-	std::string infilename = filestem + ".tif";
-	if(!std::ifstream(infilename.c_str())) {
-		std::cout<<"**WARNING** File "<<infilename<<" not found"<<std::endl;
-		return -1;
-	}
-
-	// Load TIFF stack
-	int tiffWidth, tiffHeight;
-	unsigned short tiffDepth;
-	libtiff::TIFF *MultiPageTiff = libtiff::TIFFOpen(infilename.c_str(), "r");
-	libtiff::TIFFGetField(MultiPageTiff, TIFFTAG_IMAGEWIDTH, &tiffWidth);
-	libtiff::TIFFGetField(MultiPageTiff, TIFFTAG_IMAGELENGTH, &tiffHeight);
-	libtiff::TIFFGetField(MultiPageTiff, TIFFTAG_BITSPERSAMPLE, &tiffDepth);
-
-	// Only work with square images
-	if(tiffWidth != tiffHeight) {
-		std::cout<<"**WARNING** Frame dimensions are not square"<<std::endl;
-		return -1;
-	}
-	// Only work with 8-bit or 16-bit images
-	if(tiffDepth != 8 && tiffDepth != 16) {
-		std::cout<<"**WARNING** Images must be 8-bit or 16-bit"<<std::endl;
-		return -1;
-	}
-
-	// Import the image sequence
-	arma::cube inputsequence(tiffHeight,tiffWidth,0);
-	arma::cube filteredsequence(tiffHeight,tiffWidth,0);
-	if(MultiPageTiff) {
-		int dircount = 0;
-		int imgcount = 0;
-		do {
-			if(dircount >= (startimg-1) && dircount <= (endimg-1)) {
-				inputsequence.resize(tiffHeight, tiffWidth, imgcount+1);
-				filteredsequence.resize(tiffHeight, tiffWidth, imgcount+1);
-
-				unsigned short *Buffer = new unsigned short[tiffWidth*tiffHeight];
-				unsigned short *FilteredBuffer = new unsigned short[tiffWidth*tiffHeight];
-
-				for(int tiffRow = 0; tiffRow < tiffHeight; tiffRow++) {
-		       		libtiff::TIFFReadScanline(MultiPageTiff, &Buffer[tiffRow*tiffWidth], tiffRow, 0);
-		    	}
-
-		    	arma::Mat<unsigned short> TiffSlice( Buffer, tiffHeight, tiffWidth);
-		    	inplace_trans(TiffSlice);
-		    	inputsequence.slice(imgcount) = arma::conv_to<arma::mat>::from(TiffSlice);
-
-		    	// Apply median filter (constant-time) to the 8-bit image
-		    	int memsize = 512 * 1024;	// L2 cache size
-		    	int filtsize = MedianSize;	// Median filter size in pixels
-				ConstantTimeMedianFilter(Buffer, FilteredBuffer, tiffWidth, tiffHeight, tiffWidth, tiffWidth, filtsize, 1, memsize);
-		    	arma::Mat<unsigned short> FilteredTiffSlice( FilteredBuffer, tiffHeight, tiffWidth);
-		    	inplace_trans(FilteredTiffSlice);
-		    	filteredsequence.slice(imgcount) = arma::conv_to<arma::mat>::from(FilteredTiffSlice);
-       			imgcount++;
-       		}
-    		dircount++;
-		} while(libtiff::TIFFReadDirectory(MultiPageTiff));
-		libtiff::TIFFClose(MultiPageTiff);
-	}
-	// Is number of frames compatible?
-	if(num_images > (int)inputsequence.n_slices) {
-		std::cout<<"**WARNING** Sequence only has "<<inputsequence.n_slices<<" frames"<<std::endl;
-		return -1;
-	}
-
-	// Copy image sequence and sizes
-	arma::cube noisysequence = inputsequence;
-	arma::cube cleansequence = inputsequence;
-	cleansequence.zeros();
-	
-	// Get dimensions
-	int Nx = tiffHeight;
-	int Ny = tiffWidth;
 
     // Initial outlier detection (good for hot pixels)
-    for (int i = 0; i < T; i++) {
+    for (int i = 0; i < num_images; i++) {
         double noisyMedian = arma::median(arma::vectorise(noisysequence.slice(i)));
         arma::uvec outliers = arma::find(arma::abs(noisysequence.slice(i)-noisyMedian) > 5*noisyMedian);
         for (size_t j = 0; j < outliers.n_elem; j++) {
@@ -361,7 +242,7 @@ extern "C" int PGURESVT(int argc, const char * argv[]) {
 			v = optimizer->Reconstruct(lambda);
 		}
 		else {
-			v = optimizer->Reconstruct(lambda);
+			v = optimizer->Reconstruct(userLambda);
 		}
 		delete optimizer;
 

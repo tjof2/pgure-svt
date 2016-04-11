@@ -19,6 +19,9 @@ message(STATUS "CMAKE_CXX_COMPILER_ID      = ${CMAKE_CXX_COMPILER_ID}"     )
 message(STATUS "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "CMAKE_COMPILER_IS_GNUCXX   = ${CMAKE_COMPILER_IS_GNUCXX}"  )
 
+########################################
+
+# Look for packages
 find_package(OpenMP)
 include(FindArmadillo)
 include(FindTiff)
@@ -32,18 +35,24 @@ if(NLOPT_FOUND)
 	set(SVT_LIBS ${SVT_LIBS} ${NLOPT_LIBRARIES})
 	set(SVT_INCL ${SVT_INCL} ${NLOPT_INCLUDE_DIR})
 endif()
-if(TIFF_FOUND)
+
+if(!TIFF_FOUND)
+    if(BUILD_STANDALONE)
+        message(SEND_ERROR "*** ERROR: libtiff not found; Standalone program will not be compiled")
+    endif()
+else()
 	set(SVT_LIBS ${SVT_LIBS} ${TIFF_LIBRARIES})
 	set(SVT_INCL ${SVT_INCL} ${TIFF_INCLUDE_DIR})
-elseif(TIFF_FOUND AND BUILD_STANDALONE)
-	message(SEND_ERROR "*** ERROR: libtiff not found; Standalone program will not be compiled")
 endif()
+
 if(OpenBLAS_FOUND AND ATLAS_FOUND)	
 	message(STATUS "*** WARNING: found both OpenBLAS and ATLAS; ATLAS will not be used")
-endif()    
+endif()   
+ 
 if(OpenBLAS_FOUND AND BLAS_FOUND)
 	message(STATUS "*** WARNING: found both OpenBLAS and BLAS; BLAS will not be used")
 endif()
+
 if(OpenBLAS_FOUND)
 	set(SVT_LIBS ${SVT_LIBS} ${OpenBLAS_LIBRARIES})      
 else()      
@@ -54,27 +63,27 @@ else()
     	set(SVT_LIBS ${SVT_LIBS} ${BLAS_LIBRARIES})
     endif()          
 endif()
+
 if(LAPACK_FOUND)
 	set(SVT_LIBS ${SVT_LIBS} ${LAPACK_LIBRARIES})
 endif()
+
 if(ARMADILLO_FOUND)
 	set(SVT_LIBS ${SVT_LIBS} ${ARMADILLO_LIBRARIES})
 endif()
 
+########################################
+
+# Enable OpenMP
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fPIC -Wall -march=native -std=c++11")
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-  
-include_directories(${CMAKETEST_BINARY_DIR}/src)
-link_directories(${CMAKETEST_BINARY_DIR}/src)
 
-if(BUILD_STANDALONE)
-    add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
-    target_link_libraries(PGURE-SVT ${SVT_LIBS})
-endif()
+########################################
 
+# Build libraries and executable
 if(BUILD_SHARED)
     add_library(libpguresvt-shared SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
     target_link_libraries(libpguresvt-shared ${SVT_LIBS})
@@ -83,6 +92,11 @@ endif()
 if(BUILD_STATIC)
     add_library(libpguresvt-static STATIC src/medfilter.c src/lib-PGURE-SVT.cpp)
     target_link_libraries(libpguresvt-static ${SVT_LIBS})
+endif()
+
+if(BUILD_STANDALONE AND TIFF_FOUND)
+    add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
+    target_link_libraries(PGURE-SVT ${SVT_LIBS})
 endif()
 
 
