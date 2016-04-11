@@ -73,13 +73,13 @@ value thresholding. <em>Manuscript in preparation.</em></p>
 <strong><a href="http://www.cmake.org">CMake</a></strong> (>=2.8)
 </li>
 <li>
-<strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a></strong>
-</li>
-<li>
 <strong><a href="http://arma.sourceforge.net">Armadillo</a></strong> (>=6.400)
 </li>
 <li>
 <strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> (>=2.4.2)
+</li>
+<li>
+<strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a> - for the standalone executable only</strong>
 </li>
 </ul>
 
@@ -92,12 +92,16 @@ To build PGURE-SVT, unpack the source and use the following commands
 
 <pre><code>$ tar -xzf pgure-svt.tar.gz
 $ cd pgure-svt
-$ cmake .
+$ mkdir build
+$ cd build
+$ cmake ..
 $ make
 </code></pre>
 
-<p>This will generate an executable called <code>PGURE-SVT</code> in the <code>bin</code>
-directory, as well as the appropriate library for the Python wrapper.</p>
+<p>This will generate an executable called <code>PGURE-SVT</code> in the <code>build</code>
+directory, as well as the appropriate shared library for the Python wrapper. You can choose
+whether to build the library or executable using the CMake flags 
+<code>BUILD_SHARED</code> and <code>BUILD_SHARED</code>.</p>
 
 <h2>
 <a id="python" class="anchor" href="#python" aria-hidden="true">
@@ -119,7 +123,7 @@ svt = pguresvt.SVT(patchsize=4,
 
 # Run the algorithm on the data X
 # and get the denoised output Y
-Y = SVT.denoise(X)
+Y = svt.denoise(X)
 </code></pre>
 
 <h2>
