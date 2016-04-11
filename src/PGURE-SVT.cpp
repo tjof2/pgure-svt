@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 	std::cout<<"PGURE-SVT Denoising"<<std::endl;
 	std::cout<<"Author: Tom Furnival"<<std::endl;
 	std::cout<<"Email:  tjof2@cam.ac.uk"<<std::endl<<std::endl;
-	std::cout<<"Version 0.2 - March 2016"<<std::endl<<std::endl;
+	std::cout<<"Version 0.2.3 - April 2016"<<std::endl<<std::endl;
 
 	/////////////////////////////
 	//						   //
@@ -308,9 +308,11 @@ int main(int argc, char** argv) {
 		/////////////////////////////
 
 		// Perform noise estimation
-		NoiseEstimator *noise = new NoiseEstimator;
-		noise->Estimate(u, alpha, mu, sigma, 8);
-		delete noise;
+		if(pgureOpt) {
+		    NoiseEstimator *noise = new NoiseEstimator;
+		    noise->Estimate(u, alpha, mu, sigma, 8);
+		    delete noise;
+		}
 		
 		/////////////////////////////
 		//						   //
