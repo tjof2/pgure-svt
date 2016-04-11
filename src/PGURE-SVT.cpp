@@ -78,8 +78,6 @@ extern "C" {
 // Little function to convert string "0"/"1" to boolean
 bool strToBool(std::string const& s) {return s != "0";};
 
-/**************************************************************************/
-
 // Main program
 int main(int argc, char** argv) {
 
@@ -255,17 +253,36 @@ int main(int argc, char** argv) {
 	arma::cube noisysequence = inputsequence;
 	arma::cube cleansequence = inputsequence;
 	cleansequence.zeros();
-
-	/////////////////////////////
-	//						   //
-	//    MEMORY ALLOCATION    //
-	//						   //
-	/////////////////////////////
-
+	
 	// Get dimensions
 	int Nx = tiffHeight;
 	int Ny = tiffWidth;
 
+    // Initial outlier detection (good for hot pixels)
+    for (int i = 0; i < T; i++) {
+        double noisyStdDev = arma::stddev(arma::vectorise(noisysequence.slice(i)));
+        double noisyMedian = arma::median(arma::vectorise(noisysequence.slice(i)));
+        arma::uvec outliers = arma::find(arma::abs(noisysequence.slice(i)-noisyMedian) > 10*noisyStdDev);
+        for (size_t j = 0; j < outliers.n_elem; j++) {
+            double replace = 0;
+            arma::uvec sub = arma::ind2sub(arma::size(Nx,Ny), outliers(j));           
+            if ((int)sub(0) > 0 
+                && (int)sub(0) < Nx-1 
+                && (int)sub(1) > 0 
+                && (int)sub(1) < Ny-1) {
+                replace = noisysequence(sub(0)-1, sub(1)-1, i)
+                          + noisysequence(sub(0)-1, sub(1), i)
+                          + noisysequence(sub(0)-1, sub(1)+1, i)
+                          + noisysequence(sub(0), sub(1)-1, i)
+                          + noisysequence(sub(0), sub(1)+1, i)
+                          + noisysequence(sub(0)+1, sub(1)-1, i)
+                          + noisysequence(sub(0)+1, sub(1), i)
+                          + noisysequence(sub(0)+1, sub(1)+1, i);
+            }            
+            noisysequence(sub(0), sub(1), i) = replace / 8;
+        }
+    }
+    
 	/////////////////////////////
 	//						   //
 	//     START THE LOOP      //
