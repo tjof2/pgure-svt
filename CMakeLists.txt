@@ -76,13 +76,13 @@ if(BUILD_STANDALONE)
 endif()
 
 if(BUILD_SHARED)
-    add_library(libpguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
-    target_link_libraries(libpguresvt ${SVT_LIBS})
+    add_library(libpguresvt-shared SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
+    target_link_libraries(libpguresvt-shared ${SVT_LIBS})
 endif()
 
 if(BUILD_STATIC)
-    add_library(libpguresvt STATIC src/medfilter.c src/lib-PGURE-SVT.cpp)
-    target_link_libraries(libpguresvt ${SVT_LIBS})
+    add_library(libpguresvt-static STATIC src/medfilter.c src/lib-PGURE-SVT.cpp)
+    target_link_libraries(libpguresvt-static ${SVT_LIBS})
 endif()
 
 
