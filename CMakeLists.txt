@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-message(STATUS "Configuring PGURE-SVT ${ARMADILLO_VERSION}")
+message(STATUS "Configuring PGURE-SVT...")
 
 project (PGURE-SVT CXX)
 
 set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
+
+option(BUILD_STATIC_LIBS "Build the static library" OFF)
+option(BUILD_SHARED_LIBS "Build the shared library" ON)
 
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
@@ -31,6 +34,8 @@ endif()
 if(TIFF_FOUND)
 	set(SVT_LIBS ${SVT_LIBS} ${TIFF_LIBRARIES})
 	set(SVT_INCL ${SVT_INCL} ${TIFF_INCLUDE_DIR})
+else()
+	message(SEND_ERROR "*** ERROR: libtiff not found; Standalone program will not be compiled")
 endif()
 if(OpenBLAS_FOUND AND ATLAS_FOUND)	
 	message(STATUS "*** WARNING: found both OpenBLAS and ATLAS; ATLAS will not be used")
@@ -61,7 +66,15 @@ if (OPENMP_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
   
-add_subdirectory(src)
+include_directories(${CMAKETEST_BINARY_DIR}/src)
+link_directories(${CMAKETEST_BINARY_DIR}/src)
+
+add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
+set_target_properties(PGURE-SVT
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+target_link_libraries(PGURE-SVT ${SVT_LIBS})
 
 
 
