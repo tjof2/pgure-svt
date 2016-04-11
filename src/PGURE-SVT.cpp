@@ -21,7 +21,7 @@
 			of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
 			http://dx.doi.org/10.1109/TIP.2014.2300821
 
-    This file is part of  PGURE-SVT.
+    This file is part of PGURE-SVT.
 
     PGURE-SVT is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -171,7 +171,12 @@ int main(int argc, char** argv) {
 	}
 	
 	// Block overlap
-	int Bo = 1;
+	int Bo = (programOptions.count("patch_overlap") == 1) ? std::stoi(programOptions.at("patch_overlap")) : 1;
+
+    // Noise method
+    // TODO:tjof2 document this option
+    int NoiseMethod = (programOptions.count("noise_method") == 1) ? std::stoi(programOptions.at("noise_method")) : 4;
+
 
 	/////////////////////////////
 	//						   //
@@ -310,7 +315,7 @@ int main(int argc, char** argv) {
 		// Perform noise estimation
 		if(pgureOpt) {
 		    NoiseEstimator *noise = new NoiseEstimator;
-		    noise->Estimate(u, alpha, mu, sigma, 8);
+		    noise->Estimate(u, alpha, mu, sigma, 8, NoiseMethod);
 		    delete noise;
 		}
 		

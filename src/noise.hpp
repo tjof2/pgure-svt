@@ -56,7 +56,8 @@ class NoiseEstimator {
                             double &alphaIn,
                             double &muIn,
                             double &sigmaIn,
-                            int sizeIn) {
+                            int sizeIn,
+                            int method) {
             // Read from parameters
             alpha = alphaIn;
             mu = muIn;
@@ -146,7 +147,6 @@ class NoiseEstimator {
             alpha = (alpha >= 0.) ? alpha : alphaBeta(0);
 
             // Calculate mu and sigma
-            int method = 4;
             switch(method) {
                 case 1:
                     {
