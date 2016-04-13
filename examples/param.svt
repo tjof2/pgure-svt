@@ -15,6 +15,10 @@ end_image            : 50
 #	Default = 4 pixels
 patch_size           : 16
 
+# The step-size of the patch overlap
+#   Default = 1 pixel
+patch_overlap        : 2
+
 # The length in frames of the block to form a Casorati matrix (must be odd)
 # 	Default = 15 frames
 trajectory_length    : 15
