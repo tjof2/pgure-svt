@@ -260,13 +260,12 @@ int main(int argc, char** argv) {
 
     // Initial outlier detection (for hot pixels)
     // using median absolute deviation
-    for (int i = 0; i < T; i++) {
-        double median = arma::median(arma::vectorise(noisysequence.slice(i)));
+    double median = arma::median(arma::vectorise(noisysequence));
         double medianAbsDev = arma::median(
                                     arma::vectorise(
                                       arma::abs(
-                                        noisysequence.slice(i) - median))) / 0.6745;
-        
+                                        noisysequence - median))) / 0.6745;
+    for (int i = 0; i < T; i++) {
         arma::uvec outliers = arma::find(arma::abs(noisysequence.slice(i)-median) > 2*medianAbsDev);
         for (size_t j = 0; j < outliers.n_elem; j++) {
             arma::uvec sub = arma::ind2sub(arma::size(Nx,Ny), outliers(j));
