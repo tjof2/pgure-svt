@@ -1,14 +1,11 @@
-#	PGURE-SVT Denoising
+#   PGURE-SVT Denoising
 #
-#	Author:	Tom Furnival
-#	Email:	tjof2@cam.ac.uk
+#   Author:    Tom Furnival
+#   Email:    tjof2@cam.ac.uk
 #
-#	Copyright (C) 2015-16 Tom Furnival
+#   Copyright (C) 2015-16 Tom Furnival
 #
-#	Demo script showing how to use PGURE-SVT in conjunction
-#   with the HyperSpy multi-dimensional data analysis toolbox.
-#     
-#   [1] http://www.hyperspy.org
+#   Demo script showing how to use PGURE-SVT
 #
 #   This file is part of PGURE-SVT.
 #
@@ -25,20 +22,28 @@
 #   You should have received a copy of the GNU General Public License
 #   along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
-import hyperspy.api as hs
-from hyperspy.hspy import *
-import matplotlib.pyplot as plt
-#import pguresvt
+import numpy as np
+import pguresvt
 
-# Load the file name
-imgseq = hs.load('example.dm4', stack=True)
-X = imgseq.data
+# Generate a random array
+X =  np.random.randint(255, size=(16, 16, 15))
 
 # Initialize with default parameters
-svt = pguresvt.SVT()
+svt = pguresvt.SVT(patchsize=4,
+                   length=15,
+                   optimize=False,
+                   threshold=1.,
+                   tol=1e-6)
 
 # Run the denoising
-Y = SVT.denoise(X)
+svt.denoise(X)
 
-# Plot
-imgseq.plot(navigator='slider')
+print np.linalg.norm(svt.Y - X)
+
+print X[1:4,1:4,1]
+print " "
+print svt.Y[1:4,1:4,1]
+
+print X.shape
+print svt.Y.shape
+

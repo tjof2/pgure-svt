@@ -54,15 +54,13 @@ class MotionEstimator {
                       int timewindow,
                       int num_images,
                       int blocksize,
-                      int blockoverlap,
                       int MotionP) {
             Nx = A.n_rows;
             Ny = A.n_cols;
             T = A.n_slices;
             wind = MotionP;
             Bs = blocksize;
-            Bo = blockoverlap;
-            vecSize = (1+(Nx-Bs)/Bo)*(1+(Ny-Bs)/Bo);
+            vecSize = (1+(Nx-Bs))*(1+(Ny-Bs));
 
             patches = arma::zeros<arma::icube>(2, vecSize, 2*timewindow+1);
             motions = arma::zeros<arma::icube>(2, vecSize, 2*timewindow);
@@ -72,8 +70,8 @@ class MotionEstimator {
             if (iter < timewindow) {
                 // Populate reference frame coordinates
                 for (int i = 0; i < vecSize; i++) {
-                    patches(0, i, iter) = i % (1+(Ny-Bs)/Bo);
-                    patches(1, i, iter) = i / (1+(Nx-Bs)/Bo);
+                    patches(0, i, iter) = i % (1+(Ny-Bs));
+                    patches(1, i, iter) = i / (1+(Nx-Bs));
                 }
                 // Perform motion estimation
                 // Go forwards
@@ -88,8 +86,8 @@ class MotionEstimator {
                 int endseqFrame = iter - (num_images - T);
                 // Populate reference frame coordinates
                 for (int i = 0; i < vecSize; i++) {
-                    patches(0, i, endseqFrame) = i % (1+(Ny-Bs)/Bo);
-                    patches(1, i, endseqFrame) = i / (1+(Nx-Bs)/Bo);
+                    patches(0, i, endseqFrame) = i % (1+(Ny-Bs));
+                    patches(1, i, endseqFrame) = i / (1+(Nx-Bs));
                 }
                 // Perform motion estimation
                 // Go forwards
@@ -113,8 +111,8 @@ class MotionEstimator {
             } else {
                 // Populate reference frame coordinates
                 for (int i = 0; i < vecSize; i++) {
-                    patches(0, i, timewindow) = i % (1+(Ny-Bs)/Bo);
-                    patches(1, i, timewindow) = i / (1+(Nx-Bs)/Bo);
+                    patches(0, i, timewindow) = i % (1+(Ny-Bs));
+                    patches(1, i, timewindow) = i / (1+(Nx-Bs));
                 }
                 // Perform motion estimation
                 // Go forwards
@@ -139,7 +137,7 @@ class MotionEstimator {
 
  private:
         arma::icube patches, motions;
-        int Nx, Ny, T, Bs, Bo, vecSize, wind;
+        int Nx, Ny, T, Bs, vecSize, wind;
 
         // Adaptive Rood Pattern Search ( ARPS) method
         void ARPSMotionEstimation(const arma::cube &A,
@@ -147,6 +145,7 @@ class MotionEstimator {
                                   int iARPS1,
                                   int iARPS2,
                                   int iARPS3) {
+
             #pragma omp parallel for
             for (int it = 0; it < vecSize; it++) {
                 arma::vec costs = arma::ones<arma::vec>(6) * 1E8;
@@ -165,8 +164,8 @@ class MotionEstimator {
                 SDSP(4, 1) = 1;
                 LDSP.rows(arma::span(0, 4)) = SDSP;
 
-                int i = it % (1+(Nx-Bs)/Bo);
-                int j = it / (1+(Ny-Bs)/Bo);
+                int i = it % (1+(Nx-Bs));
+                int j = it / (1+(Ny-Bs));
 
                 int x = j;
                 int y = i;

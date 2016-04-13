@@ -85,10 +85,11 @@ class SVT(object):
     """
     
     def __init__(self, 
-                patchsize=4, 
+                patchsize=4,
+                patchoverlap=1,
                 length=15,
                 optimize=True,
-                threshold=0.15,
+                threshold=-1.,
                 alpha=-1., 
                 mu=-1., 
                 sigma=-1.,                
@@ -97,8 +98,9 @@ class SVT(object):
                 median=5
                 ):
                     
-        self.patchsize =4
-        self.length = 15
+        self.patchsize = patchsize
+        self.overlap = patchoverlap
+        self.length = length
         self.optimize = optimize
         self.threshold = threshold
         self.alpha = alpha
@@ -109,23 +111,24 @@ class SVT(object):
         self.median = median
         
         # Setup ctypes function
-        libpath = os.path.dirname(os.path.abspath(__file__)) + '/bin/libpguresvt.so'
-        self._PGURESVT = ctypes.cdll.LoadLibrary(libpath).PGURE_SVT
-        self._PGURESVT.restype = ctypes.c_int
-        self._PGURESVT.argtypes = [ ndpointer(ctypes.c_double, flags="F_CONTIGUOUS"),
-                                    ndpointer(ctypes.c_double, flags="F_CONTIGUOUS"),
-                                    ctypes.c_int, 
-                                    ctypes.c_int,
-                                    ctypes.c_bool,
-                                    ctypes.c_double,
-                                    ctypes.c_double, 
-                                    ctypes.c_double, 
-                                    ctypes.c_double,
-                                    ctypes.c_int, 
-                                    ctypes.c_int,
-                                    ctypes.c_double,
-                                    ctypes.c_int]
-                                    
+        libpath = os.path.dirname(os.path.abspath(__file__)) + '/build/libpguresvt.so'
+        self._PGURESVT = ctypes.cdll.LoadLibrary(libpath).PGURESVT 
+        self._PGURESVT.restype = ctypes.c_int      
+        self._PGURESVT.argtypes = [ndpointer(ctypes.c_double, flags="F"),
+                                   ndpointer(ctypes.c_double, flags="F"),
+                                   ndpointer(ctypes.c_int),
+                                   ctypes.c_int, 
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_bool,
+                                   ctypes.c_double,
+                                   ctypes.c_double, 
+                                   ctypes.c_double, 
+                                   ctypes.c_double,
+                                   ctypes.c_int,
+                                   ctypes.c_double,
+                                   ctypes.c_int]
+
         self.Y = None
         
     def denoise(self, X):
@@ -157,14 +160,17 @@ class SVT(object):
         Returns
         -------
         Y : array [nx, ny, time]
-            Returns the denoised object
+            Returns the denoised sequence
         
         """
         X = self._check_array(X)
+        dims = np.asarray(X.shape).astype(np.int32)
         Y = np.zeros(X.shape, dtype=np.double, order='F')
         result = self._PGURESVT(X,
                                 Y,
+                                dims,
                                 self.patchsize,
+                                self.overlap,
                                 self.length,
                                 self.optimize,
                                 self.threshold,
@@ -191,7 +197,7 @@ class SVT(object):
             Returns the array in Fortran-order (column-major)
         
         """  
-        x = np.copy(X.astype(float64), order='F')
+        x = np.copy(X.astype(np.double), order='F')
         return x
    
 

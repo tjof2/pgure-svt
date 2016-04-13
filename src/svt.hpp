@@ -63,20 +63,11 @@ class SVT {
             Bs = blocksize;
             Bo = blockoverlap;
             vecSize = (1+(Nx-Bs)/Bo)*(1+(Ny-Bs)/Bo);
-
-            // Memory allocation
-            U.resize(vecSize);
-            S.resize(vecSize);
-            V.resize(vecSize);
-            for (int it = 0; it < vecSize; it++) {
-                U[it] = arma::zeros<arma::mat>(Bs*Bs, T);
-                S[it] = arma::zeros<arma::vec>(T);
-                V[it] = arma::zeros<arma::mat>(T, T);
-            }
             return;
         }
 
-        // Perform SVD on each block in the image sequence
+        // Perform SVD on each block in the image sequence,
+        // subject to the block overlap restriction
         void Decompose(const arma::cube &u) {
             // Do the local SVDs
             arma::mat Ublock, Vblock;
@@ -86,14 +77,63 @@ class SVT {
             Sblock.set_size(T);
             Vblock.set_size(T, T);
 
+            // Fix block overlap parameter
+            arma::uvec firstpatches(vecSize);
+            int kiter = 0;
+            for (int i = 0; i < 1+(Ny-Bs); i+=Bo) {
+                for (int j = 0; j < 1+(Nx-Bs); j+=Bo) {
+                    firstpatches(kiter) = i*(Ny-Bs)+j;
+                    kiter++;
+                }
+            }
+
+            // Code must include right and bottom edges
+            // of the image sequence to ensure an
+            // accurate PGURE reconstruction
+            arma::uvec patchesbottomedge(1+(Ny-Bs)/Bo);
+            for (int i = 0; i < 1+(Ny-Bs); i+=Bo) {
+                patchesbottomedge(i/Bo) = (Ny-Bs+1)*i + (Nx-Bs);
+            }
+
+            arma::uvec patchesrightedge(1+(Nx-Bs)/Bo);
+            for (int i = 0; i < 1+(Nx-Bs); i+=Bo) {
+                patchesrightedge(i/Bo) = (Ny-Bs+1)*(Nx-Bs) + i;
+            }
+
+            // Concatenate and find unique indices
+            arma::uvec joinpatches(vecSize + 1+(Ny-Bs)/Bo + 1+(Nx-Bs)/Bo);
+            joinpatches(
+                arma::span(0,
+                           vecSize-1)) = firstpatches;
+            joinpatches(
+                arma::span(vecSize,
+                           vecSize+(Ny-Bs)/Bo)) = patchesrightedge;
+            joinpatches(
+                arma::span(vecSize+(Ny-Bs)/Bo+1,
+                           vecSize+(Ny-Bs)/Bo+1+(Nx-Bs)/Bo)) = patchesbottomedge;
+            actualpatches = arma::sort(joinpatches.elem(arma::find_unique(joinpatches)));
+
+            // Get new vector size
+            newVecSize = actualpatches.n_elem;
+
+            // Memory allocation
+            U.resize(newVecSize);
+            S.resize(newVecSize);
+            V.resize(newVecSize);
+            for (int it = 0; it < newVecSize; it++) {
+                U[it] = arma::zeros<arma::mat>(Bs*Bs, T);
+                S[it] = arma::zeros<arma::vec>(T);
+                V[it] = arma::zeros<arma::mat>(T, T);
+            }
+
             #pragma omp parallel for private(Ublock, Sblock, Vblock)
-            for (int it = 0; it < vecSize; it++) {
+            for (int it = 0; it < newVecSize; it++) {
                 arma::mat block(Bs*Bs, T);
 
                 // Extract block
                 for (int k = 0; k < T; k++) {
-                    int newy = patches(0, it, k);
-                    int newx = patches(1, it, k);
+                    int newy = patches(0, actualpatches(it), k);
+                    int newx = patches(1, actualpatches(it), k);                    
                     block.col(k) = arma::vectorise(
                                      u(arma::span(newy, newy+Bs-1),
                                        arma::span(newx, newx+Bs-1),
@@ -124,7 +164,7 @@ class SVT {
 
             #pragma omp parallel for shared(v, weights) \
                         private(block, Ublock, Sblock, Vblock)
-            for (int it = 0; it < vecSize; it++) {
+            for (int it = 0; it < newVecSize; it++) {
                 Ublock = U[it];
                 Sblock = S[it];
                 Vblock = V[it];
@@ -152,8 +192,8 @@ class SVT {
 
                 // Deal with block weights (TODO: currently all weights = 1)
                 for (int k = 0; k < T; k++) {
-                    int newy = patches(0, it, k);
-                    int newx = patches(1, it, k);
+                    int newy = patches(0, actualpatches(it), k);
+                    int newx = patches(1, actualpatches(it), k);
                     v(arma::span(newy, newy+Bs-1),
                       arma::span(newx, newx+Bs-1),
                       arma::span(k, k)) += arma::reshape(block.col(k), Bs, Bs);
@@ -170,8 +210,9 @@ class SVT {
         }
 
  private:
-        int Nx, Ny, T, Bs, Bo, vecSize;
+        int Nx, Ny, T, Bs, Bo, vecSize, newVecSize;
         arma::icube patches;
+        arma::uvec actualpatches;
 
         // Collate U, S, V
         std::vector<arma::mat> U, V;
