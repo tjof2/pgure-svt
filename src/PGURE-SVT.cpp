@@ -267,7 +267,7 @@ int main(int argc, char** argv) {
                                       arma::abs(
                                         noisysequence.slice(i) - median))) / 0.6745;
         
-        arma::uvec outliers = arma::find(arma::abs(noisysequence.slice(i)-median) > 2.5*medianAbsDev);
+        arma::uvec outliers = arma::find(arma::abs(noisysequence.slice(i)-median) > 2*medianAbsDev);
         for (size_t j = 0; j < outliers.n_elem; j++) {
             arma::uvec sub = arma::ind2sub(arma::size(Nx,Ny), outliers(j));
             arma::vec medianwindow(8);
