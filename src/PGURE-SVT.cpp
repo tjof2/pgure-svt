@@ -342,7 +342,7 @@ int main(int argc, char** argv) {
 		/////////////////////////////
 
 		MotionEstimator *motion = new MotionEstimator;
-		motion->Estimate(ufilter, timeiter, framewindow, num_images, Bs, Bo, MotionP);
+		motion->Estimate(ufilter, timeiter, framewindow, num_images, Bs, MotionP);
 		arma::icube sequencePatches = motion->GetEstimate();
 		delete motion;
 
