@@ -129,7 +129,17 @@ is provided to show users how the algorithm can be linked with the
 which provides a number of useful features including data visualization and data import
 from a number of microscopy file formats.</p>
 
-<pre><code>import pguresvt
+<pre><code>import numpy as np
+import pguresvt
+
+# Import HyperSpy
+import hyperspy.api as hs
+from hyperspy.hspy import *
+import matplotlib.pyplot as plt
+
+# Load example dataset
+movie = hs.load("./test/examplesequence.tif")
+X = np.transpose(movie.data)
 
 # Initialize the algorithm
 svt = pguresvt.SVT(patchsize=4,
@@ -138,8 +148,11 @@ svt = pguresvt.SVT(patchsize=4,
                    tol=1e-6)
 
 # Run the algorithm on the data X
-# and get the denoised output Y
-Y = svt.denoise(X)
+svt.denoise(X)
+
+# Plot the denoised data Y
+im = hs.signals.Image(np.transpose(svt.Y))
+im.plot(navigator='slider')
 </code></pre>
 
 <h2>
