@@ -141,27 +141,34 @@ extern "C" int PGURESVT(double *X,
 		filteredsequence.slice(i) = arma::conv_to<arma::mat>::from(filslice);       			
     }
 
-    // Initial outlier detection (good for hot pixels)
-    for (int i = 0; i < num_images; i++) {
-        double noisyMedian = arma::median(arma::vectorise(noisysequence.slice(i)));
-        arma::uvec outliers = arma::find(arma::abs(noisysequence.slice(i)-noisyMedian) > 5*noisyMedian);
+    // Initial outlier detection (for hot pixels)
+    // using median absolute deviation
+    for (int i = 0; i < T; i++) {
+        double median = arma::median(arma::vectorise(noisysequence.slice(i)));
+        double medianAbsDev = arma::median(
+                                    arma::vectorise(
+                                      arma::abs(
+                                        noisysequence.slice(i) - median))) / 0.6745;
+        
+        arma::uvec outliers = arma::find(arma::abs(noisysequence.slice(i)-median) > 2.5*medianAbsDev);
         for (size_t j = 0; j < outliers.n_elem; j++) {
-            double replace = 0;
-            arma::uvec sub = arma::ind2sub(arma::size(Nx,Ny), outliers(j));           
+            arma::uvec sub = arma::ind2sub(arma::size(Nx,Ny), outliers(j));
+            arma::vec medianwindow(8);
             if ((int)sub(0) > 0 
                 && (int)sub(0) < Nx-1 
                 && (int)sub(1) > 0 
                 && (int)sub(1) < Ny-1) {
-                replace = noisysequence(sub(0)-1, sub(1)-1, i)
-                          + noisysequence(sub(0)-1, sub(1), i)
-                          + noisysequence(sub(0)-1, sub(1)+1, i)
-                          + noisysequence(sub(0), sub(1)-1, i)
-                          + noisysequence(sub(0), sub(1)+1, i)
-                          + noisysequence(sub(0)+1, sub(1)-1, i)
-                          + noisysequence(sub(0)+1, sub(1), i)
-                          + noisysequence(sub(0)+1, sub(1)+1, i);
-            }            
-            noisysequence(sub(0), sub(1), i) = replace / 8;
+                medianwindow(0) = noisysequence(sub(0)-1, sub(1)-1, i);
+                medianwindow(0) = noisysequence(sub(0)-1, sub(1), i);
+                medianwindow(0) = noisysequence(sub(0)-1, sub(1)+1, i);
+                medianwindow(0) = noisysequence(sub(0), sub(1)-1, i);
+                medianwindow(0) = noisysequence(sub(0), sub(1)+1, i);
+                medianwindow(0) = noisysequence(sub(0)+1, sub(1)-1, i);
+                medianwindow(0) = noisysequence(sub(0)+1, sub(1), i);
+                medianwindow(0) = noisysequence(sub(0)+1, sub(1)+1, i);
+            }
+            medianwindow = arma::sort(medianwindow);
+            noisysequence(sub(0), sub(1), i) = (medianwindow(3) + medianwindow(4))/2;
         }
     }
     

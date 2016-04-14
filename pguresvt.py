@@ -16,7 +16,7 @@
 #		http://dx.doi.org/10.1109/TSP.2013.2270464
 #
 #	[2]	"An Unbiased Risk Estimator for Image Denoising in the Presence
-#		of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
+#		of Mixed Poisson-Gaussian Noise", (2014), Le Montagner, Y et al.
 #		http://dx.doi.org/10.1109/TIP.2014.2300821
 #
 #   This file is part of PGURE-SVT.
