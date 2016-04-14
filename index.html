@@ -70,13 +70,13 @@ value thresholding. <em>Manuscript in preparation.</em></p>
 
 <ul>
 <li>
-<strong><a href="http://www.cmake.org">CMake</a></strong>
+<strong><a href="http://www.cmake.org">CMake</a></strong> 2.8+
 </li>
 <li>
-<strong><a href="http://arma.sourceforge.net">Armadillo</a></strong>
+<strong><a href="http://arma.sourceforge.net">Armadillo</a></strong> 6.400+
 </li>
 <li>
-<strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong>
+<strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> 2.4.2+
 </li>
 <li>
 <strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a> - for the standalone executable only</strong>
@@ -98,13 +98,11 @@ $ cmake ..
 $ make
 </code></pre>
 
-<p>This will generate an executable called <code>PGURE-SVT</code> in the <code>build</code>
-directory, as well as the appropriate shared library for the Python wrapper. </p>
+<p>This will generate the appropriate shared library for the Python wrapper in the <code>build</code> directory.
+The standalone executable is not built by default, as it requires LibTIFF to be installed. To
+compile the executable as well as the library, use:</p>
 
-<p>You can choose whether to build the library or executable using the CMake flags 
-<code>BUILD_LIBRARY</code> and <code>BUILD_EXECUTABLE</code>:</p>
-
-<pre><code>$ cmake -DBUILD_LIBRARY=ON -DBUILD_EXECUTABLE=ON ..
+<pre><code>$ cmake -DBUILD_EXECUTABLE=ON ..
 $ make
 </code></pre>
 
@@ -136,16 +134,20 @@ Y = svt.denoise(X)
 <span class="octicon octicon-link"></span></a>Using PGURE-SVT from the command line</h2>
 
 
-<p>The <code>PGURE-SVT</code> executable uses a simple command-line interface along 
-with a separate parameter file. The parameter file allows the user to customize various
-options of the PGURE-SVT algorithm. An example file, 
-<a href="https://github.com/tjof2/pgure-svt/blob/master/param.svt"><code>param.svt</code></a>
-is provided, with short comments to explain the effects of each option.
+<p>The <code>PGURE-SVT</code> standalone executable uses a simple command-line interface along 
+with a separate parameter file. It is convenient to use on remote computing clusters.
+The parameter file allows the user to customize various options of the PGURE-SVT algorithm. 
+An example file, 
+<a href="https://github.com/tjof2/pgure-svt/blob/master/examples/param.svt"><code>param.svt</code></a>
+is provided.
 </p>
 
 <pre><code>$ ./PGURE-SVT param.svt
 </code></pre>
 
+<p>
+Note that the standalone executable currently only supports TIFF sequences.
+</p>
 
 <h2>
 <a id="history" class="anchor" href="#history" aria-hidden="true">
