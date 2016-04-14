@@ -37,6 +37,7 @@
 import ctypes, os
 import numpy as np
 from numpy.ctypeslib import ndpointer
+from ctypes.util import find_library
 
 class SVT(object):
     """       
@@ -113,8 +114,7 @@ class SVT(object):
         self.hotpixelthreshold = hotpixelthreshold
         
         # Setup ctypes function
-        libpath = os.path.dirname(os.path.abspath(__file__)) + '/build/libpguresvt.so'
-        self._PGURESVT = ctypes.cdll.LoadLibrary(libpath).PGURESVT 
+        self._PGURESVT = ctypes.cdll.LoadLibrary('${PYTHONLIBRARYPATH}/libpguresvt.so').PGURESVT 
         self._PGURESVT.restype = ctypes.c_int      
         self._PGURESVT.argtypes = [ndpointer(ctypes.c_double, flags="F"),
                                    ndpointer(ctypes.c_double, flags="F"),
@@ -129,7 +129,7 @@ class SVT(object):
                                    ctypes.c_double,
                                    ctypes.c_int,
                                    ctypes.c_double,
-                                   ctypes.c_int
+                                   ctypes.c_int,
                                    ctypes.c_double]
 
         self.Y = None
@@ -182,7 +182,7 @@ class SVT(object):
                                 self.sigma,
                                 self.arpssize,
                                 self.tol,
-                                self.median
+                                self.median,
                                 self.hotpixelthreshold)
         self.Y = Y
         return Y
