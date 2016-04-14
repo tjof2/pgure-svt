@@ -70,13 +70,13 @@ value thresholding. <em>Manuscript in preparation.</em></p>
 
 <ul>
 <li>
-<strong><a href="http://www.cmake.org">CMake</a></strong> (>=2.8)
+<strong><a href="http://www.cmake.org">CMake</a></strong>
 </li>
 <li>
-<strong><a href="http://arma.sourceforge.net">Armadillo</a></strong> (>=6.400)
+<strong><a href="http://arma.sourceforge.net">Armadillo</a></strong>
 </li>
 <li>
-<strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> (>=2.4.2)
+<strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong>
 </li>
 <li>
 <strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a> - for the standalone executable only</strong>
@@ -99,9 +99,14 @@ $ make
 </code></pre>
 
 <p>This will generate an executable called <code>PGURE-SVT</code> in the <code>build</code>
-directory, as well as the appropriate shared library for the Python wrapper. You can choose
-whether to build the library or executable using the CMake flags 
-<code>BUILD_SHARED</code> and <code>BUILD_SHARED</code>.</p>
+directory, as well as the appropriate shared library for the Python wrapper. </p>
+
+<p>You can choose whether to build the library or executable using the CMake flags 
+<code>BUILD_LIBRARY</code> and <code>BUILD_EXECUTABLE</code>:</p>
+
+<pre><code>$ cmake -DBUILD_LIBRARY=ON -DBUILD_EXECUTABLE=ON ..
+$ make
+</code></pre>
 
 <h2>
 <a id="python" class="anchor" href="#python" aria-hidden="true">
