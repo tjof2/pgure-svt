@@ -58,16 +58,23 @@ void HotPixelFilter(arma::cube &sequence,
                 && (int)sub(1) > 0 
                 && (int)sub(1) < Ny-1) {
                 medianwindow(0) = sequence(sub(0)-1, sub(1)-1, i);
-                medianwindow(0) = sequence(sub(0)-1, sub(1), i);
-                medianwindow(0) = sequence(sub(0)-1, sub(1)+1, i);
-                medianwindow(0) = sequence(sub(0), sub(1)-1, i);
-                medianwindow(0) = sequence(sub(0), sub(1)+1, i);
-                medianwindow(0) = sequence(sub(0)+1, sub(1)-1, i);
-                medianwindow(0) = sequence(sub(0)+1, sub(1), i);
-                medianwindow(0) = sequence(sub(0)+1, sub(1)+1, i);
-            }
-            medianwindow = arma::sort(medianwindow);
-            sequence(sub(0), sub(1), i) = (medianwindow(3) + medianwindow(4))/2;
+                medianwindow(1) = sequence(sub(0)-1, sub(1), i);
+                medianwindow(2) = sequence(sub(0)-1, sub(1)+1, i);
+                medianwindow(3) = sequence(sub(0), sub(1)-1, i);
+                medianwindow(4) = sequence(sub(0), sub(1)+1, i);
+                medianwindow(5) = sequence(sub(0)+1, sub(1)-1, i);
+                medianwindow(6) = sequence(sub(0)+1, sub(1), i);
+                medianwindow(7) = sequence(sub(0)+1, sub(1)+1, i);
+                
+                medianwindow = arma::sort(medianwindow);
+                sequence(sub(0), sub(1), i) = (medianwindow(3) + medianwindow(4))/2;
+            } else {
+                // Edge pixels are replaced by the median
+                // of the frame (as they are not *usually*
+                // very important! CAREFUL THOUGH)
+                sequence(sub(0), sub(1), i) = median; 
+            }         
+            
         }
     }
     return;
