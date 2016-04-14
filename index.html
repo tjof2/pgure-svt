@@ -87,23 +87,36 @@ value thresholding. <em>Manuscript in preparation.</em></p>
 <a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compiling from source</h4>
 
 <p>
-To build PGURE-SVT, unpack the source and use the following commands
+To build PGURE-SVT, first unpack the source and create a directory in the source folder named <code>build</code>:
 </p>
 
 <pre><code>$ tar -xzf pgure-svt.tar.gz
 $ cd pgure-svt
 $ mkdir build
-$ cd build
-$ cmake ..
-$ make
 </code></pre>
 
-<p>This will generate the appropriate shared library for the Python wrapper in the <code>build</code> directory.
-The standalone executable is not built by default, as it requires LibTIFF to be installed. To
-compile the executable as well as the library, use:</p>
+<p>Navigate to the newly-created <code>build</code> directory to compile the source:</p>
+
+<pre><code>$ cd build
+$ cmake ..
+$ make
+$ sudo make install
+</code></pre>
+
+<p>This will generate the appropriate shared library for the Python wrapper in the <code>/usr/local/lib</code> directory.
+The standalone executable is not built by default, as it requires LibTIFF to be installed. To install the
+PGURE-SVT executable into <code>/usr/local/bin</code>, use:</p>
 
 <pre><code>$ cmake -DBUILD_EXECUTABLE=ON ..
 $ make
+$ sudo make install
+</code></pre>
+
+<p>To install PGURE-SVT into a directory other than <code>/usr/local</code>, use:</p>
+
+<pre><code>$ cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..
+$ make
+$ sudo make install
 </code></pre>
 
 <h2>
