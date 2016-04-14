@@ -2,7 +2,7 @@
 
     Copyright (C) 2015-16 Tom Furnival
 
-    This file is part of  PGURE-SVT.
+    This file is part of PGURE-SVT.
 
     PGURE-SVT is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
