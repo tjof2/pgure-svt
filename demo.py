@@ -30,11 +30,13 @@ from hyperspy.hspy import *
 import matplotlib.pyplot as plt
 
 # Load example dataset
-movie = hs.load("exampleimage.tif")
+movie = hs.load("./test/examplesequence.tif")
 X = np.transpose(movie.data)
+X = X[:,:,0:15]
 
 # Initialize with default parameters
 svt = pguresvt.SVT(patchsize=4,
+                   patchoverlap=2,
                    length=15,
                    optimize=False,
                    threshold=0.5,
