@@ -25,25 +25,24 @@
 import numpy as np
 import pguresvt
 
-# Generate a random array
-X =  np.random.randint(255, size=(16, 16, 15))
+import hyperspy.api as hs
+from hyperspy.hspy import *
+import matplotlib.pyplot as plt
+
+# Load example dataset
+movie = hs.load("exampleimage.tif")
+X = np.transpose(movie.data)
 
 # Initialize with default parameters
 svt = pguresvt.SVT(patchsize=4,
                    length=15,
                    optimize=False,
-                   threshold=1.,
+                   threshold=0.5,
                    tol=1e-6)
 
 # Run the denoising
 svt.denoise(X)
 
-print np.linalg.norm(svt.Y - X)
-
-print X[1:4,1:4,1]
-print " "
-print svt.Y[1:4,1:4,1]
-
-print X.shape
-print svt.Y.shape
+im = hs.signals.Image(np.transpose(svt.Y))
+im.plot(navigator='slider')
 
