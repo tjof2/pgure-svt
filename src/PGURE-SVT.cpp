@@ -71,6 +71,7 @@ extern "C" {
 
 // Own headers
 #include "arps.hpp"
+#include "hotpixel.hpp"
 #include "params.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
@@ -262,34 +263,7 @@ int main(int argc, char** argv) {
 
     // Initial outlier detection (for hot pixels)
     // using median absolute deviation
-    std::cout<<std::endl<<"Applying hot-pixel detector with threshold: "<<hotpixelthreshold<<" * MAD"<<std::endl;
-    for (int i = 0; i < T; i++) {
-        double median = arma::median(arma::vectorise(noisysequence.slice(i)));
-        double medianAbsDev = arma::median(
-                                    arma::vectorise(
-                                      arma::abs(
-                                        noisysequence.slice(i) - median))) / 0.6745;
-        arma::uvec outliers = arma::find(arma::abs(noisysequence.slice(i)-median) > hotpixelthreshold*medianAbsDev);
-        for (size_t j = 0; j < outliers.n_elem; j++) {
-            arma::uvec sub = arma::ind2sub(arma::size(Nx,Ny), outliers(j));
-            arma::vec medianwindow(8);
-            if ((int)sub(0) > 0 
-                && (int)sub(0) < Nx-1 
-                && (int)sub(1) > 0 
-                && (int)sub(1) < Ny-1) {
-                medianwindow(0) = noisysequence(sub(0)-1, sub(1)-1, i);
-                medianwindow(0) = noisysequence(sub(0)-1, sub(1), i);
-                medianwindow(0) = noisysequence(sub(0)-1, sub(1)+1, i);
-                medianwindow(0) = noisysequence(sub(0), sub(1)-1, i);
-                medianwindow(0) = noisysequence(sub(0), sub(1)+1, i);
-                medianwindow(0) = noisysequence(sub(0)+1, sub(1)-1, i);
-                medianwindow(0) = noisysequence(sub(0)+1, sub(1), i);
-                medianwindow(0) = noisysequence(sub(0)+1, sub(1)+1, i);
-            }
-            medianwindow = arma::sort(medianwindow);
-            noisysequence(sub(0), sub(1), i) = (medianwindow(3) + medianwindow(4))/2;
-        }
-    }
+    HotPixelFilter(noisysequence, hotpixelthreshold);
     
 	/////////////////////////////
 	//						   //
