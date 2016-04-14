@@ -87,6 +87,8 @@ if(BUILD_LIBRARY)
     add_library(pguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
     target_link_libraries(pguresvt ${SVT_LIBS})
     install(TARGETS pguresvt DESTINATION lib)
+    set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
+    configure_file(pguresvt.py.in ../pguresvt.py)
 endif()
 
 if(BUILD_EXECUTABLE AND TIFF_FOUND)

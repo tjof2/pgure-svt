@@ -114,8 +114,7 @@ class SVT(object):
         self.hotpixelthreshold = hotpixelthreshold
         
         # Setup ctypes function
-        #libpath = os.path.dirname(os.path.abspath(__file__)) + '/build/libpguresvt.so'
-        self._PGURESVT = ctypes.cdll.LoadLibrary('/usr/local/lib/libpguresvt.so').PGURESVT 
+        self._PGURESVT = ctypes.cdll.LoadLibrary('${PYTHONLIBRARYPATH}/libpguresvt.so').PGURESVT 
         self._PGURESVT.restype = ctypes.c_int      
         self._PGURESVT.argtypes = [ndpointer(ctypes.c_double, flags="F"),
                                    ndpointer(ctypes.c_double, flags="F"),
