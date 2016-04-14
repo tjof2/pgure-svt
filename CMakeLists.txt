@@ -7,7 +7,7 @@ set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
 
 option(BUILD_LIBRARY "Build the shared library" ON)
-option(BUILD_EXECUTABLE "Build a standalone executable" ON)
+option(BUILD_EXECUTABLE "Build a standalone executable" OFF)
 
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)

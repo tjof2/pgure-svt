@@ -59,11 +59,6 @@
 // Armadillo library
 #include <armadillo>
 
-// LibTIFF
-namespace libtiff {
-    #include "tiffio.h"
-}
-
 // Constant-time median filter
 extern "C" {
 	#include "medfilter.h"
