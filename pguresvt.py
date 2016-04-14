@@ -95,7 +95,8 @@ class SVT(object):
                 sigma=-1.,                
                 arpssize=7, 
                 tol=1e-7,
-                median=5
+                median=5,
+                hotpixelthreshold=10
                 ):
                     
         self.patchsize = patchsize
@@ -109,6 +110,7 @@ class SVT(object):
         self.arpssize = arpssize
         self.tol = tol
         self.median = median
+        self.hotpixelthreshold = hotpixelthreshold
         
         # Setup ctypes function
         libpath = os.path.dirname(os.path.abspath(__file__)) + '/build/libpguresvt.so'
@@ -127,7 +129,8 @@ class SVT(object):
                                    ctypes.c_double,
                                    ctypes.c_int,
                                    ctypes.c_double,
-                                   ctypes.c_int]
+                                   ctypes.c_int
+                                   ctypes.c_double]
 
         self.Y = None
         
@@ -179,7 +182,8 @@ class SVT(object):
                                 self.sigma,
                                 self.arpssize,
                                 self.tol,
-                                self.median)
+                                self.median
+                                self.hotpixelthreshold)
         self.Y = Y
         return Y
 
