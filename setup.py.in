@@ -1,0 +1,13 @@
+from distutils.core import setup
+
+setup(name    = 'pguresvt',
+      version = '${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}',
+      author  = 'Tom Furnival',
+      author_email = 'tjof2@cam.ac.uk',
+      url     = 'http://tjof2.github.io/pgure-svt'
+      license = 'GPLv3',
+      package_dir={ '': '${CMAKE_CURRENT_SOURCE_DIR}' },
+      packages=['pguresvt']
+      
+)
+

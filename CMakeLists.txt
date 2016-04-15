@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-message(STATUS "Configuring PGURE-SVT...")
-
 project (PGURE-SVT CXX)
+set (PGURE-SVT_VERSION_MAJOR 0)
+set (PGURE-SVT_VERSION_MINOR 3)
+set (PGURE-SVT_VERSION_PATCH 0)
+
+message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}")
 
 set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
@@ -82,15 +85,26 @@ endif()
 
 ########################################
 
-# Build libraries and executable
+# Build library
 if(BUILD_LIBRARY)
     add_library(pguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
     target_link_libraries(pguresvt ${SVT_LIBS})
     install(TARGETS pguresvt DESTINATION lib)
     set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
-    configure_file(pguresvt.py.in ../pguresvt.py)
+    configure_file(python/pguresvt/pguresvt.py.in ../pguresvt.py)
+    
+    # Install Python package
+    find_program(PYTHON "python")
+    if (PYTHON)
+        set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/python/setup.py.in")
+        set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
+        set(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/python/__init__.py")
+        set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
+    endif()
+    
 endif()
 
+# Build executable
 if(BUILD_EXECUTABLE AND TIFF_FOUND)
     add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
     target_link_libraries(PGURE-SVT ${SVT_LIBS})
