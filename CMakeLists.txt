@@ -10,6 +10,7 @@ set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
 
 option(BUILD_LIBRARY "Build the shared library" ON)
+option(BUILD_PYTHON "Install Python wrapper as a package" ON)
 option(BUILD_EXECUTABLE "Build a standalone executable" OFF)
 
 include(CheckIncludeFileCXX)
@@ -85,42 +86,23 @@ endif()
 
 ########################################
 
-# Build library
-if(BUILD_LIBRARY)
-    add_library(pguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
-    target_link_libraries(pguresvt ${SVT_LIBS})
-    install(TARGETS pguresvt DESTINATION lib)
-    set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pypguresvt/pguresvt.py.in ${CMAKE_CURRENT_BINARY_DIR}/pypguresvt/pguresvt.py)
-    
-    # Install Python package
-    find_program(PYTHON "python")
-    if (PYTHON)
-        set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
-        set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
-        set(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/pypguresvt/__init__.py")
-        set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}")
-        
-        configure_file(${SETUP_PY_IN} ${SETUP_PY})
-        
-        add_custom_command(OUTPUT ${OUTPUT}
-                       COMMAND ${PYTHON} ${SETUP_PY} build
-                       COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
-                       DEPENDS ${DEPS})
-                       
-        add_custom_target(pypguresvt ALL DEPENDS ${OUTPUT})
-        
-        install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
-    endif()
-    
-endif()
-
 # Build executable
 if(BUILD_EXECUTABLE AND TIFF_FOUND)
     add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
     target_link_libraries(PGURE-SVT ${SVT_LIBS})
     install(TARGETS PGURE-SVT DESTINATION bin)
 endif()
+
+# Build library
+if(BUILD_LIBRARY)
+    add_library(pguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
+    target_link_libraries(pguresvt ${SVT_LIBS})
+    install(TARGETS pguresvt DESTINATION lib)
+endif()
+
+add_subdirectory(python)
+
+
 
 
 

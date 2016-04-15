@@ -5,7 +5,7 @@ from setuptools import setup
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-setup(name    = 'pypguresvt',
+setup(name    = 'pguresvt',
       version = '${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}',
       author  = 'Tom Furnival',
       author_email = 'tjof2@cam.ac.uk',
@@ -13,8 +13,7 @@ setup(name    = 'pypguresvt',
       description = 'Singular value thresholding for denoising video microscopy data',
       long_description = read('../README.md'),
       license = 'GPLv3',
-      package_dir={ '': '${CMAKE_CURRENT_SOURCE_DIR}' },
-      packages=['pypguresvt']
-      
+      packages = ['pguresvt'],
+      package_dir = { '': '$CMAKE_CURRENT_SOURCE_DIR}' }
 )
 

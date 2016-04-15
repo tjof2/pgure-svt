@@ -54,4 +54,4 @@ src/cpplint*
 *.bak
 
 # Python files
-pypguresvt.egg-info
+*.pyc

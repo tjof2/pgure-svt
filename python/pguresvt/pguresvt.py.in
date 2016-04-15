@@ -37,7 +37,6 @@
 import ctypes, os
 import numpy as np
 from numpy.ctypeslib import ndpointer
-from ctypes.util import find_library
 
 class SVT(object):
     """       
