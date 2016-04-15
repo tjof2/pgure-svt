@@ -23,7 +23,7 @@
 #   along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-import pypguresvt
+import pguresvt
 
 import hyperspy.api as hs
 from hyperspy.hspy import *
@@ -35,7 +35,7 @@ X = np.transpose(movie.data)
 X = X[:,:,0:15]
 
 # Initialize with default parameters
-svt = pypguresvt.SVT(patchsize=4,
+svt = pguresvt.SVT(patchsize=4,
                      patchoverlap=2,
                      length=15,
                      optimize=False,

@@ -19,7 +19,7 @@ if(BUILD_PYTHON AND PYTHON)
                        ARGS setup.py build
                        DEPENDS ${DEPS})
                        
-    add_custom_target(pguresvt ALL DEPENDS ${OUTPUT})
+    add_custom_target(pythontarget ALL DEPENDS ${OUTPUT})
         
-    install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
+    install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install --user)")
 endif()

@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from distutils.core import setup
 
 # Utility function to read the README file.
 def read(fname):
@@ -13,7 +13,8 @@ setup(name    = 'pguresvt',
       description = 'Singular value thresholding for denoising video microscopy data',
       long_description = read('../README.md'),
       license = 'GPLv3',
+
       packages = ['pguresvt'],
-      package_dir = { '': '$CMAKE_CURRENT_SOURCE_DIR}' }
+      package_dir = {'': '${CMAKE_CURRENT_SOURCE_DIR}'},
 )
 
