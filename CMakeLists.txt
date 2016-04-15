@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-project (PGURE-SVT CXX)
+
+project (PGURE-SVT)
 set (PGURE-SVT_VERSION_MAJOR 0)
 set (PGURE-SVT_VERSION_MINOR 3)
 set (PGURE-SVT_VERSION_PATCH 0)
@@ -16,11 +17,6 @@ option(BUILD_EXECUTABLE "Build a standalone executable" OFF)
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
 enable_language(C)
-
-message(STATUS "CMAKE_SYSTEM_NAME          = ${CMAKE_SYSTEM_NAME}"         )
-message(STATUS "CMAKE_CXX_COMPILER_ID      = ${CMAKE_CXX_COMPILER_ID}"     )
-message(STATUS "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "CMAKE_COMPILER_IS_GNUCXX   = ${CMAKE_COMPILER_IS_GNUCXX}"  )
 
 ########################################
 
