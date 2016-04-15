@@ -108,7 +108,7 @@ if(BUILD_LIBRARY)
                        COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
                        DEPENDS ${DEPS})
                        
-        add_custom_target(customtarget ALL DEPENDS ${OUTPUT})
+        add_custom_target(pypguresvt ALL DEPENDS ${OUTPUT})
         
         install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
     endif()
