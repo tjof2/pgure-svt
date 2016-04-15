@@ -48,3 +48,8 @@ svt.denoise(X)
 im = hs.signals.Image(np.transpose(svt.Y))
 im.plot(navigator='slider')
 
+# Load example dataset
+movie = hs.load("./test/examplesequence.tif")
+X = np.transpose(movie.data)
+X = X[:,:,0:15]
+
