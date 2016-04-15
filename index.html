@@ -95,7 +95,9 @@ $ cd pgure-svt
 $ mkdir build
 </code></pre>
 
-<p>Navigate to the newly-created <code>build</code> directory to compile the source:</p>
+<p>Navigate to the newly-created <code>build</code> directory to compile the source. This will 
+generate a shared library in the <code>/usr/local/lib</code> directory.
+It will also install the Python wrapper by running <code>python setup.py install</code>.</p>
 
 <pre><code>$ cd build
 $ cmake ..
@@ -103,8 +105,7 @@ $ make
 $ sudo make install
 </code></pre>
 
-<p>This will generate the appropriate shared library for the Python wrapper in the <code>/usr/local/lib</code> directory.
-The standalone executable is not built by default, as it requires LibTIFF to be installed. To install the
+<p>The standalone executable is not built by default, as it requires LibTIFF to be installed. To install the
 PGURE-SVT executable into <code>/usr/local/bin</code>, use:</p>
 
 <pre><code>$ cmake -DBUILD_EXECUTABLE=ON ..
@@ -112,12 +113,6 @@ $ make
 $ sudo make install
 </code></pre>
 
-<p>To install PGURE-SVT into a directory other than <code>/usr/local</code>, use:</p>
-
-<pre><code>$ cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..
-$ make
-$ sudo make install
-</code></pre>
 
 <h2>
 <a id="python" class="anchor" href="#python" aria-hidden="true">
@@ -130,7 +125,7 @@ which provides a number of useful features including data visualization and data
 from a number of microscopy file formats.</p>
 
 <pre><code>import numpy as np
-import pguresvt
+from pguresvt import pguresvt
 
 # Import HyperSpy
 import hyperspy.api as hs
