@@ -55,4 +55,3 @@ src/cpplint*
 
 # Python files
 *.pyc
-pguresvt.py

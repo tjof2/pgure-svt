@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-message(STATUS "Configuring PGURE-SVT...")
-
 project (PGURE-SVT CXX)
+set (PGURE-SVT_VERSION_MAJOR 0)
+set (PGURE-SVT_VERSION_MINOR 3)
+set (PGURE-SVT_VERSION_PATCH 0)
+
+message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}")
 
 set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
 
 option(BUILD_LIBRARY "Build the shared library" ON)
+option(BUILD_PYTHON "Install Python wrapper as a package" ON)
 option(BUILD_EXECUTABLE "Build a standalone executable" OFF)
 
 include(CheckIncludeFileCXX)
@@ -82,20 +86,48 @@ endif()
 
 ########################################
 
-# Build libraries and executable
-if(BUILD_LIBRARY)
-    add_library(pguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
-    target_link_libraries(pguresvt ${SVT_LIBS})
-    install(TARGETS pguresvt DESTINATION lib)
-    set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
-    configure_file(pguresvt.py.in ../pguresvt.py)
-endif()
-
+# Build executable
 if(BUILD_EXECUTABLE AND TIFF_FOUND)
     add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
     target_link_libraries(PGURE-SVT ${SVT_LIBS})
     install(TARGETS PGURE-SVT DESTINATION bin)
 endif()
+
+# Build library
+if(BUILD_LIBRARY)
+    add_library(pguresvt SHARED src/medfilter.c src/lib-PGURE-SVT.cpp)
+    target_link_libraries(pguresvt ${SVT_LIBS})
+    install(TARGETS pguresvt DESTINATION lib)
+endif()
+
+# Install Python package
+find_program(PYTHON "python")
+if(BUILD_PYTHON AND PYTHON)
+  
+    set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
+    set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
+    set(DEPS        "${CMAKE_CURRENT_BINARY_DIR}/pguresvt/*.py")
+    set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
+    configure_file(${SETUP_PY_IN} ${SETUP_PY})
+    
+    set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/pguresvt.py.in 
+                   ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/pguresvt.py)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/__init__.py 
+                   ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/__init__.py)               
+    
+        
+    add_custom_command(OUTPUT ${OUTPUT}
+                       COMMAND ${PYTHON} ${SETUP_PY} build
+                       COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
+                       DEPENDS ${DEPS})
+                       
+    add_custom_target(python ALL DEPENDS ${OUTPUT})
+        
+    install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
+endif()
+
+
 
 
 

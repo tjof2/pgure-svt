@@ -23,14 +23,14 @@
 #   along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-import pguresvt
+from pguresvt import pguresvt
 
 import hyperspy.api as hs
 from hyperspy.hspy import *
 import matplotlib.pyplot as plt
 
 # Load example dataset
-movie = hs.load("./test/examplesequence.tif")
+movie = hs.load("../test/examplesequence.tif")
 X = np.transpose(movie.data)
 X = X[:,:,0:15]
 
