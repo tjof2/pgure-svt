@@ -1,13 +1,20 @@
-from distutils.core import setup
+import os
+from setuptools import setup
 
-setup(name    = 'pguresvt',
+# Utility function to read the README file.
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+setup(name    = 'pypguresvt',
       version = '${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}',
       author  = 'Tom Furnival',
       author_email = 'tjof2@cam.ac.uk',
       url     = 'http://tjof2.github.io/pgure-svt'
+      description = 'Singular value thresholding for denoising video microscopy data',
+      long_description=read('README.md'),
       license = 'GPLv3',
       package_dir={ '': '${CMAKE_CURRENT_SOURCE_DIR}' },
-      packages=['pguresvt']
+      packages=['pypguresvt']
       
 )
 

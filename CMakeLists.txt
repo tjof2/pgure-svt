@@ -91,15 +91,26 @@ if(BUILD_LIBRARY)
     target_link_libraries(pguresvt ${SVT_LIBS})
     install(TARGETS pguresvt DESTINATION lib)
     set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
-    configure_file(python/pguresvt/pguresvt.py.in ../pguresvt.py)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pypguresvt/pguresvt.py.in ${CMAKE_CURRENT_BINARY_DIR}/pypguresvt/pguresvt.py)
     
     # Install Python package
     find_program(PYTHON "python")
     if (PYTHON)
-        set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/python/setup.py.in")
+        set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
         set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
-        set(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/python/__init__.py")
-        set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
+        set(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/pypguresvt/__init__.py")
+        set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}")
+        
+        configure_file(${SETUP_PY_IN} ${SETUP_PY})
+        
+        add_custom_command(OUTPUT ${OUTPUT}
+                       COMMAND ${PYTHON} ${SETUP_PY} build
+                       COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
+                       DEPENDS ${DEPS})
+                       
+        add_custom_target(customtarget ALL DEPENDS ${OUTPUT})
+        
+        install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
     endif()
     
 endif()
