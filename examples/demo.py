@@ -23,7 +23,7 @@
 #   along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-import pguresvt
+from pguresvt import pguresvt
 
 import hyperspy.api as hs
 from hyperspy.hspy import *
@@ -36,11 +36,11 @@ X = X[:,:,0:15]
 
 # Initialize with default parameters
 svt = pguresvt.SVT(patchsize=4,
-                     patchoverlap=2,
-                     length=15,
-                     optimize=False,
-                     threshold=0.5,
-                     tol=1e-6)
+                   patchoverlap=2,
+                   length=15,
+                   optimize=False,
+                   threshold=0.5,
+                   tol=1e-6)
 
 # Run the denoising
 svt.denoise(X)
