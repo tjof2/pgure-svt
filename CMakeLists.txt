@@ -106,13 +106,13 @@ if(BUILD_PYTHON AND PYTHON)
   
     set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
     set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
-    set(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/*.py")
+    set(DEPS        "${CMAKE_CURRENT_BINARY_DIR}/pguresvt/*.py")
     set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
     
     set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/svt.py.in 
-                   ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/svt.py)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/pguresvt.py.in 
+                   ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/pguresvt.py)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/__init__.py 
                    ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/__init__.py)               
     
