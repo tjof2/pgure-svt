@@ -14,7 +14,7 @@ PGURE-SVT is released free of charge under the GNU General Public License ([GPLv
     title   = {Denoising time-resolved microscopy sequences with 
                singular value thresholding.},
     author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
-    year    = {Manuscript submitted},
+    year    = {Manuscript submitted}
 }
 ```
 
