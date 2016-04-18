@@ -73,7 +73,7 @@ class NoiseEstimator {
 
             // Perform quadtree decomposition of frames
             // to generate patches for noise estimation
-            int maxVsize = (Nx/size)*(Ny/size);
+            int maxVsize = Nx*Ny;
             arma::vec means = -1 * arma::ones<arma::vec>(T*maxVsize);
             arma::vec vars = -1 * arma::ones<arma::vec>(T*maxVsize);
             arma::vec minslice(T);
@@ -81,7 +81,7 @@ class NoiseEstimator {
             // Perform quadtree decomposition of frames
             // to generate patches for noise estimation
             // TODO:tjof2 fix this T-1 problem
-            for (int i=0; i<T-1; i++) {
+            for (int i=0; i<T; i++) {
                 treeDelete[0] = arma::zeros<arma::umat>(3, 1);
                 treeDelete[0](2, 0) = Nx;
                 treeDelete[1] = arma::zeros<arma::umat>(0, 0);
@@ -519,4 +519,3 @@ class NoiseEstimator {
 };
 
 #endif
-

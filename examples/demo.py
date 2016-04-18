@@ -32,13 +32,12 @@ import matplotlib.pyplot as plt
 # Load example dataset
 movie = hs.load("../test/examplesequence.tif")
 X = np.transpose(movie.data)
-X = X[:,:,0:15]
+#X = X[:,:,0:15]
 
 # Initialize with default parameters
 svt = pguresvt.SVT(patchsize=4,
                    patchoverlap=2,
                    length=15,
-                   optimize=False,
                    threshold=0.5,
                    tol=1e-6)
 
@@ -47,9 +46,4 @@ svt.denoise(X)
 
 im = hs.signals.Image(np.transpose(svt.Y))
 im.plot(navigator='slider')
-
-# Load example dataset
-movie = hs.load("./test/examplesequence.tif")
-X = np.transpose(movie.data)
-X = X[:,:,0:15]
 
