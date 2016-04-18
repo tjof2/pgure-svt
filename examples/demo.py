@@ -1,7 +1,7 @@
-#   PGURE-SVT Denoising
+# PGURE-SVT Denoising
 #
-#   Author:    Tom Furnival
-#   Email:    tjof2@cam.ac.uk
+#   Author: Tom Furnival
+#   Email:  tjof2@cam.ac.uk
 #
 #   Copyright (C) 2015-16 Tom Furnival
 #
