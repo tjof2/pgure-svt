@@ -80,7 +80,6 @@ class NoiseEstimator {
 
             // Perform quadtree decomposition of frames
             // to generate patches for noise estimation
-            // TODO:tjof2 fix this T-1 problem
             for (int i=0; i<T; i++) {
                 treeDelete[0] = arma::zeros<arma::umat>(3, 1);
                 treeDelete[0](2, 0) = Nx;
