@@ -81,6 +81,7 @@ class SVT(object):
         
     arpssize : integer
         Size of neighbourhood for ARPS search
+        Must be odd
         (default = 7 pixels)
         
     tol : float
@@ -89,6 +90,7 @@ class SVT(object):
         
     median : integer
         Size of initial median filter
+        Must be odd
         (default = 5 pixels)
     
     """

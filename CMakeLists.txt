@@ -84,7 +84,7 @@ endif()
 
 # Build executable
 if(BUILD_EXECUTABLE AND TIFF_FOUND)
-    add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT.cpp)
+    add_executable(PGURE-SVT src/medfilter.c src/exe-PGURE-SVT.cpp)
     target_link_libraries(PGURE-SVT ${SVT_LIBS})
     install(TARGETS PGURE-SVT DESTINATION bin)
 endif()
