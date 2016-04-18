@@ -7,6 +7,9 @@ consecutive frames to form low-rank matrices, which are then recovered using a t
 An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate the selection of the regularization parameter,
 while robust noise and motion estimation maintain broad applicability to many different types of microscopy. 
 
+**[Download stable version (0.2.3)](https://github.com/tjof2/pgure-svt/archive/v0.2.3.tar.gz)**
+
+
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html)). If you use this code in a publication, please cite our work using this citation: 
 
 ```
