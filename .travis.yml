@@ -32,8 +32,9 @@ matrix:
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_CXX_COMPILER=$CXXOMP -DCMAKE_CC_COMPILER=$CCOMP ..
+  - cmake -DCMAKE_CXX_COMPILER=$CXXOMP -DCMAKE_CC_COMPILER=$CCOMP -DBUILD_EXECUTABLE=ON ..
   - make
+  - sudo make install
 
 notifications:
   email: false

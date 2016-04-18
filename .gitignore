@@ -55,5 +55,5 @@ src/cpplint*
 # Backups
 *.bak
 
-# PYC
+# Python files
 *.pyc

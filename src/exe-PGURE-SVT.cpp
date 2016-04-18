@@ -71,6 +71,7 @@ extern "C" {
 
 // Own headers
 #include "arps.hpp"
+#include "hotpixel.hpp"
 #include "params.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
@@ -175,6 +176,8 @@ int main(int argc, char** argv) {
     // TODO:tjof2 document this option
     int NoiseMethod = (programOptions.count("noise_method") == 1) ? std::stoi(programOptions.at("noise_method")) : 4;
 
+    // Hot pixel threshold
+    double hotpixelthreshold = (programOptions.count("hot_pixel") == 1) ? std::stoi(programOptions.at("hot_pixel")) : 10;
 
 	/////////////////////////////
 	//						   //
@@ -259,35 +262,8 @@ int main(int argc, char** argv) {
 	int Ny = tiffWidth;
 
     // Initial outlier detection (for hot pixels)
-    // using median absolute deviation in each 
-    // frame of the sequence
-    for (int i = 0; i < T; i++) {
-        double median = arma::median(arma::vectorise(noisysequence));
-        double medianAbsDev = arma::median(
-                                    arma::vectorise(
-                                      arma::abs(
-                                        noisysequence - median))) / 0.6745;
-        arma::uvec outliers = arma::find(arma::abs(noisysequence.slice(i)-median) > 10*medianAbsDev);
-        for (size_t j = 0; j < outliers.n_elem; j++) {
-            arma::uvec sub = arma::ind2sub(arma::size(Nx,Ny), outliers(j));
-            arma::vec medianwindow(8);
-            if ((int)sub(0) > 0 
-                && (int)sub(0) < Nx-1 
-                && (int)sub(1) > 0 
-                && (int)sub(1) < Ny-1) {
-                medianwindow(0) = noisysequence(sub(0)-1, sub(1)-1, i);
-                medianwindow(0) = noisysequence(sub(0)-1, sub(1), i);
-                medianwindow(0) = noisysequence(sub(0)-1, sub(1)+1, i);
-                medianwindow(0) = noisysequence(sub(0), sub(1)-1, i);
-                medianwindow(0) = noisysequence(sub(0), sub(1)+1, i);
-                medianwindow(0) = noisysequence(sub(0)+1, sub(1)-1, i);
-                medianwindow(0) = noisysequence(sub(0)+1, sub(1), i);
-                medianwindow(0) = noisysequence(sub(0)+1, sub(1)+1, i);
-            }
-            medianwindow = arma::sort(medianwindow);
-            //noisysequence(sub(0), sub(1), i) = (medianwindow(3) + medianwindow(4))/2;
-        }
-    }
+    // using median absolute deviation
+    HotPixelFilter(noisysequence, hotpixelthreshold);
     
 	/////////////////////////////
 	//						   //

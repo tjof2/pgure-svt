@@ -1,7 +1,7 @@
-#   PGURE-SVT Denoising
+# PGURE-SVT Denoising
 #
-#   Author:    Tom Furnival
-#   Email:    tjof2@cam.ac.uk
+#   Author: Tom Furnival
+#   Email:  tjof2@cam.ac.uk
 #
 #   Copyright (C) 2015-16 Tom Furnival
 #
@@ -23,14 +23,14 @@
 #   along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-import pguresvt
+from pguresvt import pguresvt
 
 import hyperspy.api as hs
 from hyperspy.hspy import *
 import matplotlib.pyplot as plt
 
 # Load example dataset
-movie = hs.load("./test/examplesequence.tif")
+movie = hs.load("../test/examplesequence.tif")
 X = np.transpose(movie.data)
 X = X[:,:,0:15]
 
@@ -47,4 +47,9 @@ svt.denoise(X)
 
 im = hs.signals.Image(np.transpose(svt.Y))
 im.plot(navigator='slider')
+
+# Load example dataset
+movie = hs.load("./test/examplesequence.tif")
+X = np.transpose(movie.data)
+X = X[:,:,0:15]
 
