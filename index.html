@@ -22,7 +22,9 @@
           <li><a class="buttons github" href="https://github.com/tjof2/pgure-svt">View On GitHub</a></li>
         </ul>
        <p class="header">This project is maintained by <a class="header name" href="https://github.com/tjof2">tjof2</a></p>
-
+       <p><a href="https://travis-ci.org/tjof2/pgure-svt">
+<img src="https://travis-ci.org/tjof2/pgure-svt.svg?branch=master"/>
+</a></p>
       </header>
       <section>
 <h1>
@@ -36,38 +38,47 @@ It exploits the correlations between consecutive frames to form low-rank matrice
 are then recovered using a technique known as nuclear norm minimization. An unbiased risk 
 estimator for mixed Poisson-Gaussian noise is used to automate the selection of the 
 regularization parameter, while robust noise and motion estimation maintain broad 
-applicability to many different types of microscopy. The algorithm is described in detail in: 
-</p>
-
-<blockquote>
-<p>Furnival T, Leary R, Midgley PA. (2016). Denoising time-resolved microscopy sequences with singular 
-value thresholding. <em>Manuscript in preparation.</em></p>
-</blockquote>
-
-<p>
-<a href="https://travis-ci.org/tjof2/pgure-svt">
-<img src="https://travis-ci.org/tjof2/pgure-svt.svg?branch=master"/>
-</a>
-</p>
+applicability to many different types of microscopy. </p>
 
 <h2>
 <a id="contents" class="anchor" href="#contents" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contents</h2>
 
 <ul>
+<li><a href="#citation">Citing PGURE-SVT</a></li>
 <li><a href="#installation">Installation</a></li>
 <li><a href="#python">Using PGURE-SVT with Python</a></li>
 <li><a href="#command-line">Using PGURE-SVT from the command line</a></li>
-<li><a href="#history">History</a></li>
+<li><a href="#changelog">Changelog</a></li>
 </ul>
+
+<h2>
+<a id="citation" class="anchor" href="#citation" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>Citing PGURE-SVT</h2>
+
+<p>PGURE-SVT is released free of charge under the GNU General Public License
+(<a href="www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a>). If you use this code
+in a publication, please cite our work using this citation:
+</p>
+
+<pre><code>@article{PGURESVT2016,
+    title   = {Denoising time-resolved microscopy sequences with 
+               singular value thresholding.},
+    author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
+    year    = {2016},
+    doi     = {},
+    journal = {},
+    volume  = {},
+    pages   = {}
+}
+</code></pre>
+
+
 
 <h2>
 <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
 
 <h4>
 <a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dependencies</h4>
-
-<p>PGURE-SVT makes use of several 3rd-party libraries, which need to be installed first.</p>
-
 <ul>
 <li>
 <strong><a href="http://www.cmake.org">CMake</a></strong> 2.8+
@@ -87,7 +98,7 @@ value thresholding. <em>Manuscript in preparation.</em></p>
 <a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compiling from source</h4>
 
 <p>
-To build PGURE-SVT, first unpack the source and create a directory in the source folder named <code>build</code>:
+To build PGURE-SVT, first unpack the source and create a directory named <code>build</code>:
 </p>
 
 <pre><code>$ tar -xzf pgure-svt.tar.gz
@@ -171,8 +182,8 @@ Note that the standalone executable currently only supports TIFF sequences.
 </p>
 
 <h2>
-<a id="history" class="anchor" href="#history" aria-hidden="true">
-<span class="octicon octicon-link"></span></a>History</h2>
+<a id="changelog" class="anchor" href="#changelog" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>Changelog</h2>
 
 <ul>
 <li><strong>Version 0.2.3</strong> - 13/04/2016<br/>
