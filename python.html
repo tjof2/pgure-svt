@@ -38,25 +38,18 @@
         <p><small><em><a href="http://tjof2.github.io/pgure-svt">Home</a> &gt;
            Using PGURE-SVT with Python</small></em></p>
 
-<p>An example file, <a href="https://github.com/tjof2/pgure-svt/blob/master/demo.py"><code>demo.py</code></a>,
-is provided to show users how the algorithm can be linked with the
-<a href="http://hyperspy.org">HyperSpy</a> multi-dimensional data analysis toolbox,
-which provides a number of useful features including data visualization and data import
-from a number of microscopy file formats.</p>
+<p>PGURE-SVT comes with a simple Python wrapper that accepts any numpy array
+  with dimensions <code>(nx, ny, T)</code> for denoising. For more information
+  on the effects of the parameters, users are referred to the publication.</p>
 
 <pre><code>import numpy as np
 from pguresvt import pguresvt
 
-# Import HyperSpy
-import hyperspy.api as hs
-from hyperspy.hspy import *
-import matplotlib.pyplot as plt
-
-# Load example dataset
-movie = hs.load("./test/examplesequence.tif")
-X = np.transpose(movie.data)
+# Example dataset has dimensions (nx, ny, T)
+X = np.random.randn(128, 128, 25)
 
 # Initialize the algorithm
+# with some parameters
 svt = pguresvt.SVT(patchsize=4,
                    length=15,
                    optimize=True,
@@ -65,9 +58,47 @@ svt = pguresvt.SVT(patchsize=4,
 # Run the algorithm on the data X
 svt.denoise(X)
 
-# Plot the denoised data Y
-im = hs.signals.Image(np.transpose(svt.Y))
-im.plot(navigator='slider')
+# Get the denoised data Y
+Y = svt.Y
+</code></pre>
+
+<h2>
+<a id="changelog" class="anchor" href="#changelog" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>Integration with HyperSpy</h2>
+
+<p>PGURE-SVT can also be integrated with the
+<a href="http://hyperspy.org">HyperSpy</a> multi-dimensional data analysis toolbox,
+which provides a number of useful features including data visualization and data import
+from a number of microscopy file formats. Instead of accepting a numpy array, this
+wrapper will accept a HyperSpy signal for denoising. An <a href="https://github.com/tjof2/pgure-svt/blob/master/examples/HyperSpy%20Demo.ipynb">
+  example iPython notebook</a> is
+provided.</p>
+
+<pre><code># Configures the plotting backend
+%matplotlib qt
+
+# Import the hyperspy API
+import hyperspy.api as hs
+
+# Import the hyperspy wrapper for PGURE-SVT
+from pguresvt import hspysvt
+
+# Load example dataset
+movie = hs.load("./test/examplesequence.tif")
+
+# Take the first 15 frames, and plot the result
+movie = movie.inav[:15]
+movie.plot()
+
+# Denoise the HyperSpy signal directly.
+svt = hspysvt.HSPYSVT(patchsize=4,
+                      length=15,
+                      optimize=True,
+                      tol=1e-6))
+denoised_movie = svt.denoise(movie)
+
+# Plot denoised data
+denoised_movie.plot()
 </code></pre>
 
       </section>
