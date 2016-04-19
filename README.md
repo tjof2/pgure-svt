@@ -1,6 +1,7 @@
 # PGURE-SVT
 
 **[http://tjof2.github.io/pgure-svt](http://tjof2.github.io/pgure-svt)**
+
 [![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
 
 PGURE-SVT is an algorithm designed to denoise image sequences acquired in microscopy. It exploits the correlations between
