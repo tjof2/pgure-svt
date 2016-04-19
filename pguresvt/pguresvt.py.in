@@ -65,7 +65,7 @@ class SVT(object):
         
     threshold : float
         Threshold to use if not optimizing PGURE
-        (default = 0.15)
+        (default = 0.5)
         
     alpha : float
         Level of noise gain, if negative then
@@ -100,7 +100,7 @@ class SVT(object):
                 patchoverlap=1,
                 length=15,
                 optimize=True,
-                threshold=-1.,
+                threshold=0.5,
                 estimatenoise=True,
                 alpha=-1., 
                 mu=-1., 
@@ -137,7 +137,8 @@ class SVT(object):
             raise ValueError("Median filter size should be odd")
         
         # Setup ctypes function
-        self._PGURESVT = ctypes.cdll.LoadLibrary('${PYTHONLIBRARYPATH}/libpguresvt.so').PGURESVT 
+        self._PGURESVT = ctypes.cdll.LoadLibrary(
+            '${PYTHONLIBRARYPATH}/libpguresvt.so').PGURESVT 
         self._PGURESVT.restype = ctypes.c_int      
         self._PGURESVT.argtypes = [ndpointer(ctypes.c_double, flags="F"),
                                    ndpointer(ctypes.c_double, flags="F"),
