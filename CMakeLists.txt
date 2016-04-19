@@ -109,6 +109,8 @@ if(BUILD_PYTHON AND PYTHON)
     set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/pguresvt.py.in 
                    ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/pguresvt.py)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/hspysvt.py 
+                   ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/hspysvt.py)  
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/__init__.py 
                    ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/__init__.py)               
     
