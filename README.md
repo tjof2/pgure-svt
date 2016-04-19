@@ -11,7 +11,7 @@ while robust noise and motion estimation maintain broad applicability to many di
 
 ### Download
 
-**[Download stable version (0.2.3)](https://github.com/tjof2/pgure-svt/archive/v0.2.3.tar.gz)**
+**[Download stable version (0.3.0)](https://github.com/tjof2/pgure-svt/archive/v0.3.0.tar.gz)**
 
 PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04.
 
