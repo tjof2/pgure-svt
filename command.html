@@ -39,17 +39,76 @@
 <p>The <code>PGURE-SVT</code> standalone executable uses a simple command-line interface along
 with a separate parameter file. It is convenient to use on remote computing clusters.
 The parameter file allows the user to customize various options of the PGURE-SVT algorithm.
-An example file,
-<a href="https://github.com/tjof2/pgure-svt/blob/master/examples/param.svt"><code>param.svt</code></a>
-is provided.
+Note that the standalone executable currently only supports TIFF sequences.
 </p>
 
 <pre><code>$ ./PGURE-SVT param.svt
 </code></pre>
 
-<p>
-Note that the standalone executable currently only supports TIFF sequences.
+<p>An example file,
+<a href="https://github.com/tjof2/pgure-svt/blob/master/examples/param.svt"><code>param.svt</code></a>
+is provided.
 </p>
+
+<pre><code>##### Example parameter file for PGURE-SVT program #####
+
+##### REQUIRED #####
+# Specify the file name of the TIFF stack to be denoised
+filename             : ../test/examplesequence.tif
+
+# The start and end frames of the sequence to be denoised
+start_image          : 1
+end_image            : 50
+
+##### OPTIONAL #####
+# The dimensions of the patch in pixels to form a Casorati matrix
+#	Default = 4 pixels
+patch_size           : 4
+
+# The step-size of the patch overlap
+#   Default = 1 pixel
+patch_overlap        : 2
+
+# The length in frames of the block to form
+# a Casorati matrix (must be odd)
+# 	Default = 15 frames
+trajectory_length    : 15
+
+# Noise parameter estimation
+# 	Setting a value will override automatic
+#   estimation of that parameter
+#alpha                : 0.1
+#mu                   : 0.1
+#sigma                : 0.1
+
+# Turn off lambda optimization with PGURE
+#	0 = OFF
+#	1 = ON
+#	Default = ON
+pgure                : 1
+
+# If PGURE is turned off, you MUST specify a threshold
+#lambda               : 0.15
+
+# Motion estimation
+#	0 = OFF
+#	1 = ON
+#	Default = ON
+motion_estimation    : 1
+
+##### ADVANCED #####
+# Size of ARPS motion estimation neighbourhood
+#	Default = 7 pixels
+#motion_neighbourhood : 7
+
+# Relative tolerance of PGURE optimization
+#	Default = 1E-7
+#tolerance            : 1E-7
+
+# Size of median filter
+#	Default = 5 pixels
+#median_filter        : 5
+</code></pre>
 
      </section>
       <footer>

@@ -38,39 +38,50 @@
                 <p><small><em><a href="http://tjof2.github.io/pgure-svt">Home</a> &gt;
                    Installation</small></em></p>
 
-<h3>
-<a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true">
-  <span class="octicon octicon-link"></span></a>Dependencies</h3>
-<ul>
-<li>
-<strong><a href="http://www.cmake.org">CMake</a></strong> 2.8+
-</li>
-<li>
-<strong><a href="http://arma.sourceforge.net">Armadillo</a></strong> 6.400+
-</li>
-<li>
-<strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> 2.4.2+
-</li>
-<li>
-<strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a> - for the standalone executable only</strong>
-</li>
-</ul>
+<p>PGURE-SVT uses CMake to compile and install both the C++ and Python code. By
+default, the system will build a C++ library for linking with Python. Installation of
+the <a href="command.html"> standalone executable</a> must be specified by the user.</p>
 
-<h3>
-<a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true">
-  <span class="octicon octicon-link"></span></a>Compiling from source</h3>
+<h2>
+<a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true">
+  <span class="octicon octicon-link"></span></a>Dependencies</h2>
 
 <p>
-To build PGURE-SVT, first unpack the source and create a directory named <code>build</code>:
+To successfully compile the C++ code, PGURE-SVT requires the following packages and
+libraries to be installed on your machine first.
 </p>
 
-<pre><code>$ tar -xzf pgure-svt.tar.gz
-$ cd pgure-svt
-$ mkdir build
+<ul>
+<li><strong><a href="http://www.cmake.org">CMake</a></strong> 2.8+</li>
+<li><strong><a href="http://arma.sourceforge.net">Armadillo</a></strong> 6.400+</li>
+<li><strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> 2.4.2+</li>
+<li><strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a> - for the standalone executable only</strong></li>
+</ul>
+
+<p>When installing the Armadillo linear algebra library, it
+is recommended that you also install a high-speed BLAS replacement such as OpenBLAS
+or MKL; more information can be found in the  Armadillo <a href="http://arma.sourceforge.net/faq.html#blas_lapack_replacements">
+documentation</a>.</p>
+
+<h2>
+<a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true">
+  <span class="octicon octicon-link"></span></a>Compiling from source</h2>
+
+<p>To build PGURE-SVT, first unpack the source:</p>
+
+<pre><code>$ tar -xzf pgure-svt-0.3.0.tar.gz
+$ cd pgure-svt-0.3.0
 </code></pre>
 
-<p>Navigate to the newly-created <code>build</code> directory to compile the source. This will
-generate a shared library in the <code>/usr/local/lib</code> directory.
+<p>Next create a <code>build</code> directory for CMake to use when compiling
+  and installing PGURE-SVT:</p>
+
+<pre><code>$ mkdir build
+  $ cd build
+</code></pre>
+
+<p>Use CMake to compile and install PGURE-SVT. By default, this will
+generate a shared library in the <code>/usr/lib</code> directory.
 It will also install the Python wrapper by running <code>python setup.py install</code>.</p>
 
 <pre><code>$ cd build
@@ -79,15 +90,16 @@ $ make
 $ sudo make install
 </code></pre>
 
+<p>To change the install location, type <code>cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..</code> and
+recompile with <code>make</code> and <code>sudo make install</code>.</p>
+
 <p>The standalone executable is not built by default, as it requires LibTIFF to be installed. To install the
-PGURE-SVT executable into <code>/usr/local/bin</code>, use:</p>
+PGURE-SVT executable into <code>/usr/bin</code>, use:</p>
 
 <pre><code>$ cmake -DBUILD_EXECUTABLE=ON ..
 $ make
 $ sudo make install
 </code></pre>
-
-
 
       </section>
       <footer>
