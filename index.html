@@ -34,119 +34,39 @@
 <p><strong>Singular value thresholding for denoising video microscopy data</strong></p>
 
 <p>PGURE-SVT is an algorithm designed to denoise image sequences acquired in microscopy.
-It exploits the correlations between consecutive frames to form low-rank matrices, which 
-are then recovered using a technique known as nuclear norm minimization. An unbiased risk 
-estimator for mixed Poisson-Gaussian noise is used to automate the selection of the 
-regularization parameter, while robust noise and motion estimation maintain broad 
+It exploits the correlations between consecutive frames to form low-rank matrices, which
+are then recovered using a technique known as nuclear norm minimization. An unbiased risk
+estimator for mixed Poisson-Gaussian noise is used to automate the selection of the
+regularization parameter, while robust noise and motion estimation maintain broad
 applicability to many different types of microscopy. </p>
 
-<h2>
-<a id="contents" class="anchor" href="#contents" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contents</h2>
-
 <ul>
-<li><a href="#installation">Installation</a></li>
-<li><a href="#python">Using PGURE-SVT with Python</a></li>
-<li><a href="#command-line">Using PGURE-SVT from the command line</a></li>
-<li><a href="#citation">Citing PGURE-SVT</a></li>
-<li><a href="#changelog">Changelog</a></li>
+<li><a href="./install.html"><strong>Installation</strong></a></li>
+<li><a href="./python.html"><strong>Using PGURE-SVT with Python</strong></a></li>
+<li><a href="./command.html"><strong>Using PGURE-SVT from the command line</strong></a></li>
+<li><a href="#changelog"><strong>Changelog</strong></a></li>
 </ul>
 
-<h2>
-<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
-
-<h4>
-<a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dependencies</h4>
-<ul>
-<li>
-<strong><a href="http://www.cmake.org">CMake</a></strong> 2.8+
-</li>
-<li>
-<strong><a href="http://arma.sourceforge.net">Armadillo</a></strong> 6.400+
-</li>
-<li>
-<strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> 2.4.2+
-</li>
-<li>
-<strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a> - for the standalone executable only</strong>
-</li>
-</ul>
-
-<h4>
-<a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compiling from source</h4>
-
-<p>
-To build PGURE-SVT, first unpack the source and create a directory named <code>build</code>:
+<p>PGURE-SVT is released free of charge under the GNU General Public License
+(<a href="www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a>). If you use this code in a publication, please cite our work:
 </p>
 
-<pre><code>$ tar -xzf pgure-svt.tar.gz
-$ cd pgure-svt
-$ mkdir build
-</code></pre>
-
-<p>Navigate to the newly-created <code>build</code> directory to compile the source. This will 
-generate a shared library in the <code>/usr/local/lib</code> directory.
-It will also install the Python wrapper by running <code>python setup.py install</code>.</p>
-
-<pre><code>$ cd build
-$ cmake ..
-$ make
-$ sudo make install
-</code></pre>
-
-<p>The standalone executable is not built by default, as it requires LibTIFF to be installed. To install the
-PGURE-SVT executable into <code>/usr/local/bin</code>, use:</p>
-
-<pre><code>$ cmake -DBUILD_EXECUTABLE=ON ..
-$ make
-$ sudo make install
-</code></pre>
-
-
-<h2>
-<a id="python" class="anchor" href="#python" aria-hidden="true">
-<span class="octicon octicon-link"></span></a>Using PGURE-SVT with Python</h2>
-
-<p>An example file, <a href="https://github.com/tjof2/pgure-svt/blob/master/demo.py"><code>demo.py</code></a>, 
-is provided to show users how the algorithm can be linked with the 
-<a href="http://hyperspy.org">HyperSpy</a> multi-dimensional data analysis toolbox, 
-which provides a number of useful features including data visualization and data import
-from a number of microscopy file formats.</p>
-
-<pre><code>import numpy as np
-from pguresvt import pguresvt
-
-# Import HyperSpy
-import hyperspy.api as hs
-from hyperspy.hspy import *
-import matplotlib.pyplot as plt
-
-# Load example dataset
-movie = hs.load("./test/examplesequence.tif")
-X = np.transpose(movie.data)
-
-# Initialize the algorithm
-svt = pguresvt.SVT(patchsize=4,
-                   length=15,
-                   optimize=True,
-                   tol=1e-6)
-
-# Run the algorithm on the data X
-svt.denoise(X)
-
-# Plot the denoised data Y
-im = hs.signals.Image(np.transpose(svt.Y))
-im.plot(navigator='slider')
+<pre><code>@article{PGURESVT2016,
+    title   = {Denoising time-resolved microscopy sequences with
+               singular value thresholding.},
+    author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
+    year    = {Manuscript submitted}
+}
 </code></pre>
 
 <h2>
 <a id="command-line" class="anchor" href="#command-line" aria-hidden="true">
 <span class="octicon octicon-link"></span></a>Using PGURE-SVT from the command line</h2>
 
-
-<p>The <code>PGURE-SVT</code> standalone executable uses a simple command-line interface along 
+<p>The <code>PGURE-SVT</code> standalone executable uses a simple command-line interface along
 with a separate parameter file. It is convenient to use on remote computing clusters.
-The parameter file allows the user to customize various options of the PGURE-SVT algorithm. 
-An example file, 
+The parameter file allows the user to customize various options of the PGURE-SVT algorithm.
+An example file,
 <a href="https://github.com/tjof2/pgure-svt/blob/master/examples/param.svt"><code>param.svt</code></a>
 is provided.
 </p>
@@ -157,23 +77,6 @@ is provided.
 <p>
 Note that the standalone executable currently only supports TIFF sequences.
 </p>
-
-<h2>
-<a id="citation" class="anchor" href="#citation" aria-hidden="true">
-<span class="octicon octicon-link"></span></a>Citing PGURE-SVT</h2>
-
-<p>PGURE-SVT is released free of charge under the GNU General Public License
-(<a href="www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a>). If you use this code
-in a publication, please cite our work:
-</p>
-
-<pre><code>@article{PGURESVT2016,
-    title   = {Denoising time-resolved microscopy sequences with 
-               singular value thresholding.},
-    author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
-    year    = {Manuscript submitted}
-}
-</code></pre>
 
 <h2>
 <a id="changelog" class="anchor" href="#changelog" aria-hidden="true">
@@ -201,7 +104,7 @@ in a publication, please cite our work:
 
       </section>
       <footer>
-        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+        <p><small>Copyright (C) 2015-2016 Tom Furnival. Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
       </footer>
     </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->

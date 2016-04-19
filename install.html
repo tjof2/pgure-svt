@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>PGURE-SVT by tjof2</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">PGURE-SVT</h1>
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/tjof2/pgure-svt/archive/v0.3.0.tar.gz">Download v0.3.0</a></li>
+          <li><a class="buttons github" href="https://github.com/tjof2/pgure-svt">View On GitHub</a></li>
+        </ul>
+       <p class="header">This project is maintained by <a class="header name" href="https://github.com/tjof2">tjof2</a></p>
+       <p><a href="https://travis-ci.org/tjof2/pgure-svt">
+<img src="https://travis-ci.org/tjof2/pgure-svt.svg?branch=master"/>
+</a></p>
+      </header>
+      <section>
+
+
+                <p><small><em><a href="http://tjof2.github.io/pgure-svt">Home</a> &gt;
+                   Installation</small></em></p>
+
+<h1>
+<a id="pgure-svt" class="anchor" href="#pgure-svt" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>Installation</h1>
+
+<h3>
+<a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true">
+  <span class="octicon octicon-link"></span></a>Dependencies</h3>
+<ul>
+<li>
+<strong><a href="http://www.cmake.org">CMake</a></strong> 2.8+
+</li>
+<li>
+<strong><a href="http://arma.sourceforge.net">Armadillo</a></strong> 6.400+
+</li>
+<li>
+<strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> 2.4.2+
+</li>
+<li>
+<strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a> - for the standalone executable only</strong>
+</li>
+</ul>
+
+<h3>
+<a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true">
+  <span class="octicon octicon-link"></span></a>Compiling from source</h3>
+
+<p>
+To build PGURE-SVT, first unpack the source and create a directory named <code>build</code>:
+</p>
+
+<pre><code>$ tar -xzf pgure-svt.tar.gz
+$ cd pgure-svt
+$ mkdir build
+</code></pre>
+
+<p>Navigate to the newly-created <code>build</code> directory to compile the source. This will
+generate a shared library in the <code>/usr/local/lib</code> directory.
+It will also install the Python wrapper by running <code>python setup.py install</code>.</p>
+
+<pre><code>$ cd build
+$ cmake ..
+$ make
+$ sudo make install
+</code></pre>
+
+<p>The standalone executable is not built by default, as it requires LibTIFF to be installed. To install the
+PGURE-SVT executable into <code>/usr/local/bin</code>, use:</p>
+
+<pre><code>$ cmake -DBUILD_EXECUTABLE=ON ..
+$ make
+$ sudo make install
+</code></pre>
+
+
+
+      </section>
+      <footer>
+        <p><small>Copyright (C) 2015-2016 Tom Furnival. Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		          <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-65991272-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
