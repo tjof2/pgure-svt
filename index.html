@@ -18,7 +18,7 @@
       <header>
         <h1 class="header">PGURE-SVT</h1>
         <ul>
-          <li class="download"><a class="buttons" href="https://github.com/tjof2/pgure-svt/archive/v0.2.3.tar.gz">Download v0.2.3</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/tjof2/pgure-svt/archive/v0.3.0.tar.gz">Download v0.3.0</a></li>
           <li><a class="buttons github" href="https://github.com/tjof2/pgure-svt">View On GitHub</a></li>
         </ul>
        <p class="header">This project is maintained by <a class="header name" href="https://github.com/tjof2">tjof2</a></p>
@@ -44,35 +44,12 @@ applicability to many different types of microscopy. </p>
 <a id="contents" class="anchor" href="#contents" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contents</h2>
 
 <ul>
-<li><a href="#citation">Citing PGURE-SVT</a></li>
 <li><a href="#installation">Installation</a></li>
 <li><a href="#python">Using PGURE-SVT with Python</a></li>
 <li><a href="#command-line">Using PGURE-SVT from the command line</a></li>
+<li><a href="#citation">Citing PGURE-SVT</a></li>
 <li><a href="#changelog">Changelog</a></li>
 </ul>
-
-<h2>
-<a id="citation" class="anchor" href="#citation" aria-hidden="true">
-<span class="octicon octicon-link"></span></a>Citing PGURE-SVT</h2>
-
-<p>PGURE-SVT is released free of charge under the GNU General Public License
-(<a href="www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a>). If you use this code
-in a publication, please cite our work using this citation:
-</p>
-
-<pre><code>@article{PGURESVT2016,
-    title   = {Denoising time-resolved microscopy sequences with 
-               singular value thresholding.},
-    author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
-    year    = {Manuscript submitted},
-    doi     = {},
-    journal = {},
-    volume  = {},
-    pages   = {}
-}
-</code></pre>
-
-
 
 <h2>
 <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
@@ -182,10 +159,35 @@ Note that the standalone executable currently only supports TIFF sequences.
 </p>
 
 <h2>
+<a id="citation" class="anchor" href="#citation" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>Citing PGURE-SVT</h2>
+
+<p>PGURE-SVT is released free of charge under the GNU General Public License
+(<a href="www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a>). If you use this code
+in a publication, please cite our work:
+</p>
+
+<pre><code>@article{PGURESVT2016,
+    title   = {Denoising time-resolved microscopy sequences with 
+               singular value thresholding.},
+    author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
+    year    = {Manuscript submitted},
+    doi     = {},
+    journal = {},
+    volume  = {},
+    pages   = {}
+}
+</code></pre>
+
+<h2>
 <a id="changelog" class="anchor" href="#changelog" aria-hidden="true">
 <span class="octicon octicon-link"></span></a>Changelog</h2>
 
 <ul>
+<li><strong>Version 0.3.0</strong> - 19/04/2016<br/>
+    &nbsp;-&nbsp;Functional Python wrapper<br/>
+    &nbsp;-&nbsp;Link with <a href="http://hyperspy.org">HyperSpy</a> multidimensional analysis toolbox</li>
+    &nbsp;-&nbsp;Numerous bug fixes</li>
 <li><strong>Version 0.2.3</strong> - 13/04/2016<br/>
     &nbsp;-&nbsp;Fixes patch overlap bug<br/>
     &nbsp;-&nbsp;Introduces a simple Python wrapper</li>
