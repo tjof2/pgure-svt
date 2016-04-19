@@ -1,5 +1,11 @@
-from pguresvt.pguresvt import SVT
 from hyperspy import signals
+
+try:
+    from pguresvt.pguresvt import SVT
+except ImportError:
+    raise ImportError("It looks like you may be working in the original "
+                      "PGURE-SVT directory. Try again in a different "
+                      "directory.")
 
 
 class HSPYSVT(SVT):
