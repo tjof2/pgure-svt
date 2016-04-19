@@ -38,6 +38,8 @@
 CMakeCache.txt
 CMakeFiles/
 Makefile
+src/CMakeCache.txt
+src/CMakeFiles/
 cmake_install.cmake
 
 # Programs
@@ -46,6 +48,7 @@ PGURE-SVT
 # Directories
 build
 dev
+venv
 
 # CPP Lint
 src/cpplint*
@@ -55,3 +58,9 @@ src/cpplint*
 
 # Python files
 *.pyc
+
+# PyCharm
+.idea/
+
+# Notebooks
+.ipynb_checkpoints/
