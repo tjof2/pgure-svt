@@ -1,11 +1,11 @@
 # Travis file
 
 language: generic
-    
+
 before_install:
   - sudo apt-get update -qq
   - test/install-dependencies.sh > log-file 2>&1
-  
+
 matrix:
   include:
     - os: linux
@@ -28,7 +28,17 @@ matrix:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libblas-dev', 'liblapack-dev', 'libtiff4']
       env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
-     
+
+    - os: osx
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-4.8', 'libblas-dev', 'liblapack-dev', 'libtiff4']
+        env: COMPILER_NAME=gcc CXX=g++-4.8 CC=gcc-4.8
+
+  allow_failures:
+    - os: osx
+
 script:
   - mkdir build
   - cd build
@@ -38,5 +48,3 @@ script:
 
 notifications:
   email: false
-  
-
