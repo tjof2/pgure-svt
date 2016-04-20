@@ -4,8 +4,9 @@ language: generic
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-  - test/install-dependencies.sh > log-file 2>&1
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then test/install-dependencies.sh > log-file 2>&1 ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test/install-dependencies.sh ; fi
 
 matrix:
   include:
