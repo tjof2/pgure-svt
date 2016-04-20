@@ -3,7 +3,9 @@
 language: generic
 
 before_install:
-  - sudo apt-get update -qq
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; sudo apt-get update -qq ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install libtiff; fi
   - test/install-dependencies.sh > log-file 2>&1
 
 matrix:
@@ -31,9 +33,6 @@ matrix:
 
     - os: osx
       addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libblas-dev', 'liblapack-dev', 'libtiff4']
         env: COMPILER_NAME=gcc CXX=g++-4.8 CC=gcc-4.8
 
   allow_failures:
