@@ -47,6 +47,7 @@ PGURE-SVT
 
 # Directories
 build
+winbuild
 dev
 venv
 
