@@ -11,10 +11,9 @@ setup(name    = 'pguresvt',
       author_email = 'tjof2@cam.ac.uk',
       url     = 'http://tjof2.github.io/pgure-svt',
       description = 'Singular value thresholding for denoising video microscopy data',
-      long_description = read('../README.md'),
+      long_description = read('${CMAKE_SOURCE_DIR}/README.md'),
       license = 'GPLv3',
 
       packages = ['pguresvt'],
       package_dir = {'': '${CMAKE_CURRENT_BINARY_DIR}'},
 )
-
