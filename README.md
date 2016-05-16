@@ -30,6 +30,6 @@ If you use this code in a publication, please cite our work:
 }
 ```
 
-_Copyright (C) 2015-2016 Tom Furnival.
+_Copyright (C) 2015-2016 Tom Furnival._
 
-PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html))._
+_PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html))._
