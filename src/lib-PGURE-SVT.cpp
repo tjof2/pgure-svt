@@ -76,8 +76,8 @@ bool strToBool(std::string const& s) {return s != "0";};
 
 // Main program
 extern "C" int PGURESVT(double *X,
-                        double *Y,               
-                        int *dims,                        
+                        double *Y,
+                        int *dims,
                         int Bs,
                         int Bo,
                         int T,
@@ -89,7 +89,8 @@ extern "C" int PGURESVT(double *X,
                         int MotionP,
                         double tol,
                         int MedianSize,
-                        double hotpixelthreshold) {
+                        double hotpixelthreshold,
+												int numthreads) {
 
 	// Overall program timer
 	auto overallstart = std::chrono::steady_clock::now();
@@ -101,52 +102,50 @@ extern "C" int PGURESVT(double *X,
 	std::cout<<"Email:  tjof2@cam.ac.uk"<<std::endl<<std::endl;
 	std::cout<<"Version 0.3.0 - April 2016"<<std::endl<<std::endl;
 
-    int NoiseMethod = 4;
-    double lambda = (userLambda >= 0.) ? userLambda : 0.;
-    
-    int Nx = dims[0];
-    int Ny = dims[1];
-    int num_images = dims[2];
+	// Set up OMP
+	omp_set_dynamic(0);
+	omp_set_num_threads(numthreads);
 
-    // Copy the image sequence into the a cube
-    arma::cube noisysequence(X, Nx, Ny, num_images);
-    
-    // Generate the clean and filtered sequences
-    arma::cube cleansequence(Nx, Ny, num_images);
-    arma::cube filteredsequence(Nx, Ny, num_images);
-    
-    cleansequence.zeros();
-    filteredsequence.zeros();
-    
-    // Parameters for median filter
-    unsigned short *Buffer = new unsigned short[Nx*Ny];
-    unsigned short *FilteredBuffer = new unsigned short[Nx*Ny];
-    int memsize = 512 * 1024;	// L2 cache size
-    int filtsize = MedianSize;	// Median filter size in pixels
-    
-    // Perform the initial median filtering
-    for (int i = 0; i < num_images; i++) {
-        arma::Mat<unsigned short> curslice = arma::conv_to<arma::Mat<unsigned short>>::from(noisysequence.slice(i).eval());
-        inplace_trans(curslice);
-        Buffer = curslice.memptr();
-        ConstantTimeMedianFilter(Buffer, 
-                                 FilteredBuffer,
-                                 Nx, Ny, Nx, Ny,
-                                 filtsize, 1, memsize);
+  int NoiseMethod = 4;
+  double lambda = (userLambda >= 0.) ? userLambda : 0.;
+
+  int Nx = dims[0];
+  int Ny = dims[1];
+  int num_images = dims[2];
+
+  // Copy the image sequence into the a cube
+  arma::cube noisysequence(X, Nx, Ny, num_images);
+
+  // Generate the clean and filtered sequences
+  arma::cube cleansequence(Nx, Ny, num_images);
+  arma::cube filteredsequence(Nx, Ny, num_images);
+
+  cleansequence.zeros();
+  filteredsequence.zeros();
+
+  // Parameters for median filter
+  unsigned short *Buffer = new unsigned short[Nx*Ny];
+  unsigned short *FilteredBuffer = new unsigned short[Nx*Ny];
+  int memsize = 512 * 1024;	// L2 cache size
+  int filtsize = MedianSize;	// Median filter size in pixels
+
+  // Perform the initial median filtering
+  for (int i = 0; i < num_images; i++) {
+    arma::Mat<unsigned short> curslice = arma::conv_to<arma::Mat<unsigned short>>::from(noisysequence.slice(i).eval());
+    inplace_trans(curslice);
+    Buffer = curslice.memptr();
+    ConstantTimeMedianFilter(Buffer,
+                             FilteredBuffer,
+                             Nx, Ny, Nx, Ny,
+                             filtsize, 1, memsize);
 		arma::Mat<unsigned short> filslice(FilteredBuffer, Nx, Ny);
 		inplace_trans(filslice);
-		filteredsequence.slice(i) = arma::conv_to<arma::mat>::from(filslice);       			
-    }
+		filteredsequence.slice(i) = arma::conv_to<arma::mat>::from(filslice);
+  }
 
-    // Initial outlier detection (for hot pixels)
-    // using median absolute deviation
-    HotPixelFilter(noisysequence, hotpixelthreshold);
-    
-	/////////////////////////////
-	//						   //
-	//     START THE LOOP      //
-	//						   //
-	/////////////////////////////
+  // Initial outlier detection (for hot pixels)
+  // using median absolute deviation
+  HotPixelFilter(noisysequence, hotpixelthreshold);
 
 	// Print table headings
 	int ww = 10;
@@ -176,36 +175,25 @@ extern "C" int PGURESVT(double *X,
 			u = noisysequence.slices(timeiter - framewindow, timeiter + framewindow);
 			ufilter = filteredsequence.slices(timeiter - framewindow, timeiter + framewindow);
 		}
-		
+
 		// Basic sequence normalization
 		double inputmax = u.max();
 		u /= inputmax;
 		ufilter /= ufilter.max();
 
-		/////////////////////////////
-		//						   //
-		//    NOISE ESTIMATION     //
-		//						   //
-		/////////////////////////////
-
 		// Perform noise estimation
 		if(pgureOpt) {
-		    NoiseEstimator *noise = new NoiseEstimator;
-		    noise->Estimate(u,
-		                    alpha,
-		                    mu,
-		                    sigma,
-		                    8,
-		                    NoiseMethod);
-		    delete noise;
+		  NoiseEstimator *noise = new NoiseEstimator;
+		  noise->Estimate(u,
+		                  alpha,
+		                  mu,
+		                  sigma,
+		                  4,
+		                  NoiseMethod);
+		  delete noise;
 		}
-		
-		/////////////////////////////
-		//						   //
-		//    MOTION ESTIMATION    //
-		//						   //
-		/////////////////////////////
 
+		// Perform motion estimation
 		MotionEstimator *motion = new MotionEstimator;
 		motion->Estimate(ufilter,
 		                 timeiter,
@@ -216,12 +204,7 @@ extern "C" int PGURESVT(double *X,
 		arma::icube sequencePatches = motion->GetEstimate();
 		delete motion;
 
-		/////////////////////////////
-		//						   //
-		//   PGURE OPTIMIZATION    //
-		//						   //
-		/////////////////////////////
-
+		// Perform PGURE optimization
 		PGURE *optimizer = new PGURE;
 		optimizer->Initialize(u,
 		                      sequencePatches,
@@ -240,12 +223,6 @@ extern "C" int PGURESVT(double *X,
 			v = optimizer->Reconstruct(userLambda);
 		}
 		delete optimizer;
-
-		/////////////////////////////
-		//						   //
-		// SEQUENCE RECONSTRUCTION //
-		//						   //
-		/////////////////////////////
 
 		// Rescale back to original range
 		v *= inputmax;
@@ -269,29 +246,19 @@ extern "C" int PGURESVT(double *X,
 		// Output a table row with noise estimates, lambda and timing
 		std::ostringstream framestring;
 		framestring << timeiter+1;
-
 		std::cout<<std::fixed<<std::setw(5)<<framestring.str()<<std::setw(ww)<<std::setprecision(3)<<alpha<<std::setw(ww)<<std::setprecision(3)<<mu<<std::setw(ww)<<std::setprecision(3)<<sigma<<std::setw(ww)<<std::setprecision(3)<<lambda<<std::setw(ww)<<std::setprecision(3)<<(elapsedLoopTimer.count()/1E6)<<std::endl;
 	}
 
 	// Finish the table off
 	std::cout<<std::setw(5*ww+5)<<std::string(5*ww+5,'-')<<std::endl<<std::endl;
 
-	/////////////////////////////
-	//						   //
-	//      REPORT RESULT      //
-	//						   //
-	/////////////////////////////
-
 	// Overall program timer
 	auto overallend = std::chrono::steady_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(overallend - overallstart);
 	std::cout<<"Total time: "<<std::setprecision(5)<<(elapsed.count()/1E6)<<" seconds"<<std::endl<<std::endl;
 
-    // Copy back to Python
-    memcpy(Y, cleansequence.memptr(), cleansequence.n_elem*sizeof(double));
+  // Copy back to Python
+  memcpy(Y, cleansequence.memptr(), cleansequence.n_elem*sizeof(double));
 
 	return 0;
 }
-
-
-
