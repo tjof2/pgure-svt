@@ -26,7 +26,9 @@ If you use this code in a publication, please cite our work:
     title   = {Denoising time-resolved microscopy sequences with
                singular value thresholding.},
     author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
-    year    = {Manuscript submitted}
+    journal = {Ultramicroscopy},
+    doi     = {10.1016/j.ultramic.2016.05.005}
+    year    = {Article in press}
 }
 ```
 
