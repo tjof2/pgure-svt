@@ -32,6 +32,8 @@ have been tested on 64-bit versions of Windows 7 and Windows 10.
 + **[Download source](https://github.com/tjof2/pgure-svt/archive/v0.3.1.tar.gz)**
 + **[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.1/PGURE-SVT_Win64.zip)**
 
+_Note: You may need to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) before running PGURE-SVT._
+
 [![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
 
 _Copyright (C) 2015-2016 Tom Furnival._
