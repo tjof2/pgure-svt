@@ -7,15 +7,7 @@ consecutive frames to form low-rank matrices, which are then recovered using a t
 An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate the selection of the regularization parameter,
 while robust noise and motion estimation maintain broad applicability to many different types of microscopy.
 
-### Download
-
-PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04. The Windows binaries
-have been tested on 64-bit versions of Windows 7 and Windows 10.
-
-+ **[Download source](https://github.com/tjof2/pgure-svt/archive/v0.3.1.tar.gz)**
-+ **[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.1/PGURE-SVT_Win64.zip)**
-
-[![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
+More information on the algorithm can be found in our paper, DOI:[10.1016/j.ultramic.2016.05.005](http://dx.doi.org/10.1016/j.ultramic.2016.05.005).
 
 ### Citing
 
@@ -31,6 +23,16 @@ If you use this code in a publication, please cite our work:
     year    = {Article in press}
 }
 ```
+
+### Download
+
+PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04. The Windows binaries
+have been tested on 64-bit versions of Windows 7 and Windows 10.
+
++ **[Download source](https://github.com/tjof2/pgure-svt/archive/v0.3.1.tar.gz)**
++ **[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.1/PGURE-SVT_Win64.zip)**
+
+[![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
 
 _Copyright (C) 2015-2016 Tom Furnival._
 
