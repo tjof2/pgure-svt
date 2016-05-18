@@ -38,6 +38,5 @@ _Note_: You may need to install the [Microsoft Visual C++ 2015 redistributable p
 
 <small>
 Copyright (C) 2015-2016 Tom Furnival.
-
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html)).
 </small>
