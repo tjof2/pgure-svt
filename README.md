@@ -29,8 +29,8 @@ If you use this code in a publication, please cite our work:
 PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04. The Windows binaries
 have been tested on 64-bit versions of Windows 7 and Windows 10.
 
-+ **[Download source](https://github.com/tjof2/pgure-svt/archive/v0.3.1.tar.gz)**
-+ **[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.1/PGURE-SVT_Win64.zip)**
++ **[Download source](https://github.com/tjof2/pgure-svt/archive/v0.3.2.tar.gz)**
++ **[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.2/PGURE-SVT_Win64.zip)**
 
 _Note_: You may need to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) before running PGURE-SVT.
 
