@@ -90,7 +90,7 @@ extern "C" int PGURESVT(double *X,
                         double tol,
                         int MedianSize,
                         double hotpixelthreshold,
-												int numthreads) {
+                        int numthreads) {
 
 	// Overall program timer
 	auto overallstart = std::chrono::steady_clock::now();

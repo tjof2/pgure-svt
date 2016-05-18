@@ -19,7 +19,7 @@ If you use this code in a publication, please cite our work:
                singular value thresholding.},
     author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
     journal = {Ultramicroscopy},
-    doi     = {10.1016/j.ultramic.2016.05.005}
+    doi     = {10.1016/j.ultramic.2016.05.005},
     year    = {Article in press}
 }
 ```
@@ -32,10 +32,12 @@ have been tested on 64-bit versions of Windows 7 and Windows 10.
 + **[Download source](https://github.com/tjof2/pgure-svt/archive/v0.3.1.tar.gz)**
 + **[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.1/PGURE-SVT_Win64.zip)**
 
-_Note: You may need to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) before running PGURE-SVT._
+_Note_: You may need to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) before running PGURE-SVT.
 
 [![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
 
-_Copyright (C) 2015-2016 Tom Furnival._
+<small>
+Copyright (C) 2015-2016 Tom Furnival.
 
-_PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html))._
+PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html)).
+</small>
