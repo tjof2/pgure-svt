@@ -103,8 +103,10 @@ extern "C" int PGURESVT(double *X,
 	std::cout<<"Version 0.3.2 - May 2016"<<std::endl<<std::endl;
 
 	// Set up OMP
-	omp_set_dynamic(0);
-	omp_set_num_threads(numthreads);
+	#if defined(_OPENMP)
+		omp_set_dynamic(0);
+		omp_set_num_threads(numthreads);
+	#endif
 
   int NoiseMethod = 4;
   double lambda = (userLambda >= 0.) ? userLambda : 0.;
