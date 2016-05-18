@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
     std::cout<<"PGURE-SVT Denoising"<<std::endl;
     std::cout<<"Author: Tom Furnival"<<std::endl;
     std::cout<<"Email:  tjof2@cam.ac.uk"<<std::endl<<std::endl;
-    std::cout<<"Version 0.3.0 - April 2016"<<std::endl<<std::endl;
+    std::cout<<"Version 0.3.2 - May 2016"<<std::endl<<std::endl;
 
     /////////////////////////////
     //                           //
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
         double tol;
         osTol >> tol;
     }
-    
+
     // Block overlap
     int Bo = (programOptions.count("patch_overlap") == 1) ? std::stoi(programOptions.at("patch_overlap")) : 1;
 
@@ -179,11 +179,12 @@ int main(int argc, char** argv) {
     // Hot pixel threshold
     double hotpixelthreshold = (programOptions.count("hot_pixel") == 1) ? std::stoi(programOptions.at("hot_pixel")) : 10;
 
-    /////////////////////////////
-    //                           //
-    //     SEQUENCE IMPORT     //
-    //                           //
-    /////////////////////////////
+    // Set up OMP
+    #if defined(_OPENMP)
+      int num_threads = (programOptions.count("num_threads") == 1) ? std::stoi(programOptions.at("num_threads")) : 4;
+      omp_set_dynamic(0);
+      omp_set_num_threads(num_threads);
+    #endif
 
     // Check file exists
     std::string infilename = filestem + ".tif";
@@ -256,7 +257,7 @@ int main(int argc, char** argv) {
     arma::cube noisysequence = inputsequence;
     arma::cube cleansequence = inputsequence;
     cleansequence.zeros();
-    
+
     // Get dimensions
     int Nx = tiffHeight;
     int Ny = tiffWidth;
@@ -264,12 +265,6 @@ int main(int argc, char** argv) {
     // Initial outlier detection (for hot pixels)
     // using median absolute deviation
     HotPixelFilter(noisysequence, hotpixelthreshold);
-    
-    /////////////////////////////
-    //                           //
-    //     START THE LOOP      //
-    //                           //
-    /////////////////////////////
 
     // Print table headings
     int ww = 10;
@@ -299,17 +294,11 @@ int main(int argc, char** argv) {
             u = noisysequence.slices(timeiter - framewindow, timeiter + framewindow);
             ufilter = filteredsequence.slices(timeiter - framewindow, timeiter + framewindow);
         }
-        
+
         // Basic sequence normalization
         double inputmax = u.max();
         u /= inputmax;
         ufilter /= ufilter.max();
-
-        /////////////////////////////
-        //                           //
-        //    NOISE ESTIMATION     //
-        //                           //
-        /////////////////////////////
 
         // Perform noise estimation
         if(pgureOpt) {
@@ -322,13 +311,8 @@ int main(int argc, char** argv) {
                             NoiseMethod);
             delete noise;
         }
-        
-        /////////////////////////////
-        //                           //
-        //    MOTION ESTIMATION    //
-        //                           //
-        /////////////////////////////
 
+        // Perform motion estimation
         MotionEstimator *motion = new MotionEstimator;
         motion->Estimate(ufilter,
                          timeiter,
@@ -339,12 +323,7 @@ int main(int argc, char** argv) {
         arma::icube sequencePatches = motion->GetEstimate();
         delete motion;
 
-        /////////////////////////////
-        //                           //
-        //   PGURE OPTIMIZATION    //
-        //                           //
-        /////////////////////////////
-
+        // Perform PGURE optimization
         PGURE *optimizer = new PGURE;
         optimizer->Initialize(u,
                               sequencePatches,
@@ -352,7 +331,7 @@ int main(int argc, char** argv) {
                               Bo,
                               alpha,
                               sigma,
-                              mu);    
+                              mu);
         // Determine optimum threshold value (max 1000 evaluations)
         if(pgureOpt) {
             lambda = (timeiter == 0) ? arma::accu(u)/(Nx*Ny*T) : lambda;
@@ -363,12 +342,6 @@ int main(int argc, char** argv) {
             v = optimizer->Reconstruct(lambda);
         }
         delete optimizer;
-
-        /////////////////////////////
-        //                           //
-        // SEQUENCE RECONSTRUCTION //
-        //                           //
-        /////////////////////////////
 
         // Rescale back to original range
         v *= inputmax;
@@ -399,12 +372,6 @@ int main(int argc, char** argv) {
     // Finish the table off
     std::cout<<std::setw(5*ww+5)<<std::string(5*ww+5,'-')<<std::endl<<std::endl;
 
-    /////////////////////////////
-    //                           //
-    //      SAVE SEQUENCE      //
-    //                           //
-    /////////////////////////////
-
     // Normalize to [0,65535] range
     cleansequence = (cleansequence - cleansequence.min())/(cleansequence.max() - cleansequence.min());
     arma::Cube<unsigned short> outTiff(tiffWidth,tiffHeight,num_images);
@@ -427,7 +394,7 @@ int main(int argc, char** argv) {
 
     for(int tOut = 0; tOut < num_images; tOut++) {
         libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGEWIDTH, tiffWidth);
-           libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGELENGTH, tiffHeight);
+        libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGELENGTH, tiffHeight);
         libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_BITSPERSAMPLE, 16);
         libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_SAMPLESPERPIXEL, 1);
         libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
@@ -446,12 +413,6 @@ int main(int argc, char** argv) {
       }
       libtiff::TIFFClose(MultiPageTiffOut);
 
-    /////////////////////////////
-    //                           //
-    //      REPORT RESULT      //
-    //                           //
-    /////////////////////////////
-
     // Overall program timer
     auto overallend = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(overallend - overallstart);
@@ -459,6 +420,3 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-
-
-

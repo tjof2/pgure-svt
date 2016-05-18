@@ -100,7 +100,7 @@ extern "C" int PGURESVT(double *X,
 	std::cout<<"PGURE-SVT Denoising"<<std::endl;
 	std::cout<<"Author: Tom Furnival"<<std::endl;
 	std::cout<<"Email:  tjof2@cam.ac.uk"<<std::endl<<std::endl;
-	std::cout<<"Version 0.3.0 - April 2016"<<std::endl<<std::endl;
+	std::cout<<"Version 0.3.2 - May 2016"<<std::endl<<std::endl;
 
 	// Set up OMP
 	omp_set_dynamic(0);

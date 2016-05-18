@@ -33,7 +33,7 @@ sigma                : 0.1
 #	0 = OFF
 #	1 = ON
 #	Default = ON
-pgure                : 0 
+pgure                : 0
 
 # If PGURE is turned off, you MUST specify a threshold
 lambda               : 0.15
@@ -57,3 +57,12 @@ motion_estimation    : 1
 # Size of median filter
 #	Default = 5 pixels
 #median_filter        : 5
+
+# Hot pixel threshold detection
+#   User value = n, threshold is n * median absolute deviation from image median
+# Default = 10
+#hot_pixel            : 5
+
+# OpenMP num_threads
+# Default = 4
+#num_threads          : 4
