@@ -28,8 +28,6 @@
       </header>
       <section>
 
-
-
 <h1>
 <a id="pgure-svt" class="anchor" href="#pgure-svt" aria-hidden="true">
 <span class="octicon octicon-link"></span></a>Using PGURE-SVT with Python</h1>
@@ -40,14 +38,77 @@
 
 <p>PGURE-SVT includes two methods for integrating the algorithm into your Python
 workflow. This is often convenient for importing proprietary file formats,
-for any pre- or post-processing of the data, and for plotting results.
-</p>
+for any pre- or post-processing of the data, and for plotting results.</p>
 
-<p>A <a href="./command.html">standalone executable</a> is available, but only
-supports TIFF sequences.</p>
+<ul>
+  <li><a href="#options"><strong>Program options</strong></a></li>
+  <li><a href="#hyperspy"><strong>Integration with HyperSpy</strong></a></li>
+  <li><a href="#numpy"><strong>Standalone Python wrapper</strong></a></li>
+</ul>
+
+<h2>
+<a id="options" class="anchor" href="#options" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>Program options:</h2>
+
+<ul>
+<li>
+  <strong>patchsize</strong> - Dimensions of spatial patches in pixels
+</li>
+<li>
+  <strong>patchoverlap</strong> - Step size in pixels by which successive spatial patches are displaced with respect to one another
+</li>
+<li>
+  <strong>length</strong> - Length in frames of a temporal block (must be odd)
+</li>
+<li>
+  <strong>optimize</strong> - Turn on (<code>True</code>) or off (<code>False</code>) optimisation of lambda with PGURE
+  <br/>(if <code>False</code>, threshold must be specified)
+</li>
+<li>
+  <strong>threshold</strong> - Option to specify lambda when PGURE is not used<br/>(ignored when <code>optimize=True</code>)
+</li>
+<li>
+  <strong>estimatenoise</strong> - Turn automated noise estimation on (<code>True</code>) or off (<code>False</code>)
+  <br/>(if <code>False</code>, <code>alpha</code>, <code>mu</code> and <code>sigma</code> must be specified)
+</li>
+<li>
+  <strong>alpha</strong> - Option to specify detector gain
+  <br/>(ignored when <code>estimatenoise=True</code>)
+</li>
+<li>
+  <strong>mu</strong> - Option to specify detector offset
+  <br/>(ignored when <code>estimatenoise=True</code>)
+</li>
+<li>
+  <strong>sigma</strong> - Option to specify Gaussian noise component
+  <br/>(ignored when <code>estimatenoise=True</code>)
+</li>
+</ul>
+
+<h4>
+<a id="options" class="anchor" href="#options" aria-hidden="true">
+<span class="octicon octicon-link"></span></a>Advanced options:</h4>
+<ul>
+<li>
+  <strong>arpssize</strong> -  Size in pixels of ARPS motion estimation neighbourhood
+</li>
+<li>
+  <strong>tol</strong> - PGURE optimization terminates after relative change is below tolerance
+</li>
+<li>
+  <strong>median</strong> - Size of median filter
+</li>
+<li>
+  <strong>hotpixelthreshold</strong> - <code>n * median absolute deviation</code> above the image median,
+  where <code>n</code> is the user value. Any hot pixels are replaced by the median of their immediate neighbours.
+</li>
+<li>
+  <strong>numthreads</strong> - Number of threads to use on a multicore computer
+</li>
+</ul>
 
   <h2>
-  <a id="changelog" class="anchor" href="#changelog" aria-hidden="true">
+  <a id="hyperspy" class="anchor" href="#hyperspy" aria-hidden="true">
   <span class="octicon octicon-link"></span></a>Integration with HyperSpy</h2>
 
   <p>PGURE-SVT can be integrated with the
@@ -57,31 +118,30 @@ supports TIFF sequences.</p>
     example iPython notebook</a> is
   provided.</p>
 
-  <pre><code>
-  %matplotlib qt
-  import hyperspy.api as hs
-  from pguresvt import hspysvt
+  <pre><code>%matplotlib qt
+import hyperspy.api as hs
+from pguresvt import hspysvt
 
-  # Load example dataset
-  movie = hs.load("./examples/examplesequence.tif")
+# Load example dataset
+movie = hs.load("./examples/examplesequence.tif")
 
-  # Take the first 15 frames, and plot the result
-  movie = movie.inav[:15]
-  movie.plot(navigator'slider')
+# Take the first 15 frames, and plot the result
+movie = movie.inav[:15]
+movie.plot(navigator'slider')
 
-  # Denoise the HyperSpy signal directly.
-  svt = hspysvt.HSPYSVT(patchsize=4,
-                        length=15,
-                        optimize=True,
-                        tol=1e-6)
-  denoised_movie = svt.denoise(movie)
+# Denoise the HyperSpy signal directly.
+svt = hspysvt.HSPYSVT(patchsize=4,
+                      length=15,
+                      optimize=True,
+                      tol=1e-6)
+denoised_movie = svt.denoise(movie)
 
-  # Plot denoised data
-  denoised_movie.plot(navigator'slider')
-  </code></pre>
+# Plot denoised data
+denoised_movie.plot(navigator'slider')
+</code></pre>
 
   <h2>
-  <a id="changelog" class="anchor" href="#changelog" aria-hidden="true">
+  <a id="numpy" class="anchor" href="#numpy" aria-hidden="true">
   <span class="octicon octicon-link"></span></a>Standalone Python wrapper</h2>
 
   <p>PGURE-SVT comes with a simple Python wrapper that accepts any NumPy array
@@ -95,11 +155,8 @@ from pguresvt import pguresvt
 X = np.random.randn(128, 128, 25)
 
 # Initialize the algorithm
-# with some parameters
-svt = pguresvt.SVT(patchsize=4,
-                   length=15,
-                   optimize=True,
-                   tol=1e-6)
+# with default parameters
+svt = pguresvt.SVT()
 
 # Run the algorithm on the data X
 svt.denoise(X)
