@@ -1,11 +1,13 @@
 # Travis file
 
 language: generic
-    
+
 before_install:
-  - sudo apt-get update -qq
-  - test/install-dependencies.sh > log-file 2>&1
-  
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then test/install-dependencies.sh > log-file 2>&1 ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test/install-dependencies.sh ; fi
+
 matrix:
   include:
     - os: linux
@@ -28,7 +30,14 @@ matrix:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libblas-dev', 'liblapack-dev', 'libtiff4']
       env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
-     
+
+    - os: osx
+      addons:
+        env: COMPILER_NAME=gcc CXX=g++-4.8 CC=gcc-4.8
+
+  allow_failures:
+    - os: osx
+
 script:
   - mkdir build
   - cd build
@@ -38,5 +47,3 @@ script:
 
 notifications:
   email: false
-  
-
