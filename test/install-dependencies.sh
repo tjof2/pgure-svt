@@ -15,7 +15,7 @@ sudo make install
 ##########################################
 # Armadillo 6.600
 wget http://sourceforge.net/projects/arma/files/armadillo-7.200.1.tar.xz
-tar -xzvf armadillo-7.200.1.tar.xz
+tar -xvf armadillo-7.200.1.tar.xz
 cd armadillo-7.200.1
 cmake .
 make 
