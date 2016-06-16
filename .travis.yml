@@ -31,7 +31,7 @@ matrix:
       env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
       
     - os: osx      
-      env: COMPILER_NAME=gcc CXX=g++-mp-4.9 CC=gcc-mp-4.9
+      env: COMPILER_NAME=gcc CXX=g++-4.9 CC=gcc-4.9
      
 script:
   - mkdir build
