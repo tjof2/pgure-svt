@@ -4,8 +4,6 @@ language: generic
     
 before_install:
   - if [${TRAVIS_OS_NAME} == "linux"]; then sudo apt-get update -qq; fi
-  - if [${TRAVIS_OS_NAME} == "osx"]; then brew update; fi
-  - if [${TRAVIS_OS_NAME} == "osx"]; then brew install gcc5; fi
   - test/install-dependencies.sh 
   #> log-file 2>&1
   
@@ -32,9 +30,8 @@ matrix:
           packages: ['g++-5', 'libblas-dev', 'liblapack-dev', 'libtiff4']
       env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
       
-    - os: osx
-      osx_image: xcode6.4
-      env: COMPILER_NAME=gcc CXX=g++-mp-5 CC=gcc-mp-5
+    - os: osx      
+      env: COMPILER_NAME=gcc CXX=g++-mp-4.9 CC=gcc-mp-4.9
      
 script:
   - mkdir build
