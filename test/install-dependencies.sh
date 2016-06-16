@@ -2,7 +2,7 @@
 #
 #   This script builds from source:
 #       - OpenBLAS 0.2.16
-#       - Armadillo 6.700
+#       - Armadillo 7.200
 #       - NLopt 2.4.2
 #
 set -ex
@@ -14,9 +14,9 @@ make NO_AFFINITY=1
 sudo make install
 ##########################################
 # Armadillo 6.600
-wget http://sourceforge.net/projects/arma/files/armadillo-6.700.4.tar.gz
-tar -xzvf armadillo-6.700.4.tar.gz
-cd armadillo-6.700.4
+wget http://sourceforge.net/projects/arma/files/armadillo-7.200.1.tar.xz
+tar -xvf armadillo-7.200.1.tar.xz
+cd armadillo-7.200.1
 cmake .
 make 
 sudo make install
