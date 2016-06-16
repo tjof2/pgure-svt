@@ -10,8 +10,8 @@ set -ex
 wget http://github.com/xianyi/OpenBLAS/archive/v0.2.16.tar.gz
 tar -xzvf v0.2.16.tar.gz
 cd OpenBLAS-0.2.16
-make NO_AFFINITY=1
-sudo make install
+make NO_AFFINITY=1 > log-file 2>&1
+sudo make install > log-file 2>&1
 ##########################################
 # Armadillo 6.600
 wget http://sourceforge.net/projects/arma/files/armadillo-7.200.1.tar.xz
