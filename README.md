@@ -26,13 +26,21 @@ If you use this code in a publication, please cite our work:
 
 ### Download
 
-PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04. The Windows binaries
-have been tested on 64-bit versions of Windows 7 and Windows 10.
+#### Linux/Mac
 
-+ **[Download source](https://github.com/tjof2/pgure-svt/archive/v0.3.2.tar.gz)**
-+ **[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.2/PGURE-SVT_Win64.zip)**
+PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04.
+For Mac users, you may need to use the GCC compiler (v4.9+) rather than the default.
+Compilation instructions can be found [here](http://tjof2.github.io/pgure-svt/install.html).
 
-_Note_: You may need to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) before running PGURE-SVT.
+**[Download source](https://github.com/tjof2/pgure-svt/archive/v0.3.2.tar.gz)**
+
+#### Windows
+
+The Windows binaries have been tested on 64-bit versions of Windows 7 and Windows 10. You may need 
+to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) 
+before running PGURE-SVT.
+
+**[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.2/PGURE-SVT_Win64.zip)**
 
 [![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
 
