@@ -50,8 +50,8 @@
 <a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true">
   <span class="octicon octicon-link"></span></a>Compiling from source</h2>
 
-  <p>PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04. It should work (although
-    it has not yet been tested) on OSX. You may need to specify GCC as your compiler.</p>
+  <p>PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04. It should also work on Mac, although
+  you will probably need to specify GCC version 4.9 or above as your compiler.</p>
 
   <h3>
   <a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true">
@@ -73,6 +73,13 @@
   is recommended that you also install a high-speed BLAS replacement such as OpenBLAS
   or MKL; more information can be found in the  Armadillo <a href="http://arma.sourceforge.net/faq.html#blas_lapack_replacements">
   documentation</a>.</p>
+  
+  <p>When installing NLopt, make sure you specify to build the shared library:</p>
+<pre><code>$ cd nlopt-2.4.2
+$ ./configure --enable-shared
+$ make
+$ sudo make install
+</code></pre>
 
   <h3>
   <a id="compilation" class="anchor" href="#compilation" aria-hidden="true">
@@ -81,15 +88,15 @@
 <p>By default, the system will build a C++ library for linking with Python. Installation of
 the <a href="command.html"> standalone executable</a> must be specified by the user. To build PGURE-SVT, first unpack the source:</p>
 
-<pre><code>$ tar -xzf pgure-svt-0.3.0.tar.gz
-$ cd pgure-svt-0.3.0
+<pre><code>$ tar -xzf pgure-svt-0.3.2.tar.gz
+$ cd pgure-svt-0.3.2
 </code></pre>
 
 <p>Next create a <code>build</code> directory for CMake to use when compiling
   and installing PGURE-SVT:</p>
 
 <pre><code>$ mkdir build
-  $ cd build
+$ cd build
 </code></pre>
 
 <p>Use CMake to compile and install PGURE-SVT. By default, this will
