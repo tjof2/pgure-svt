@@ -263,7 +263,7 @@ class SVT(object):
         dims = np.asarray(X.shape).astype(np.int32)
         if dims[0] != dims[1] and self.estimation:
             raise ValueError("Quadtree noise estimation requires square images")
-        if is_power_of_two(dims[0]) is False and self.estimation:
+        if self._is_power_of_two(dims[0]) is False and self.estimation:
             raise ValueError("Quadtree noise estimation requires image dimensions 2^N")
         # Create Y in memory
         Y = np.zeros(X.shape, dtype=np.double, order='F')
@@ -303,11 +303,11 @@ class SVT(object):
         x = np.copy(X.astype(np.double), order='F')
         return x
 
-        def _is_power_of_two(self, n):
-              n = n/2
-              if n == 2:
-                  return True
-              elif n > 2:
-                  return self._is_power_of_two(n)
-              else:
-                  return False
+    def _is_power_of_two(self, n):
+          n = n/2
+          if n == 2:
+              return True
+          elif n > 2:
+              return self._is_power_of_two(n)
+          else:
+              return False
