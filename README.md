@@ -7,7 +7,7 @@ consecutive frames to form low-rank matrices, which are then recovered using a t
 An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate the selection of the regularization parameter,
 while robust noise and motion estimation maintain broad applicability to many different types of microscopy.
 
-More information on the algorithm can be found in our paper, DOI:[10.1016/j.ultramic.2016.05.005](http://dx.doi.org/10.1016/j.ultramic.2016.05.005).
+More information on the algorithm can be found [in our paper](http://dx.doi.org/10.1016/j.ultramic.2016.05.005) in *Ultramicroscopy*.
 
 ### Citing
 
