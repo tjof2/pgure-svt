@@ -40,7 +40,7 @@ The Windows binaries have been tested on 64-bit versions of Windows 7 and Window
 to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) 
 before running PGURE-SVT.
 
-**[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.2/PGURE-SVT_Win64.zip)**
+**[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.3/PGURE-SVT_Win64.zip)**
 
 [![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
 
