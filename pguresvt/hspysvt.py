@@ -35,12 +35,12 @@ class HSPYSVT(SVT):
         signal_data : numpy.ndarray
 
         """
-        if signal.metadata.Signal.record_by == "spectrum":
+        if signal.axes_manager.signal_dimension == 1:
             signal_data = signal._data_aligned_with_axes
             self.signal_type = "spectrum"
-        elif signal.metadata.Signal.record_by == "image":
+        elif signal.axes_manager.signal_dimension == 2:
             signal.unfold_navigation_space()
-            signal_3d = signal.as_spectrum(spectral_axis=0)
+            signal_3d = signal.as_signal1D(spectral_axis=0)
             signal_data = signal_3d._data_aligned_with_axes
             signal.fold()
             self.signal_type = "image"
@@ -50,11 +50,11 @@ class HSPYSVT(SVT):
         return signal_data
 
     def denoised_data_to_signal(self):
-        signal = signals.Signal(self.Y)
+        signal = signals.BaseSignal(self.Y)
         if self.signal_type == "spectrum":
-            return signal.as_spectrum(2)
+            return signal.as_signal1D(2)
         if self.signal_type == "image":
-            return signal.as_image((0, 1))
+            return signal.as_signal2D((1,2))
 
     def denoise(self, signal):
         """
