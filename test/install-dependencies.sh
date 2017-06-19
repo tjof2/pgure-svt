@@ -14,9 +14,9 @@ make NO_AFFINITY=1 > log-file 2>&1
 sudo make install > log-file 2>&1
 ##########################################
 # Armadillo 6.600
-wget http://sourceforge.net/projects/arma/files/armadillo-7.200.1.tar.xz
-tar -xvf armadillo-7.200.1.tar.xz
-cd armadillo-7.200.1
+wget http://sourceforge.net/projects/arma/files/armadillo-7.950.1.tar.xz
+tar -xvf armadillo-7.950.1.tar.xz
+cd armadillo-7.950.1
 cmake .
 make 
 sudo make install
