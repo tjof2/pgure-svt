@@ -374,6 +374,7 @@ int main(int argc, char** argv) {
 
     auto&& func = [&, lambda_=lambda]( int timeiter )
     {
+        auto lambda = lambda_;
         // Extract the subset of the image sequence
         arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
         if(timeiter < framewindow) {
@@ -427,7 +428,6 @@ int main(int argc, char** argv) {
                               sigma,
                               mu);
         // Determine optimum threshold value (max 1000 evaluations)
-        auto lambda = lambda_;
         if(pgureOpt) {
             lambda = (timeiter == 0) ? arma::accu(u)/(Nx*Ny*T) : lambda;
             lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);

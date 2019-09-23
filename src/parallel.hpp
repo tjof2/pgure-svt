@@ -8,7 +8,7 @@ constexpr unsigned long parallel_mode = 1;
 
 // originally from https://github.com/fengwang/matrix/blob/master/matrix.hpp#L222
 template< typename Function, typename Integer_Type >
-void parallel( Function const& func, Integer_Type dim_first, Integer_Type dim_last, unsigned long threshold = 1024 ) // 1d parallel
+void parallel( Function const& func, Integer_Type dim_first, Integer_Type dim_last, unsigned long threshold = 1 ) // 1d parallel
 {
     if constexpr( parallel_mode == 0 )
     {

@@ -70,7 +70,7 @@ extern "C" {
 #include "params.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
-#include "paralle.hpp"
+#include "parallel.hpp"
 
 // Little function to convert string "0"/"1" to boolean
 bool strToBool(std::string const& s) {return s != "0";};

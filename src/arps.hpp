@@ -146,7 +146,7 @@ class MotionEstimator {
                                   int iARPS2,
                                   int iARPS3) {
 
-            #pragma omp parallel for
+            //#pragma omp parallel for
             for (int it = 0; it < vecSize; it++) {
                 arma::vec costs = arma::ones<arma::vec>(6) * 1E8;
                 arma::umat chkMat = arma::zeros<arma::umat>(2*wind+1, 2*wind+1);
