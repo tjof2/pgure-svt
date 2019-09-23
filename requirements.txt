@@ -9,7 +9,7 @@ ipykernel==4.3.1
 ipython==4.1.2
 ipython-genutils==0.1.0
 ipywidgets==4.1.1
-Jinja2==2.8
+Jinja2>=2.10.1
 jsonschema==2.5.1
 jupyter==1.0.0
 jupyter-client==4.2.2
@@ -17,12 +17,12 @@ jupyter-console==4.1.1
 jupyter-core==4.1.0
 MarkupSafe==0.23
 matplotlib==1.5.1
-mistune==0.7.2
+mistune==0.8.1
 mpmath==0.19
 natsort==4.0.4
 nbconvert==4.2.0
 nbformat==4.0.1
-notebook==4.2.0
+notebook==5.7.8
 numpy==1.11.0
 pexpect==4.0.1
 pguresvt==0.3.0
