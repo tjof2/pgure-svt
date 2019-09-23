@@ -70,6 +70,7 @@ extern "C" {
 #include "params.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
+#include "paralle.hpp"
 
 // Little function to convert string "0"/"1" to boolean
 bool strToBool(std::string const& s) {return s != "0";};
@@ -126,12 +127,30 @@ extern "C" int PGURESVT(double *X,
   filteredsequence.zeros();
 
   // Parameters for median filter
-  unsigned short *Buffer = new unsigned short[Nx*Ny];
-  unsigned short *FilteredBuffer = new unsigned short[Nx*Ny];
   int memsize = 512 * 1024;	// L2 cache size
   int filtsize = MedianSize;	// Median filter size in pixels
 
   // Perform the initial median filtering
+  auto&& mfunc = [&]( int i )
+  {
+    unsigned short *Buffer = new unsigned short[Nx*Ny];
+    unsigned short *FilteredBuffer = new unsigned short[Nx*Ny];
+    arma::Mat<unsigned short> curslice = arma::conv_to<arma::Mat<unsigned short>>::from(noisysequence.slice(i).eval());
+    inplace_trans(curslice);
+    Buffer = curslice.memptr();
+    ConstantTimeMedianFilter(Buffer,
+                             FilteredBuffer,
+                             Nx, Ny, Nx, Ny,
+                             filtsize, 1, memsize);
+		arma::Mat<unsigned short> filslice(FilteredBuffer, Nx, Ny);
+		inplace_trans(filslice);
+		filteredsequence.slice(i) = arma::conv_to<arma::mat>::from(filslice);
+    delete[] Buffer;
+    delete[] FilteredBuffer;
+  };
+  parallel( mfunc, static_cast<unsigned long long>(num_images) );
+
+  /*
   for (int i = 0; i < num_images; i++) {
     arma::Mat<unsigned short> curslice = arma::conv_to<arma::Mat<unsigned short>>::from(noisysequence.slice(i).eval());
     inplace_trans(curslice);
@@ -144,6 +163,8 @@ extern "C" int PGURESVT(double *X,
 		inplace_trans(filslice);
 		filteredsequence.slice(i) = arma::conv_to<arma::mat>::from(filslice);
   }
+  */
+
 
   // Initial outlier detection (for hot pixels)
   // using median absolute deviation
@@ -158,11 +179,9 @@ extern "C" int PGURESVT(double *X,
 
 	// Loop over time windows
 	int framewindow = std::floor(T/2);
-	for(int timeiter = 0; timeiter < num_images; timeiter++) {
-
-		// Time the loop iteration
-		auto startLoopTimer = std::chrono::steady_clock::now();
-
+	//for(int timeiter = 0; timeiter < num_images; timeiter++) {
+    auto&& func = [&, lambda_=lambda]( int timeiter )
+    {
 		// Extract the subset of the image sequence
 		arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
 		if(timeiter < framewindow) {
@@ -217,6 +236,7 @@ extern "C" int PGURESVT(double *X,
 		                      mu);
 		// Determine optimum threshold value (max 1000 evaluations)
 		if(pgureOpt) {
+            auto lambda = lambda_;
 			lambda = (timeiter == 0) ? arma::accu(u)/(Nx*Ny*T) : lambda;
 			lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
 			v = optimizer->Reconstruct(lambda);
@@ -241,15 +261,8 @@ extern "C" int PGURESVT(double *X,
 			cleansequence.slice(timeiter) = v.slice(framewindow);
 		}
 
-		// Finish timing
-		auto endLoopTimer = std::chrono::steady_clock::now();
-		auto elapsedLoopTimer = std::chrono::duration_cast<std::chrono::microseconds>(endLoopTimer - startLoopTimer);
-
-		// Output a table row with noise estimates, lambda and timing
-		std::ostringstream framestring;
-		framestring << timeiter+1;
-		std::cout<<std::fixed<<std::setw(5)<<framestring.str()<<std::setw(ww)<<std::setprecision(3)<<alpha<<std::setw(ww)<<std::setprecision(3)<<mu<<std::setw(ww)<<std::setprecision(3)<<sigma<<std::setw(ww)<<std::setprecision(3)<<lambda<<std::setw(ww)<<std::setprecision(3)<<(elapsedLoopTimer.count()/1E6)<<std::endl;
-	}
+	};
+    parallel( func, static_cast<unsigned long long>(num_images) );
 
 	// Finish the table off
 	std::cout<<std::setw(5*ww+5)<<std::string(5*ww+5,'-')<<std::endl<<std::endl;
