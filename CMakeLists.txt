@@ -77,7 +77,9 @@ message(STATUS ${SVT_LIBS})
 ########################################
 
 # Enable OpenMP
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fPIC -Wall -march=native -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fPIC -Wall -march=native -std=c++17")
+# enable std::thread
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")

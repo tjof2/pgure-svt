@@ -75,6 +75,7 @@ extern "C" {
 #include "params.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
+#include "parallel.hpp"
 
 // Little function to convert string "0"/"1" to boolean
 bool strToBool(std::string const& s) {return s != "0";};
@@ -275,6 +276,7 @@ int main(int argc, char** argv) {
 
     // Loop over time windows
     int framewindow = std::floor(T/2);
+    /*
     for(int timeiter = 0; timeiter < num_images; timeiter++) {
 
         // Time the loop iteration
@@ -368,6 +370,91 @@ int main(int argc, char** argv) {
 
         std::cout<<std::fixed<<std::setw(5)<<framestring.str()<<std::setw(ww)<<std::setprecision(3)<<alpha<<std::setw(ww)<<std::setprecision(3)<<mu<<std::setw(ww)<<std::setprecision(3)<<sigma<<std::setw(ww)<<std::setprecision(3)<<lambda<<std::setw(ww)<<std::setprecision(3)<<(elapsedLoopTimer.count()/1E6)<<std::endl;
     }
+    */
+
+    auto&& func = [&, lambda_=lambda]( int timeiter )
+    {
+        auto lambda = lambda_;
+        // Extract the subset of the image sequence
+        arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
+        if(timeiter < framewindow) {
+            u = noisysequence.slices(0,2*framewindow);
+            ufilter = filteredsequence.slices(0,2*framewindow);
+        }
+        else if(timeiter >= (num_images - framewindow)) {
+            u = noisysequence.slices(num_images-2*framewindow-1,num_images-1);
+            ufilter = filteredsequence.slices(num_images-2*framewindow-1,num_images-1);
+        }
+        else {
+            u = noisysequence.slices(timeiter - framewindow, timeiter + framewindow);
+            ufilter = filteredsequence.slices(timeiter - framewindow, timeiter + framewindow);
+        }
+
+        // Basic sequence normalization
+        double inputmax = u.max();
+        u /= inputmax;
+        ufilter /= ufilter.max();
+
+        // Perform noise estimation
+        if(pgureOpt) {
+            NoiseEstimator *noise = new NoiseEstimator;
+            noise->Estimate(u,
+                            alpha,
+                            mu,
+                            sigma,
+                            8,
+                            NoiseMethod);
+            delete noise;
+        }
+
+        // Perform motion estimation
+        MotionEstimator *motion = new MotionEstimator;
+        motion->Estimate(ufilter,
+                         timeiter,
+                         framewindow,
+                         num_images,
+                         Bs,
+                         MotionP);
+        arma::icube sequencePatches = motion->GetEstimate();
+        delete motion;
+
+        // Perform PGURE optimization
+        PGURE *optimizer = new PGURE;
+        optimizer->Initialize(u,
+                              sequencePatches,
+                              Bs,
+                              Bo,
+                              alpha,
+                              sigma,
+                              mu);
+        // Determine optimum threshold value (max 1000 evaluations)
+        if(pgureOpt) {
+            lambda = (timeiter == 0) ? arma::accu(u)/(Nx*Ny*T) : lambda;
+            lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
+            v = optimizer->Reconstruct(lambda);
+        }
+        else {
+            v = optimizer->Reconstruct(lambda);
+        }
+        delete optimizer;
+
+        // Rescale back to original range
+        v *= inputmax;
+
+        // Place frames back into sequence
+        if(timeiter < framewindow) {
+            cleansequence.slice(timeiter) = v.slice(timeiter);
+        }
+        else if(timeiter >= (num_images - framewindow)) {
+            int endseqFrame = timeiter - (num_images - T);
+            cleansequence.slice(timeiter) = v.slice(endseqFrame);
+        }
+        else {
+            cleansequence.slice(timeiter) = v.slice(framewindow);
+        }
+
+    };
+    parallel( func, static_cast<unsigned long long>(num_images) );
 
     // Finish the table off
     std::cout<<std::setw(5*ww+5)<<std::string(5*ww+5,'-')<<std::endl<<std::endl;

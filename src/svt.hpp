@@ -126,14 +126,14 @@ class SVT {
                 V[it] = arma::zeros<arma::mat>(T, T);
             }
 
-            #pragma omp parallel for private(Ublock, Sblock, Vblock)
+            //#pragma omp parallel for private(Ublock, Sblock, Vblock)
             for (int it = 0; it < newVecSize; it++) {
                 arma::mat block(Bs*Bs, T);
 
                 // Extract block
                 for (int k = 0; k < T; k++) {
                     int newy = patches(0, actualpatches(it), k);
-                    int newx = patches(1, actualpatches(it), k);                    
+                    int newx = patches(1, actualpatches(it), k);
                     block.col(k) = arma::vectorise(
                                      u(arma::span(newy, newy+Bs-1),
                                        arma::span(newx, newx+Bs-1),
@@ -162,8 +162,10 @@ class SVT {
             Sblock.set_size(T);
             Vblock.set_size(T, T);
 
+            /*
             #pragma omp parallel for shared(v, weights) \
-                        private(block, Ublock, Sblock, Vblock)
+                       private(block, Ublock, Sblock, Vblock)
+            */
             for (int it = 0; it < newVecSize; it++) {
                 Ublock = U[it];
                 Sblock = S[it];
