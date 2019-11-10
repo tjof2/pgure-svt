@@ -14,13 +14,16 @@ More information on the algorithm can be found [in our paper](http://dx.doi.org/
 If you use this code in a publication, please cite our work:
 
 ```
-@article{PGURESVT2016,
+@article{PGURESVT2017,
     title   = {Denoising time-resolved microscopy sequences with
                singular value thresholding.},
     author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
     journal = {Ultramicroscopy},
     doi     = {10.1016/j.ultramic.2016.05.005},
-    year    = {Article in press}
+    url     = {https://doi.org/10.1016/j.ultramic.2016.05.005}
+    year    = {2017}
+    volume  = {178},
+    pages   = {112--124},
 }
 ```
 
@@ -36,15 +39,13 @@ Compilation instructions can be found [here](http://tjof2.github.io/pgure-svt/in
 
 #### Windows
 
-The Windows binaries have been tested on 64-bit versions of Windows 7 and Windows 10. You may need 
-to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) 
+The Windows binaries have been tested on 64-bit versions of Windows 7 and Windows 10. You may need
+to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145)
 before running PGURE-SVT.
 
 **[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.3/PGURE-SVT_Win64.zip)**
 
 [![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
 
-<small>
-Copyright (C) 2015-2016 Tom Furnival.
+Copyright (C) 2015-2019 Tom Furnival.
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html)).
-</small>
