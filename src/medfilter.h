@@ -1,6 +1,6 @@
 /***************************************************************************
 
-    Copyright (C) 2015-16 Tom Furnival
+    Copyright (C) 2015-2019 Tom Furnival
 
     Constant-time median filter based on code by Simon Perreault.
 

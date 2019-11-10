@@ -1,6 +1,6 @@
 /***************************************************************************
 
-    Copyright (C) 2015-16 Tom Furnival
+    Copyright (C) 2015-2019 Tom Furnival
 
     Perform Adaptive Rood Pattern Search (ARPS) for motion estimation [1].
     Based on MATLAB code by Aroh Barjatya [2].

@@ -5,7 +5,7 @@
     Author: Tom Furnival
     Email:  tjof2@cam.ac.uk
 
-    Copyright (C) 2015-16 Tom Furnival
+    Copyright (C) 2015-2019 Tom Furnival
 
     This program uses Singular Value Thresholding (SVT) [1], combined
     with an unbiased risk estimator (PGURE) to denoise a video sequence

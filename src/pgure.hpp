@@ -1,6 +1,6 @@
 /***************************************************************************
 
-    Copyright (C) 2015-16 Tom Furnival
+    Copyright (C) 2015-2019 Tom Furnival
 
     Optimization of PGURE between noisy and denoised image sequences.
     PGURE is an extension of the formula presented in [1].
