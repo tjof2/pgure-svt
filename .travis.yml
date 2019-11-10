@@ -1,37 +1,37 @@
 # Travis file
 
 language: generic
-    
+
 before_install:
   - if [${TRAVIS_OS_NAME} == "linux"]; then sudo apt-get update -qq; fi
   - test/install-dependencies.sh
-  
+
 matrix:
   include:
     - os: linux
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libblas-dev', 'liblapack-dev', 'libtiff4']
+          packages: ['g++-4.8', 'libblas-dev', 'liblapack-dev', 'libtiff5-dev']
       env: COMPILER_NAME=gcc CXX=g++-4.8 CC=gcc-4.8
 
     - os: linux
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.9', 'libblas-dev', 'liblapack-dev', 'libtiff4']
+          packages: ['g++-4.9', 'libblas-dev', 'liblapack-dev', 'libtiff5-dev']
       env: COMPILER_NAME=gcc CXX=g++-4.9 CC=gcc-4.9
 
     - os: linux
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libblas-dev', 'liblapack-dev', 'libtiff4']
+          packages: ['g++-5', 'libblas-dev', 'liblapack-dev', 'libtiff5-dev']
       env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
-      
+
     - os: osx      
       env: COMPILER_NAME=gcc CXX=g++-4.9 CC=gcc-4.9
-     
+
 script:
   - mkdir build
   - cd build
@@ -41,5 +41,3 @@ script:
 
 notifications:
   email: false
-  
-
