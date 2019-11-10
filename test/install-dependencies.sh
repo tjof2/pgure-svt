@@ -1,10 +1,26 @@
 #!/bin/sh
-#
 #   This script builds from source:
 #       - OpenBLAS 0.2.16
 #       - Armadillo 7.200
 #       - NLopt 2.4.2
 #
+# Copyright 2015-2019 Tom Furnival
+#
+# This file is part of PGURE-SVT.
+#
+# PGURE-SVT is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PGURE-SVT is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
+
 set -ex
 ##########################################
 wget http://github.com/xianyi/OpenBLAS/archive/v0.2.16.tar.gz
@@ -18,7 +34,7 @@ wget http://sourceforge.net/projects/arma/files/armadillo-7.950.1.tar.xz
 tar -xvf armadillo-7.950.1.tar.xz
 cd armadillo-7.950.1
 cmake .
-make 
+make
 sudo make install
 ##########################################
 # NLopt 2.4.2
@@ -29,4 +45,3 @@ cd nlopt-2.4.2
 make
 sudo make install
 ##########################################
-

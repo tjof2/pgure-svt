@@ -1,11 +1,31 @@
+# -*- coding: utf-8 -*-
+# Copyright 2015-2019 Tom Furnival
+#
+# This file is part of PGURE-SVT.
+#
+# PGURE-SVT is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PGURE-SVT is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
+
 from hyperspy import signals
 
 try:
     from pguresvt.pguresvt import SVT
 except ImportError:
-    raise ImportError("It looks like you may be working in the original "
-                      "PGURE-SVT directory. Try again in a different "
-                      "directory.")
+    raise ImportError(
+        "It looks like you may be working in the original "
+        "PGURE-SVT directory. Try again in a different "
+        "directory."
+    )
 
 
 class HSPYSVT(SVT):
@@ -45,8 +65,9 @@ class HSPYSVT(SVT):
             signal.fold()
             self.signal_type = "image"
         else:
-            raise NotImplementedError("`signal` should be of `Image` or "
-                                      "`Spectrum` type.")
+            raise NotImplementedError(
+                "`signal` should be of `Image` or " "`Spectrum` type."
+            )
         return signal_data
 
     def denoised_data_to_signal(self):
@@ -54,7 +75,7 @@ class HSPYSVT(SVT):
         if self.signal_type == "spectrum":
             return signal.as_signal1D(2)
         if self.signal_type == "image":
-            return signal.as_signal2D((1,2))
+            return signal.as_signal2D((1, 2))
 
     def denoise(self, signal):
         """
@@ -76,7 +97,7 @@ class HSPYSVT(SVT):
         return self.denoised_data_to_signal()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import hyperspy.api as hs
     import matplotlib.pyplot as plt
 

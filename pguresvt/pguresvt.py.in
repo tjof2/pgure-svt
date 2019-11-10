@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 # PGURE-SVT Denoising
 #
 #   Author: Tom Furnival
 #   Email:  tjof2@cam.ac.uk
 #
-#   Copyright (C) 2015-16 Tom Furnival
+#   Copyright (C) 2015-19 Tom Furnival
 #
 #   This program uses Singular Value Thresholding (SVT) [1], combined
 #   with an unbiased risk estimator (PGURE) to denoise a video sequence
@@ -19,24 +20,25 @@
 #       of Mixed Poisson-Gaussian Noise", (2014), Le Montagner, Y et al.
 #       http://dx.doi.org/10.1109/TIP.2014.2300821
 #
-#   This file is part of PGURE-SVT.
+# This file is part of PGURE-SVT.
 #
-#   PGURE-SVT is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation, either version 3 of the License, or
-#   (at your option) any later version.
+# PGURE-SVT is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#   PGURE-SVT is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#   GNU General Public License for more details.
+# PGURE-SVT is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-#   You should have received a copy of the GNU General Public License
-#   along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
 
 import ctypes, os, multiprocessing
 import numpy as np
 from numpy.ctypeslib import ndpointer
+
 
 def _addnoise(x, alpha, mu, sigma):
     """Add Poisson-Gaussian noise to the data x
@@ -64,6 +66,7 @@ def _addnoise(x, alpha, mu, sigma):
     y = alpha * np.random.poisson(x / alpha) + mu + sigma * np.random.randn()
     return y
 
+
 def PoissonGaussianNoiseGenerator(X, alpha=0.1, mu=0.1, sigma=0.1):
     """Add Poisson-Gaussian noise to the data X
 
@@ -88,7 +91,7 @@ def PoissonGaussianNoiseGenerator(X, alpha=0.1, mu=0.1, sigma=0.1):
 
     """
     # Do some error checking
-    if alpha < 0. or alpha > 1.:
+    if alpha < 0.0 or alpha > 1.0:
         raise ValueError("alpha should be in range [0,1]")
     # Vectorize noise function
     addnoise = np.vectorize(_addnoise, otypes=[np.float])
@@ -106,6 +109,7 @@ def PoissonGaussianNoiseGenerator(X, alpha=0.1, mu=0.1, sigma=0.1):
     # Rescale to X range
     Y = Xmax * Y / np.amax(Y)
     return Y
+
 
 class SVT(object):
     """
@@ -154,22 +158,24 @@ class SVT(object):
         (default = 5 pixels)
 
     """
-    def __init__(self,
-                patchsize=4,
-                patchoverlap=1,
-                length=15,
-                optimize=True,
-                threshold=0.5,
-                estimatenoise=True,
-                alpha=-1.,
-                mu=-1.,
-                sigma=-1.,
-                arpssize=7,
-                tol=1e-7,
-                median=5,
-                hotpixelthreshold=10,
-                numthreads=1
-                ):
+
+    def __init__(
+        self,
+        patchsize=4,
+        patchoverlap=1,
+        length=15,
+        optimize=True,
+        threshold=0.5,
+        estimatenoise=True,
+        alpha=-1.0,
+        mu=-1.0,
+        sigma=-1.0,
+        arpssize=7,
+        tol=1e-7,
+        median=5,
+        hotpixelthreshold=10,
+        numthreads=1,
+    ):
 
         # Load up parameters
         self.patchsize = patchsize
@@ -192,36 +198,41 @@ class SVT(object):
             raise ValueError("Patch overlap should not be greater than patch size")
         if self.arpssize % 2 == 0:
             raise ValueError("ARPS motion estimation window size should be odd")
-        if self.threshold < 0. or self.threshold > 1.:
+        if self.threshold < 0.0 or self.threshold > 1.0:
             raise ValueError("Threshold should be in range [0,1]")
         if self.median % 2 == 0:
             raise ValueError("Median filter size should be odd")
 
-		    # Check number of available CPU cores
+        # Check number of available CPU cores
         num_cpu_cores = multiprocessing.cpu_count()
         if self.numthreads > num_cpu_cores:
-            raise ValueError("Number of threads should be less than or equal to %d" % num_cpu_cores)
+            raise ValueError(
+                "Number of threads should be less than or equal to %d" % num_cpu_cores
+            )
 
         # Setup ctypes function
         self._PGURESVT = ctypes.cdll.LoadLibrary(
-            '${PYTHONLIBRARYPATH}/libpguresvt.so').PGURESVT
+            "${PYTHONLIBRARYPATH}/libpguresvt.so"
+        ).PGURESVT
         self._PGURESVT.restype = ctypes.c_int
-        self._PGURESVT.argtypes = [ndpointer(ctypes.c_double, flags="F"),
-                                   ndpointer(ctypes.c_double, flags="F"),
-                                   ndpointer(ctypes.c_int),
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_bool,
-                                   ctypes.c_double,
-                                   ctypes.c_double,
-                                   ctypes.c_double,
-                                   ctypes.c_double,
-                                   ctypes.c_int,
-                                   ctypes.c_double,
-                                   ctypes.c_int,
-                                   ctypes.c_double,
-                 								   ctypes.c_int]
+        self._PGURESVT.argtypes = [
+            ndpointer(ctypes.c_double, flags="F"),
+            ndpointer(ctypes.c_double, flags="F"),
+            ndpointer(ctypes.c_int),
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_bool,
+            ctypes.c_double,
+            ctypes.c_double,
+            ctypes.c_double,
+            ctypes.c_double,
+            ctypes.c_int,
+            ctypes.c_double,
+            ctypes.c_int,
+            ctypes.c_double,
+            ctypes.c_int,
+        ]
 
         self.Y = None
 
@@ -266,23 +277,25 @@ class SVT(object):
         if self._is_power_of_two(dims[0]) is False and self.estimation:
             raise ValueError("Quadtree noise estimation requires image dimensions 2^N")
         # Create Y in memory
-        Y = np.zeros(X.shape, dtype=np.double, order='F')
-        result = self._PGURESVT(X,
-                                Y,
-                                dims,
-                                self.patchsize,
-                                self.overlap,
-                                self.length,
-                                self.optimize,
-                                self.threshold,
-                                self.alpha,
-                                self.mu,
-                                self.sigma,
-                                self.arpssize,
-                                self.tol,
-                                self.median,
-                                self.hotpixelthreshold,
-                								self.numthreads)
+        Y = np.zeros(X.shape, dtype=np.double, order="F")
+        result = self._PGURESVT(
+            X,
+            Y,
+            dims,
+            self.patchsize,
+            self.overlap,
+            self.length,
+            self.optimize,
+            self.threshold,
+            self.alpha,
+            self.mu,
+            self.sigma,
+            self.arpssize,
+            self.tol,
+            self.median,
+            self.hotpixelthreshold,
+            self.numthreads,
+        )
         self.Y = Y
         return Y
 
@@ -300,14 +313,14 @@ class SVT(object):
             Returns the array in Fortran-order (column-major)
 
         """
-        x = np.copy(X.astype(np.double), order='F')
+        x = np.copy(X.astype(np.double), order="F")
         return x
 
     def _is_power_of_two(self, n):
-          n = n/2
-          if n == 2:
-              return True
-          elif n > 2:
-              return self._is_power_of_two(n)
-          else:
-              return False
+        n = n / 2
+        if n == 2:
+            return True
+        elif n > 2:
+            return self._is_power_of_two(n)
+        else:
+            return False
