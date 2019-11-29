@@ -35,8 +35,8 @@ sudo make install
 ##########################################
 
 wget https://github.com/stevengj/nlopt/archive/v2.6.1.tar.gz
-tar -xzvf nlopt-2.6.1.tar.gz
-cd nlopt-2.6.1
+tar -xzvf v2.6.1.tar.gz
+cd v2.6.1
 ./configure --enable-shared
 make
 sudo make install
