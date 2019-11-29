@@ -46,8 +46,7 @@ template <typename Function, typename Integer_Type>
 void parallel(Function const &func, Integer_Type dim_first,
               Integer_Type dim_last, unsigned long threshold = 1) // 1d parallel
 {
-  if
-    constexpr(parallel_mode == 0) {
+  if constexpr(parallel_mode == 0) {
       for (auto a : range(dim_first, dim_last))
         func(a);
       return;

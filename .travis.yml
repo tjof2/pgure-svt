@@ -12,25 +12,11 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libblas-dev', 'liblapack-dev', 'libtiff5-dev']
-      env: COMPILER_NAME=gcc CXX=g++-4.8 CC=gcc-4.8
+          packages: ['g++-7', 'libblas-dev', 'liblapack-dev', 'libopenblas-dev', 'libtiff5-dev']
+      env: COMPILER_NAME=gcc CXX=g++-7 CC=gcc-7
 
-    - os: linux
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.9', 'libblas-dev', 'liblapack-dev', 'libtiff5-dev']
-      env: COMPILER_NAME=gcc CXX=g++-4.9 CC=gcc-4.9
-
-    - os: linux
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-5', 'libblas-dev', 'liblapack-dev', 'libtiff5-dev']
-      env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
-
-    - os: osx      
-      env: COMPILER_NAME=gcc CXX=g++-4.9 CC=gcc-4.9
+    - os: osx
+      env: COMPILER_NAME=gcc CXX=g++-7 CC=gcc-7
 
 script:
   - mkdir build
