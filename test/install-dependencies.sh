@@ -26,7 +26,7 @@ set -ex
 ##########################################
 
 wget http://sourceforge.net/projects/arma/files/armadillo-9.800.2.tar.xz
-tar -xvf armadillo-9.800.2.tar.xz
+tar -xvf armadillo-9.800.2.tar.xz > log-file 2>&1
 cd armadillo-9.800.2
 cmake .
 make
@@ -35,8 +35,8 @@ sudo make install
 ##########################################
 
 wget https://github.com/stevengj/nlopt/archive/v2.6.1.tar.gz
-tar -xzvf v2.6.1.tar.gz
-cd v2.6.1
+tar -xzvf v2.6.1.tar.gz > log-file 2>&1
+cd nlopt-2.6.1
 ./configure --enable-shared
 make
 sudo make install
