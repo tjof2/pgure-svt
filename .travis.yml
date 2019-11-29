@@ -12,7 +12,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-7', 'libblas-dev', 'liblapack-dev', 'libtiff5-dev']
+          packages: ['g++-7', 'libblas-dev', 'liblapack-dev', 'libopenblas-dev', 'libtiff5-dev']
       env: COMPILER_NAME=gcc CXX=g++-7 CC=gcc-7
 
     - os: osx

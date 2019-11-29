@@ -22,13 +22,6 @@
 # along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
 
 set -ex
-##########################################
-
-wget https://github.com/xianyi/OpenBLAS/archive/v0.3.7.tar.gz
-tar -xzvf v0.3.7.tar.gz > log-file 2>&1
-cd OpenBLAS-0.3.7
-make NO_AFFINITY=1 > log-file 2>&1
-sudo make install > log-file 2>&1
 
 ##########################################
 
