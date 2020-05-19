@@ -1,3 +1,2 @@
-hyperspy
 numpy
 scipy

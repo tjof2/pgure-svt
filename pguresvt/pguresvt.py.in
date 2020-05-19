@@ -35,7 +35,9 @@
 # You should have received a copy of the GNU General Public License
 # along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
 
-import ctypes, os, multiprocessing
+import ctypes
+import multiprocessing
+
 import numpy as np
 from numpy.ctypeslib import ndpointer
 
@@ -278,7 +280,7 @@ class SVT(object):
             raise ValueError("Quadtree noise estimation requires image dimensions 2^N")
         # Create Y in memory
         Y = np.zeros(X.shape, dtype=np.double, order="F")
-        result = self._PGURESVT(
+        _ = self._PGURESVT(
             X,
             Y,
             dims,
