@@ -5,7 +5,7 @@
     Author: Tom Furnival
     Email:  tjof2@cam.ac.uk
 
-    Copyright (C) 2015-2019 Tom Furnival
+    Copyright (C) 2015-2020 Tom Furnival
 
     This program uses Singular Value Thresholding (SVT) [1], combined
     with an unbiased risk estimator (PGURE) to denoise a video sequence
@@ -60,7 +60,8 @@
 #include <armadillo>
 
 // Constant-time median filter
-extern "C" {
+extern "C"
+{
 #include "medfilter.h"
 }
 
@@ -80,7 +81,8 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
                         bool pgureOpt, double userLambda, double alpha,
                         double mu, double sigma, int MotionP, double tol,
                         int MedianSize, double hotpixelthreshold,
-                        int numthreads) {
+                        int numthreads)
+{
 
   // Overall program timer
   auto overallstart = std::chrono::steady_clock::now();
@@ -89,8 +91,10 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
   std::cout << std::endl;
   std::cout << "PGURE-SVT Denoising" << std::endl;
   std::cout << "Author: Tom Furnival" << std::endl;
-  std::cout << "Email:  tjof2@cam.ac.uk" << std::endl << std::endl;
-  std::cout << "Version 0.3.2 - May 2016" << std::endl << std::endl;
+  std::cout << "Email:  tjof2@cam.ac.uk" << std::endl
+            << std::endl;
+  std::cout << "Version 0.3.2 - May 2016" << std::endl
+            << std::endl;
 
 // Set up OMP
 #if defined(_OPENMP)
@@ -174,18 +178,23 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
   // Loop over time windows
   int framewindow = std::floor(T / 2);
   // for(int timeiter = 0; timeiter < num_images; timeiter++) {
-  auto &&func = [&, lambda_ = lambda ](int timeiter) {
+  auto &&func = [&, lambda_ = lambda](int timeiter) {
     // Extract the subset of the image sequence
     arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
-    if (timeiter < framewindow) {
+    if (timeiter < framewindow)
+    {
       u = noisysequence.slices(0, 2 * framewindow);
       ufilter = filteredsequence.slices(0, 2 * framewindow);
-    } else if (timeiter >= (num_images - framewindow)) {
+    }
+    else if (timeiter >= (num_images - framewindow))
+    {
       u = noisysequence.slices(num_images - 2 * framewindow - 1,
                                num_images - 1);
       ufilter = filteredsequence.slices(num_images - 2 * framewindow - 1,
                                         num_images - 1);
-    } else {
+    }
+    else
+    {
       u = noisysequence.slices(timeiter - framewindow, timeiter + framewindow);
       ufilter = filteredsequence.slices(timeiter - framewindow,
                                         timeiter + framewindow);
@@ -197,7 +206,8 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
     ufilter /= ufilter.max();
 
     // Perform noise estimation
-    if (pgureOpt) {
+    if (pgureOpt)
+    {
       NoiseEstimator *noise = new NoiseEstimator;
       noise->Estimate(u, alpha, mu, sigma, 4, NoiseMethod);
       delete noise;
@@ -213,12 +223,15 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
     PGURE *optimizer = new PGURE;
     optimizer->Initialize(u, sequencePatches, Bs, Bo, alpha, sigma, mu);
     // Determine optimum threshold value (max 1000 evaluations)
-    if (pgureOpt) {
+    if (pgureOpt)
+    {
       auto lambda = lambda_;
       lambda = (timeiter == 0) ? arma::accu(u) / (Nx * Ny * T) : lambda;
       lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
       v = optimizer->Reconstruct(lambda);
-    } else {
+    }
+    else
+    {
       v = optimizer->Reconstruct(userLambda);
     }
     delete optimizer;
@@ -227,12 +240,17 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
     v *= inputmax;
 
     // Place frames back into sequence
-    if (timeiter < framewindow) {
+    if (timeiter < framewindow)
+    {
       cleansequence.slice(timeiter) = v.slice(timeiter);
-    } else if (timeiter >= (num_images - framewindow)) {
+    }
+    else if (timeiter >= (num_images - framewindow))
+    {
       int endseqFrame = timeiter - (num_images - T);
       cleansequence.slice(timeiter) = v.slice(endseqFrame);
-    } else {
+    }
+    else
+    {
       cleansequence.slice(timeiter) = v.slice(framewindow);
     }
   };

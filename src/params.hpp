@@ -1,6 +1,6 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2019 Tom Furnival
+    Copyright (C) 2015-2020 Tom Furnival
 
     This file is part of PGURE-SVT.
 
@@ -29,20 +29,31 @@
 #include <string>
 
 void ParseParameters(std::istream &cfgfile,
-                     std::map<std::string, std::string> &options) {
-  for (std::string line; std::getline(cfgfile, line);) {
+                     std::map<std::string, std::string> &options)
+{
+  for (std::string line; std::getline(cfgfile, line);)
+  {
     std::istringstream iss(line);
     std::string id, eq, val, temp;
 
-    if (!(iss >> id)) {
+    if (!(iss >> id))
+    {
       continue; // Ignore empty lines
-    } else if (id[0] == '#') {
+    }
+    else if (id[0] == '#')
+    {
       continue; // Ignore comment lines
-    } else if (!(iss >> eq) || eq != ":" || iss.get() != EOF) {
-      while (iss >> temp) {
-        if (iss >> std::ws) {
+    }
+    else if (!(iss >> eq) || eq != ":" || iss.get() != EOF)
+    {
+      while (iss >> temp)
+      {
+        if (iss >> std::ws)
+        {
           val += temp;
-        } else {
+        }
+        else
+        {
           val += temp + " ";
         }
       }

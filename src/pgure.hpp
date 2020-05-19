@@ -1,6 +1,6 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2019 Tom Furnival
+    Copyright (C) 2015-2020 Tom Furnival
 
     Optimization of PGURE between noisy and denoised image sequences.
     PGURE is an extension of the formula presented in [1].
@@ -46,15 +46,18 @@
 // Own header
 #include "svt.hpp"
 
-class PGURE {
+class PGURE
+{
 public:
-  PGURE() {
+  PGURE()
+  {
     svt0 = new SVT;
     svt1 = new SVT;
     svt2p = new SVT;
     svt2m = new SVT;
   }
-  ~PGURE() {
+  ~PGURE()
+  {
     delete svt0;
     delete svt1;
     delete svt2p;
@@ -63,7 +66,8 @@ public:
 
   void Initialize(const arma::cube &u, const arma::icube patches, int blocksize,
                   int blockoverlap, double alphaIn, double muIn,
-                  double sigmaIn) {
+                  double sigmaIn)
+  {
     U = u;
 
     Nx = u.n_rows;
@@ -108,12 +112,14 @@ public:
     return;
   }
 
-  arma::cube Reconstruct(double user_lambda) {
+  arma::cube Reconstruct(double user_lambda)
+  {
     return svt0->Reconstruct(user_lambda);
   }
 
   double CalculatePGURE(const std::vector<double> &x, std::vector<double> &grad,
-                        void *data) {
+                        void *data)
+  {
     Uhat = svt0->Reconstruct(x[0]);
     U1 = svt1->Reconstruct(x[0]);
     U2p = svt2p->Reconstruct(x[0]);
@@ -155,19 +161,24 @@ private:
   std::mt19937 rand_engine;
 
   // Reshape to n^2 x T Casorati matrix
-  arma::mat CubeFlatten(arma::cube u) {
+  arma::mat CubeFlatten(arma::cube u)
+  {
     u.reshape(u.n_rows * u.n_cols, u.n_slices, 1);
     return u.slice(0);
   }
 
   // Perturbations used in empirical calculation of d'f(y) and d''f(y)
-  void GenerateRandomPerturbations() {
+  void GenerateRandomPerturbations()
+  {
     std::bernoulli_distribution binary_dist1(0.5);
     delta1.imbue([&]() {
       bool bernRand = binary_dist1(rand_engine);
-      if (bernRand == true) {
+      if (bernRand == true)
+      {
         return -1;
-      } else {
+      }
+      else
+      {
         return 1;
       }
     });
@@ -178,9 +189,12 @@ private:
     std::bernoulli_distribution binary_dist2(vP);
     delta2.imbue([&]() {
       bool bernRand = binary_dist2(rand_engine);
-      if (bernRand == true) {
+      if (bernRand == true)
+      {
         return -1 * std::sqrt(vQ / vP);
-      } else {
+      }
+      else
+      {
         return std::sqrt(vP / vQ);
       }
     });
@@ -190,14 +204,16 @@ private:
 
 // Wrapper for the PGURE optimization function
 double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad,
-                   void *data) {
+                   void *data)
+{
   PGURE *obj = static_cast<PGURE *>(data);
   return obj->CalculatePGURE(x, grad, data);
 }
 
 // Optimization function using NLopt and
 // BOBYQA gradient-free algorithm
-double PGURE::Optimize(double tol, double start, double bound, int eval) {
+double PGURE::Optimize(double tol, double start, double bound, int eval)
+{
   double startingStep = start / 2;
 
   // Optimize PGURE
@@ -219,7 +235,8 @@ double PGURE::Optimize(double tol, double start, double bound, int eval) {
   // Run the optimizer
   nlopt::result status = opt.optimize(x, minf);
 
-  if (status <= 0) {
+  if (status <= 0)
+  {
     // TODO(tjof2): Need to implement warnings
   }
   return lambda;

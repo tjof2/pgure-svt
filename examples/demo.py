@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2019 Tom Furnival
+# Copyright 2015-2020 Tom Furnival
 #
 # This file is part of PGURE-SVT.
 #
@@ -20,13 +20,11 @@ import numpy as np
 from pguresvt import pguresvt
 
 import hyperspy.api as hs
-from hyperspy.hspy import *
-import matplotlib.pyplot as plt
+
 
 # Load example dataset
 movie = hs.load("../test/examplesequence.tif")
 X = np.transpose(movie.data)
-# X = X[:,:,0:15]
 
 # Initialize with default parameters
 svt = pguresvt.SVT(patchsize=4, patchoverlap=2, length=15, threshold=0.5, tol=1e-6)

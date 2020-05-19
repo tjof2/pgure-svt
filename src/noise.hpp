@@ -1,6 +1,6 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2019 Tom Furnival
+    Copyright (C) 2015-2020 Tom Furnival
 
     Noise estimation functions:
         - Estimate noise parameters based on method in [1]
@@ -41,9 +41,11 @@
 // Armadillo library
 #include <armadillo>
 
-class NoiseEstimator {
+class NoiseEstimator
+{
 public:
-  NoiseEstimator() {
+  NoiseEstimator()
+  {
     // Set Laplacian kernel to 3x3
     laplacian = 1 / 8 * arma::ones<arma::mat>(3, 3);
     laplacian(1, 1) = -1;
@@ -53,7 +55,8 @@ public:
   ~NoiseEstimator(){};
 
   void Estimate(const arma::cube &input, double &alphaIn, double &muIn,
-                double &sigmaIn, int sizeIn, int method) {
+                double &sigmaIn, int sizeIn, int method)
+  {
     // Read from parameters
     alpha = alphaIn;
     mu = muIn;
@@ -76,7 +79,8 @@ public:
 
     // Perform quadtree decomposition of frames
     // to generate patches for noise estimation
-    for (int i = 0; i < T; i++) {
+    for (int i = 0; i < T; i++)
+    {
       treeDelete[0] = arma::zeros<arma::umat>(3, 1);
       treeDelete[0](2, 0) = Nx;
       treeDelete[1] = arma::zeros<arma::umat>(0, 0);
@@ -87,12 +91,14 @@ public:
       arma::umat dele = arma::unique(arma::sort(treeDelete[1]));
 
       // Shed parents from quadtree
-      for (size_t k = dele.n_elem - 1; k > 0; k--) {
+      for (size_t k = dele.n_elem - 1; k > 0; k--)
+      {
         tree.shed_col(dele(0, k));
       }
 
       // Extract patches for robust estimation
-      for (size_t n = 0; n < tree.n_cols; n++) {
+      for (size_t n = 0; n < tree.n_cols; n++)
+      {
         int x = tree(0, n);
         int y = tree(1, n);
         int s = tree(2, n);
@@ -140,8 +146,10 @@ public:
     alpha = (alpha >= 0.) ? alpha : alphaBeta(0);
 
     // Calculate mu and sigma
-    switch (method) {
-    case 1: {
+    switch (method)
+    {
+    case 1:
+    {
       // (Method 1 - PureDenoise@EPFL)
       int L = std::floor(1. * (Nx * Ny / means.n_elem));
       mu = (mu >= 0.)
@@ -151,7 +159,8 @@ public:
       sigma = (sigma >= 0.) ? sigma : std::sqrt(dSi);
       break;
     }
-    case 2: {
+    case 2:
+    {
       // (Method 2 - PureDenoise@EPFL [commented out there]))
       mu = (mu >= 0.) ? mu : ComputeMode(rmeans);
       dSi = ComputeMode(rvars);
@@ -161,7 +170,8 @@ public:
                         dSi, std::max(alphaBeta(1) + alphaBeta(0) * dSi, 0.)));
       break;
     }
-    case 3: {
+    case 3:
+    {
       // (Method 3 - tjof2@cam.ac.uk)
       // This assumes that the DC offset is the mode
       // of the means
@@ -172,7 +182,8 @@ public:
       break;
     }
     case 4:
-    default: {
+    default:
+    {
       // (Method 4 - tjof2@cam.ac.uk)
       // This assumes that the DC offset is the min
       // of the means, and thus trys to avoid filtering
@@ -202,7 +213,7 @@ private:
 
   // F-test lookup tables
   // Default goes wth 2.5%
-  const arma::uvec DegOFreePlus1 = {2,   4,   8,   16,   32,   64,
+  const arma::uvec DegOFreePlus1 = {2, 4, 8, 16, 32, 64,
                                     128, 256, 512, 1024, 2048, 4096};
   const arma::vec Ftest0100 = {5.39077, 1.97222, 1.38391, 1.17439,
                                1.08347, 1.04087, 1.02023, 1.01006,
@@ -221,12 +232,14 @@ private:
   arma::mat laplacian;
 
   // Test to see if a node should be split
-  bool SplitBlockQ(const arma::mat &A) {
+  bool SplitBlockQ(const arma::mat &A)
+  {
 
     // Check if it can be split first by comparing
     // to minimum allowed size of block
     int N = A.n_cols;
-    if (N <= size) {
+    if (N <= size)
+    {
       return false;
     }
 
@@ -234,8 +247,10 @@ private:
     // variance due to noise
     int l = 2 * 2 + 1;
     arma::mat resids(N, N);
-    for (int x = 0; x < N; x++) {
-      for (int y = 0; y < N; y++) {
+    for (int x = 0; x < N; x++)
+    {
+      for (int y = 0; y < N; y++)
+      {
         int xp = ((x + 1) == N) ? 1 : (x + 1);
         int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
         int yp = ((y + 1) == N) ? 1 : (y + 1);
@@ -260,14 +275,18 @@ private:
     // (2.5% default)
     value = Ftest0025.elem(arma::find(DegOFreePlus1 == N));
 
-    if (stat > value(0)) {
+    if (stat > value(0))
+    {
       return true;
-    } else {
+    }
+    else
+    {
       return false;
     }
   };
 
-  double InterqDist(const arma::vec &A) {
+  double InterqDist(const arma::vec &A)
+  {
     arma::vec sorted = sort(A);
     int N = sorted.n_elem;
     int m = std::floor((std::floor((N + 1) / 2) + 1) / 2);
@@ -275,12 +294,14 @@ private:
     return diq;
   };
 
-  double RobustVarEstimate(const arma::vec &A) {
+  double RobustVarEstimate(const arma::vec &A)
+  {
     double sig = 1.4826 * arma::median(arma::abs(A - arma::median(A)));
     return sig * sig;
   };
 
-  double RobustMeanEstimate(const arma::vec &A) {
+  double RobustMeanEstimate(const arma::vec &A)
+  {
     int I = 1E4;
     int N = A.n_elem;
     double e = 0.;
@@ -294,14 +315,16 @@ private:
     arma::vec w(N), r(N);
     w.ones();
 
-    for (int i = 0; i < I; i++) {
+    for (int i = 0; i < I; i++)
+    {
       r = w % A;
       m = arma::accu(r);
       aux = arma::accu(w);
       m = (std::abs(aux) < eps) ? m0 : m / aux;
       r = A - m;
       e = arma::mean(arma::abs(r));
-      if (std::abs(m0 - m) < tol || e < tol) {
+      if (std::abs(m0 - m) < tol || e < tol)
+      {
         break;
       }
       m0 = m;
@@ -312,7 +335,8 @@ private:
     return m;
   };
 
-  double ComputeMode(const arma::vec &A) {
+  double ComputeMode(const arma::vec &A)
+  {
     int maxCount = 0;
     int count;
     double maxValue = 0.;
@@ -321,14 +345,18 @@ private:
     double dyn = 1. * N;
     arma::vec a = arma::round(A * dyn / M);
 
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++)
+    {
       count = 0;
-      for (int j = 0; j < N; j++) {
-        if (a(j) == a(i)) {
+      for (int j = 0; j < N; j++)
+      {
+        if (a(j) == a(i))
+        {
           count++;
         }
       }
-      if (count > maxCount) {
+      if (count > maxCount)
+      {
         maxCount = count;
         maxValue = a(i);
       }
@@ -337,12 +365,15 @@ private:
     return maxValue;
   };
 
-  void WeightFunction(const arma::vec &x, arma::vec &w) {
+  void WeightFunction(const arma::vec &x, arma::vec &w)
+  {
     double p, pp;
-    switch (wtype) {
+    switch (wtype)
+    {
     case 0:
       p = 0.75;
-      for (size_t i = 0; i < x.n_elem; i++) {
+      for (size_t i = 0; i < x.n_elem; i++)
+      {
         w(i) = (std::abs(x(i)) < p) ? 1. : p / std::abs(x(i));
       }
       break;
@@ -350,16 +381,17 @@ private:
     default:
       p = 3.5;
       pp = p * p;
-      for (size_t i = 0; i < x.n_elem; i++) {
-        w(i) = (std::abs(x(i)) > p) ? 0. : (pp - x(i) * x(i)) *
-                                               (pp - x(i) * x(i)) / (pp * pp);
+      for (size_t i = 0; i < x.n_elem; i++)
+      {
+        w(i) = (std::abs(x(i)) > p) ? 0. : (pp - x(i) * x(i)) * (pp - x(i) * x(i)) / (pp * pp);
       }
       break;
     }
     return;
   };
 
-  arma::vec WLSFit(const arma::vec &x, const arma::vec &y) {
+  arma::vec WLSFit(const arma::vec &x, const arma::vec &y)
+  {
     int I = 1E4;
     int N = x.n_elem;
     double e = 0.;
@@ -376,7 +408,8 @@ private:
     arma::vec w(N), w2(N), w2x(N), w2y(N), xy(N), f(N), r(N);
     w.ones();
 
-    for (int i = 0; i < I; i++) {
+    for (int i = 0; i < I; i++)
+    {
       w2 = w % w;
       w2x = w2 % x;
       w2y = w2 % y;
@@ -403,7 +436,8 @@ private:
       e = arma::mean(arma::abs(r));
 
       if ((std::abs(a0 - params(0)) < tol && std::abs(b0 - params[1]) < tol) ||
-          e < tol) {
+          e < tol)
+      {
         break;
       }
       a0 = params[0];
@@ -416,21 +450,26 @@ private:
     return params;
   };
 
-  arma::vec RestrictArray(const arma::vec &a, int Is, int Ie) {
+  arma::vec RestrictArray(const arma::vec &a, int Is, int Ie)
+  {
     arma::vec b(Ie - Is + 1);
-    for (int i = Is; i <= Ie; i++) {
+    for (int i = Is; i <= Ie; i++)
+    {
       b(i - Is) = a(i);
     }
     return b;
   };
 
-  arma::mat ConvolveFIR(const arma::mat &in) {
+  arma::mat ConvolveFIR(const arma::mat &in)
+  {
     int N = in.n_cols;
     arma::mat out(N, N);
     out.zeros();
     arma::mat neigh(3, 3);
-    for (int x = 0; x < N; x++) {
-      for (int y = 0; y < N; y++) {
+    for (int x = 0; x < N; x++)
+    {
+      for (int y = 0; y < N; y++)
+      {
         int xp = ((x + 1) == N) ? 1 : (x + 1);
         int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
         int yp = ((y + 1) == N) ? 1 : (y + 1);
@@ -446,7 +485,8 @@ private:
   };
 
   // Recursive quadtree function
-  void QuadTree(const arma::mat &A, int part) {
+  void QuadTree(const arma::mat &A, int part)
+  {
 
     int i = treeDelete[0](0, part);
     int j = treeDelete[0](1, part);
@@ -455,7 +495,8 @@ private:
     // Test if block should be split
     arma::mat patch =
         A.submat(arma::span(i, i + s - 1), arma::span(j, j + s - 1));
-    if (!SplitBlockQ(patch)) {
+    if (!SplitBlockQ(patch))
+    {
       return;
     }
 
@@ -478,7 +519,8 @@ private:
     treeDelete[1] = newdelete;
 
     int iter = n;
-    do {
+    do
+    {
       QuadTree(A, iter);
       iter++;
     } while (iter < n + 4);

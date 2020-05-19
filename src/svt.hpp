@@ -1,6 +1,6 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2019 Tom Furnival
+    Copyright (C) 2015-2020 Tom Furnival
 
     SVT calculation based on [1].
 
@@ -42,14 +42,16 @@
 // Armadillo library
 #include <armadillo>
 
-class SVT {
+class SVT
+{
 public:
   SVT() {}
   ~SVT() {}
 
   // Allocate memory for SVD step
   void Initialize(const arma::icube &sequencePatches, int w, int h, int l,
-                  int blocksize, int blockoverlap) {
+                  int blocksize, int blockoverlap)
+  {
     patches = sequencePatches;
 
     Nx = w;
@@ -64,7 +66,8 @@ public:
 
   // Perform SVD on each block in the image sequence,
   // subject to the block overlap restriction
-  void Decompose(const arma::cube &u) {
+  void Decompose(const arma::cube &u)
+  {
     // Do the local SVDs
     arma::mat Ublock, Vblock;
     arma::vec Sblock;
@@ -76,8 +79,10 @@ public:
     // Fix block overlap parameter
     arma::uvec firstpatches(vecSize);
     int kiter = 0;
-    for (int i = 0; i < 1 + (Ny - Bs); i += Bo) {
-      for (int j = 0; j < 1 + (Nx - Bs); j += Bo) {
+    for (int i = 0; i < 1 + (Ny - Bs); i += Bo)
+    {
+      for (int j = 0; j < 1 + (Nx - Bs); j += Bo)
+      {
         firstpatches(kiter) = i * (Ny - Bs) + j;
         kiter++;
       }
@@ -87,12 +92,14 @@ public:
     // of the image sequence to ensure an
     // accurate PGURE reconstruction
     arma::uvec patchesbottomedge(1 + (Ny - Bs) / Bo);
-    for (int i = 0; i < 1 + (Ny - Bs); i += Bo) {
+    for (int i = 0; i < 1 + (Ny - Bs); i += Bo)
+    {
       patchesbottomedge(i / Bo) = (Ny - Bs + 1) * i + (Nx - Bs);
     }
 
     arma::uvec patchesrightedge(1 + (Nx - Bs) / Bo);
-    for (int i = 0; i < 1 + (Nx - Bs); i += Bo) {
+    for (int i = 0; i < 1 + (Nx - Bs); i += Bo)
+    {
       patchesrightedge(i / Bo) = (Ny - Bs + 1) * (Nx - Bs) + i;
     }
 
@@ -114,18 +121,21 @@ public:
     U.resize(newVecSize);
     S.resize(newVecSize);
     V.resize(newVecSize);
-    for (int it = 0; it < newVecSize; it++) {
+    for (int it = 0; it < newVecSize; it++)
+    {
       U[it] = arma::zeros<arma::mat>(Bs * Bs, T);
       S[it] = arma::zeros<arma::vec>(T);
       V[it] = arma::zeros<arma::mat>(T, T);
     }
 
     //#pragma omp parallel for private(Ublock, Sblock, Vblock)
-    for (int it = 0; it < newVecSize; it++) {
+    for (int it = 0; it < newVecSize; it++)
+    {
       arma::mat block(Bs * Bs, T);
 
       // Extract block
-      for (int k = 0; k < T; k++) {
+      for (int k = 0; k < T; k++)
+      {
         int newy = patches(0, actualpatches(it), k);
         int newx = patches(1, actualpatches(it), k);
         block.col(k) =
@@ -143,7 +153,8 @@ public:
   }
 
   // Reconstruct block in the image sequence after thresholding
-  arma::cube Reconstruct(double lambda) {
+  arma::cube Reconstruct(double lambda)
+  {
     arma::cube v = arma::zeros<arma::cube>(Nx, Ny, T);
     arma::cube weights = arma::zeros<arma::cube>(Nx, Ny, T);
 
@@ -159,7 +170,8 @@ public:
     #pragma omp parallel for shared(v, weights) \
                private(block, Ublock, Sblock, Vblock)
     */
-    for (int it = 0; it < newVecSize; it++) {
+    for (int it = 0; it < newVecSize; it++)
+    {
       Ublock = U[it];
       Sblock = S[it];
       Vblock = V[it];
@@ -183,7 +195,8 @@ public:
       block = Ublock * diagmat(Snew) * Vblock.t();
 
       // Deal with block weights (TODO: currently all weights = 1)
-      for (int k = 0; k < T; k++) {
+      for (int k = 0; k < T; k++)
+      {
         int newy = patches(0, actualpatches(it), k);
         int newx = patches(1, actualpatches(it), k);
         v(arma::span(newy, newy + Bs - 1), arma::span(newx, newx + Bs - 1),

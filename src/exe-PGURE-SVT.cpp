@@ -5,7 +5,7 @@
     Author: Tom Furnival
     Email:  tjof2@cam.ac.uk
 
-    Copyright (C) 2015-2019 Tom Furnival
+    Copyright (C) 2015-2020 Tom Furnival
 
     This program uses Singular Value Thresholding (SVT) [1], combined
     with an unbiased risk estimator (PGURE) to denoise a video sequence
@@ -60,12 +60,14 @@
 #include <armadillo>
 
 // LibTIFF
-namespace libtiff {
+namespace libtiff
+{
 #include "tiffio.h"
 }
 
 // Constant-time median filter
-extern "C" {
+extern "C"
+{
 #include "medfilter.h"
 }
 
@@ -81,7 +83,8 @@ extern "C" {
 bool strToBool(std::string const &s) { return s != "0"; };
 
 // Main program
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
   // Overall program timer
   auto overallstart = std::chrono::steady_clock::now();
@@ -90,8 +93,10 @@ int main(int argc, char **argv) {
   std::cout << std::endl;
   std::cout << "PGURE-SVT Denoising" << std::endl;
   std::cout << "Author: Tom Furnival" << std::endl;
-  std::cout << "Email:  tjof2@cam.ac.uk" << std::endl << std::endl;
-  std::cout << "Version 0.3.2 - May 2016" << std::endl << std::endl;
+  std::cout << "Email:  tjof2@cam.ac.uk" << std::endl
+            << std::endl;
+  std::cout << "Version 0.3.2 - May 2016" << std::endl
+            << std::endl;
 
   /////////////////////////////
   //                           //
@@ -100,7 +105,8 @@ int main(int argc, char **argv) {
   /////////////////////////////
 
   // Read in the parameter file name
-  if (argc != 2) {
+  if (argc != 2)
+  {
     std::cout << "  Usage: ./PGURE-SVT paramfile" << std::endl;
     return -1;
   }
@@ -113,7 +119,8 @@ int main(int argc, char **argv) {
   // Check all required parameters are specified
   if (programOptions.count("filename") == 0 ||
       programOptions.count("start_image") == 0 ||
-      programOptions.count("end_image") == 0) {
+      programOptions.count("end_image") == 0)
+  {
     std::cout << "**WARNING** Required parameters not specified" << std::endl;
     std::cout << "            You must specify filename, start and end frame"
               << std::endl;
@@ -161,10 +168,14 @@ int main(int argc, char **argv) {
                       ? strToBool(programOptions.at("pgure"))
                       : true;
   double lambda;
-  if (!pgureOpt) {
-    if (programOptions.count("lambda") == 1) {
+  if (!pgureOpt)
+  {
+    if (programOptions.count("lambda") == 1)
+    {
       lambda = std::stod(programOptions.at("lambda"));
-    } else {
+    }
+    else
+    {
       std::cout << "**WARNING** PGURE optimization is turned OFF but no lambda "
                    "specified in parameter file"
                 << std::endl;
@@ -185,7 +196,8 @@ int main(int argc, char **argv) {
 
   // PGURE tolerance
   double tol = 1E-7;
-  if (programOptions.count("tolerance") == 1) {
+  if (programOptions.count("tolerance") == 1)
+  {
     std::istringstream osTol(programOptions.at("tolerance"));
     double tol;
     osTol >> tol;
@@ -218,7 +230,8 @@ int main(int argc, char **argv) {
 
   // Check file exists
   std::string infilename = filestem + ".tif";
-  if (!std::ifstream(infilename.c_str())) {
+  if (!std::ifstream(infilename.c_str()))
+  {
     std::cout << "**WARNING** File " << infilename << " not found" << std::endl;
     return -1;
   }
@@ -232,12 +245,14 @@ int main(int argc, char **argv) {
   libtiff::TIFFGetField(MultiPageTiff, TIFFTAG_BITSPERSAMPLE, &tiffDepth);
 
   // Only work with square images
-  if (tiffWidth != tiffHeight) {
+  if (tiffWidth != tiffHeight)
+  {
     std::cout << "**WARNING** Frame dimensions are not square" << std::endl;
     return -1;
   }
   // Only work with 8-bit or 16-bit images
-  if (tiffDepth != 8 && tiffDepth != 16) {
+  if (tiffDepth != 8 && tiffDepth != 16)
+  {
     std::cout << "**WARNING** Images must be 8-bit or 16-bit" << std::endl;
     return -1;
   }
@@ -245,11 +260,14 @@ int main(int argc, char **argv) {
   // Import the image sequence
   arma::cube inputsequence(tiffHeight, tiffWidth, 0);
   arma::cube filteredsequence(tiffHeight, tiffWidth, 0);
-  if (MultiPageTiff) {
+  if (MultiPageTiff)
+  {
     int dircount = 0;
     int imgcount = 0;
-    do {
-      if (dircount >= (startimg - 1) && dircount <= (endimg - 1)) {
+    do
+    {
+      if (dircount >= (startimg - 1) && dircount <= (endimg - 1))
+      {
         inputsequence.resize(tiffHeight, tiffWidth, imgcount + 1);
         filteredsequence.resize(tiffHeight, tiffWidth, imgcount + 1);
 
@@ -257,7 +275,8 @@ int main(int argc, char **argv) {
         unsigned short *FilteredBuffer =
             new unsigned short[tiffWidth * tiffHeight];
 
-        for (int tiffRow = 0; tiffRow < tiffHeight; tiffRow++) {
+        for (int tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
+        {
           libtiff::TIFFReadScanline(MultiPageTiff, &Buffer[tiffRow * tiffWidth],
                                     tiffRow, 0);
         }
@@ -284,7 +303,8 @@ int main(int argc, char **argv) {
     libtiff::TIFFClose(MultiPageTiff);
   }
   // Is number of frames compatible?
-  if (num_images > (int)inputsequence.n_slices) {
+  if (num_images > (int)inputsequence.n_slices)
+  {
     std::cout << "**WARNING** Sequence only has " << inputsequence.n_slices
               << " frames" << std::endl;
     return -1;
@@ -418,19 +438,24 @@ int main(int argc, char **argv) {
   }
   */
 
-  auto &&func = [&, lambda_ = lambda ](int timeiter) {
+  auto &&func = [&, lambda_ = lambda](int timeiter) {
     auto lambda = lambda_;
     // Extract the subset of the image sequence
     arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
-    if (timeiter < framewindow) {
+    if (timeiter < framewindow)
+    {
       u = noisysequence.slices(0, 2 * framewindow);
       ufilter = filteredsequence.slices(0, 2 * framewindow);
-    } else if (timeiter >= (num_images - framewindow)) {
+    }
+    else if (timeiter >= (num_images - framewindow))
+    {
       u = noisysequence.slices(num_images - 2 * framewindow - 1,
                                num_images - 1);
       ufilter = filteredsequence.slices(num_images - 2 * framewindow - 1,
                                         num_images - 1);
-    } else {
+    }
+    else
+    {
       u = noisysequence.slices(timeiter - framewindow, timeiter + framewindow);
       ufilter = filteredsequence.slices(timeiter - framewindow,
                                         timeiter + framewindow);
@@ -442,7 +467,8 @@ int main(int argc, char **argv) {
     ufilter /= ufilter.max();
 
     // Perform noise estimation
-    if (pgureOpt) {
+    if (pgureOpt)
+    {
       NoiseEstimator *noise = new NoiseEstimator;
       noise->Estimate(u, alpha, mu, sigma, 8, NoiseMethod);
       delete noise;
@@ -458,11 +484,14 @@ int main(int argc, char **argv) {
     PGURE *optimizer = new PGURE;
     optimizer->Initialize(u, sequencePatches, Bs, Bo, alpha, sigma, mu);
     // Determine optimum threshold value (max 1000 evaluations)
-    if (pgureOpt) {
+    if (pgureOpt)
+    {
       lambda = (timeiter == 0) ? arma::accu(u) / (Nx * Ny * T) : lambda;
       lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
       v = optimizer->Reconstruct(lambda);
-    } else {
+    }
+    else
+    {
       v = optimizer->Reconstruct(lambda);
     }
     delete optimizer;
@@ -471,12 +500,17 @@ int main(int argc, char **argv) {
     v *= inputmax;
 
     // Place frames back into sequence
-    if (timeiter < framewindow) {
+    if (timeiter < framewindow)
+    {
       cleansequence.slice(timeiter) = v.slice(timeiter);
-    } else if (timeiter >= (num_images - framewindow)) {
+    }
+    else if (timeiter >= (num_images - framewindow))
+    {
       int endseqFrame = timeiter - (num_images - T);
       cleansequence.slice(timeiter) = v.slice(endseqFrame);
-    } else {
+    }
+    else
+    {
       cleansequence.slice(timeiter) = v.slice(framewindow);
     }
   };
@@ -504,13 +538,15 @@ int main(int argc, char **argv) {
   libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_BITSPERSAMPLE, 16);
 
   // Write the file
-  if (!MultiPageTiffOut) {
+  if (!MultiPageTiffOut)
+  {
     std::cout << "**WARNING** File " << outfilename << " could not be written"
               << std::endl;
     return -1;
   }
 
-  for (int tOut = 0; tOut < num_images; tOut++) {
+  for (int tOut = 0; tOut < num_images; tOut++)
+  {
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGEWIDTH, tiffWidth);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGELENGTH, tiffHeight);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_BITSPERSAMPLE, 16);
@@ -525,7 +561,8 @@ int main(int argc, char **argv) {
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PAGENUMBER, tOut,
                           num_images);
-    for (int tiffRow = 0; tiffRow < tiffHeight; tiffRow++) {
+    for (int tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
+    {
       arma::Mat<unsigned short> outSlice = outTiff.slice(tOut);
       inplace_trans(outSlice);
       unsigned short *OutBuffer = outSlice.memptr();

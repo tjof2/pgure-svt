@@ -1,10 +1,9 @@
 #!/bin/sh
 #   This script builds from source:
-#       - OpenBLAS 0.2.16
-#       - Armadillo 7.200
-#       - NLopt 2.4.2
+#       - Armadillo 9.800.2
+#       - NLopt 2.6.1
 #
-# Copyright 2015-2019 Tom Furnival
+# Copyright 2015-2020 Tom Furnival
 #
 # This file is part of PGURE-SVT.
 #
@@ -22,9 +21,10 @@
 # along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
 
 set -ex
+mkdir build_deps
+cd build_deps
 
-##########################################
-
+# Armadillo
 wget http://sourceforge.net/projects/arma/files/armadillo-9.800.2.tar.xz
 tar -xvf armadillo-9.800.2.tar.xz > log-file 2>&1
 cd armadillo-9.800.2
@@ -32,8 +32,7 @@ cmake .
 make
 sudo make install
 
-##########################################
-
+# NLopt
 wget https://github.com/stevengj/nlopt/archive/v2.6.1.tar.gz
 tar -xzvf v2.6.1.tar.gz > log-file 2>&1
 cd nlopt-2.6.1
@@ -41,4 +40,6 @@ cmake .
 make
 sudo make install
 
-##########################################
+# Tidy-up
+cd ../
+rm -rf build_deps/
