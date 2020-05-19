@@ -9,11 +9,6 @@ More information on the algorithm can be found [in our paper](http://dx.doi.org/
 
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html)).
 
-Poisson-Gaussian noise is defined according to the following equation, where $X$ is the underlying "true" signal, $Y$ is the observed noisy signal, $\alpha$ defines the detector gain for Poisson noise, and $\mu, \sigma$ define additive Gaussian noise.
-
-![Poisson-Gaussian noise equation](examples/mixed_noise_figure.png)
-
-
 ## Citing
 
 If you use this code in a publication, please cite our work:
@@ -55,16 +50,11 @@ When installing NLopt, make sure you specify to build the shared library with
 
 ##### Compilation
 
-By default, the system will build a C++ library for linking with Python. Installation of the standalone executable must be specified by the user. To build PGURE-SVT, first unpack the source:
+By default, the system will build a C++ library for linking with Python. Installation of the standalone executable must be specified by the user. To build PGURE-SVT:
 
 ```bash
 tar -xzf pgure-svt-0.4.2.tar.gz
 cd pgure-svt-0.4.2
-```
-
-Next create a `build` directory for CMake to use when compiling and installing PGURE-SVT:
-
-```bash
 mkdir build
 cd build
 ```
