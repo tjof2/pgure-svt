@@ -103,26 +103,34 @@ endif()
 # Install Python package
 find_program(PYTHON "python")
 if((BUILD_PYTHON OR BUILD_PYTHON_DIST) AND PYTHON)
+    set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
     set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
     set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
     set(DEPS        "${CMAKE_CURRENT_BINARY_DIR}/pguresvt/*.py")
     set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
-    configure_file(${SETUP_PY_IN} ${SETUP_PY})
 
-    set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
+    configure_file(${SETUP_PY_IN} ${SETUP_PY})
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/pguresvt.py.in
                    ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/pguresvt.py)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/hspysvt.py
-                   ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/hspysvt.py)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/__init__.py.in
                    ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/__init__.py)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/README.md
-                   ${CMAKE_CURRENT_BINARY_DIR}/README.md)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MANIFEST.in
-                   ${CMAKE_CURRENT_BINARY_DIR}/MANIFEST.in)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/LICENSE
-                   ${CMAKE_CURRENT_BINARY_DIR}/LICENSE)
+
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/hspysvt.py
+         DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/pguresvt)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/README.md
+         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/MANIFEST.in
+         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE
+         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+    # file(GLOB SVT_SRC_C "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c*")
+    # file(GLOB SVT_SRC_H "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h*")
+    # file(COPY ${SVT_SRC_C} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/src)
+    # file(COPY ${SVT_SRC_H} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/src)
+    # file(GLOB SVT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/cmake_aux/Modules/*.cmake")
+    # file(COPY ${SVT_CMAKE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/cmake_aux/Modules)
 
     add_custom_command(OUTPUT ${OUTPUT}
                        COMMAND ${PYTHON} ${SETUP_PY} build
