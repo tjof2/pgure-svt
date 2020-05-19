@@ -9,6 +9,11 @@ More information on the algorithm can be found [in our paper](http://dx.doi.org/
 
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html)).
 
+Poisson-Gaussian noise is defined according to the following equation, where $X$ is the underlying "true" signal, $Y$ is the observed noisy signal, $\alpha$ defines the detector gain for Poisson noise, and $\mu, \sigma$ define additive Gaussian noise.
+
+![Poisson-Gaussian noise equation](examples/mixed_noise_figure.png)
+
+
 ## Citing
 
 If you use this code in a publication, please cite our work:
