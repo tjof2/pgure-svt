@@ -9,8 +9,6 @@ More information on the algorithm can be found [in our paper](http://dx.doi.org/
 
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html)).
 
-## Citing
-
 If you use this code in a publication, please cite our work:
 
 > T. Furnival, R. K. Leary and P. A. Midgley, "Denoising time-resolved microscopy sequences with singular value thresholding", *Ultramicroscopy*, vol. 178, pp. 112– 124, 2017. DOI:[10.1016/j.ultramic.2016.05.005](http://dx.doi.org/10.1016/j.ultramic.2016.05.005)
@@ -29,11 +27,26 @@ If you use this code in a publication, please cite our work:
 }
 ```
 
+## Contents
+
+- [PGURE-SVT](#pgure-svt)
+  - [Contents](#contents)
+  - [Installation](#installation)
+      - [Building from source (Linux/OSX)](#building-from-source-linuxosx)
+        - [Dependencies](#dependencies)
+        - [Compilation](#compilation)
+      - [Windows](#windows)
+  - [Usage](#usage)
+      - [Python](#python)
+        - [Options](#options)
+        - [Integration with HyperSpy](#integration-with-hyperspy)
+      - [Standalone executable](#standalone-executable)
+
 ## Installation
 
-#### Linux/Mac
+#### Building from source (Linux/OSX)
 
-PGURE-SVT has been tested on Ubuntu 12.04+. For Mac users, you may need to use the GCC compiler (v4.9+) rather than the default.
+PGURE-SVT has been tested on Ubuntu 12.04+. For OSX users, you may need to use the GCC compiler rather than the default.
 
 ##### Dependencies
 To successfully compile the C++ code, PGURE-SVT requires the following packages and libraries to be installed on your machine first.
