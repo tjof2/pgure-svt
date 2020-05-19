@@ -9,7 +9,7 @@ More information on the algorithm can be found [in our paper](http://dx.doi.org/
 
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://tjof2.github.io/pgure-svt/www.gnu.org/licenses/gpl-3.0.en.html)).
 
-### Citing
+## Citing
 
 If you use this code in a publication, please cite our work:
 
@@ -29,19 +29,73 @@ If you use this code in a publication, please cite our work:
 }
 ```
 
-### Download
+## Installation
 
 #### Linux/Mac
 
-PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04. For Mac users, you may need to use the GCC compiler (v4.9+) rather than the default. Compilation instructions can be found [here](http://tjof2.github.io/pgure-svt/install.html).
+PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04. For Mac users, you may need to use the GCC compiler (v4.9+) rather than the default.
 
-**[Download source](https://github.com/tjof2/pgure-svt/archive/v0.3.2.tar.gz)**
+##### Dependencies
+To successfully compile the C++ code, PGURE-SVT requires the following packages and libraries to be installed on your machine first.
+
+- [CMake](http://www.cmake.org) 2.8+
+- [Armadillo](http://arma.sourceforge.net) 6.400+
+- [NLopt](http://ab-initio.mit.edu/wiki/index.php/NLopt) 2.4.2+
+- [LibTIFF](http://www.remotesensing.org/libtiff/) - for the standalone executable only
+
+When installing the Armadillo linear algebra library, it is recommended that you also install a high-speed BLAS replacement such as OpenBLAS or MKL; more information can be found in the [Armadillo](http://arma.sourceforge.net/faq.html#blas_lapack_replacements) documentation.
+
+When installing NLopt, make sure you specify to build the shared library:
+```bash
+cd nlopt-2.4.2
+./configure --enable-shared
+make
+sudo make install
+```
+
+##### Compilation
+
+By default, the system will build a C++ library for linking with Python. Installation of the standalone executable must be specified by the user. To build PGURE-SVT, first unpack the source:
+
+```bash
+tar -xzf pgure-svt-0.4.2.tar.gz
+cd pgure-svt-0.4.2
+```
+
+Next create a `build` directory for CMake to use when compiling and installing PGURE-SVT:
+
+```bash
+mkdir build
+cd build
+```
+
+Use CMake to compile and install PGURE-SVT. By default, this will generate a shared library in the `/usr/lib` directory. It will also install the Python wrapper by running `python setup.py install`.
+
+```bash
+cd build
+cmake ..
+make
+sudo make install
+```
+
+To change the install location, type `cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..`, and recompile with `make && sudo make install`.
+
+The standalone executable is **not** built by default, as it requires LibTIFF to be installed. To install the PGURE-SVT executable into `/usr/bin`, use:
+
+```bash
+cmake -DBUILD_EXECUTABLE=ON ..
+make
+sudo make install
+```
 
 #### Windows
 
-The Windows binaries have been tested on 64-bit versions of Windows 7 and Windows 10. You may need
-to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) before running PGURE-SVT.
+The Windows binaries have been tested on 64-bit versions of Windows 7 and Windows 10. You may need to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) before running PGURE-SVT.
 
 **[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.3/PGURE-SVT_Win64.zip)**
+
+## Usage
+
+TODO
 
 Copyright (C) 2015-2020 Tom Furnival.
