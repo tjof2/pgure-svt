@@ -53,9 +53,6 @@ To successfully compile the C++ code, PGURE-SVT requires the following packages 
 
 When installing the Armadillo linear algebra library, it is recommended that you also install a high-speed BLAS replacement such as OpenBLAS or MKL; more information can be found in the [Armadillo](http://arma.sourceforge.net/faq.html#blas_lapack_replacements) documentation.
 
-When installing NLopt, make sure you specify to build the shared library with
-`./configure --enable-shared`.
-
 ##### Compilation
 
 By default, the system will build a C++ library for linking with Python. Installation of the standalone executable must be specified by the user. To build PGURE-SVT:
