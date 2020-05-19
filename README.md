@@ -29,18 +29,17 @@ If you use this code in a publication, please cite our work:
 
 ## Contents
 
-- [PGURE-SVT](#pgure-svt)
-  - [Contents](#contents)
-  - [Installation](#installation)
-      - [Building from source (Linux/OSX)](#building-from-source-linuxosx)
-        - [Dependencies](#dependencies)
-        - [Compilation](#compilation)
-      - [Windows](#windows)
-  - [Usage](#usage)
-      - [Python](#python)
-        - [Options](#options)
-        - [Integration with HyperSpy](#integration-with-hyperspy)
-      - [Standalone executable](#standalone-executable)
+
+- [Installation](#installation)
+    - [Building from source (Linux/OSX)](#building-from-source-linuxosx)
+    - [Dependencies](#dependencies)
+    - [Compilation](#compilation)
+    - [Windows](#windows)
+- [Usage](#usage)
+    - [Python](#python)
+    - [Options](#options)
+    - [Integration with HyperSpy](#integration-with-hyperspy)
+    - [Standalone executable](#standalone-executable)
 
 ## Installation
 
