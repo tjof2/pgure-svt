@@ -4,8 +4,9 @@ project (PGURE-SVT)
 set (PGURE-SVT_VERSION_MAJOR 0)
 set (PGURE-SVT_VERSION_MINOR 4)
 set (PGURE-SVT_VERSION_PATCH 3)
+set (PGURE-SVT_VERSION_FULL "${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}")
 
-message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}")
+message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_FULL}")
 
 set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
@@ -125,13 +126,6 @@ if((BUILD_PYTHON OR BUILD_PYTHON_DIST) AND PYTHON)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE
          DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-    # file(GLOB SVT_SRC_C "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c*")
-    # file(GLOB SVT_SRC_H "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h*")
-    # file(COPY ${SVT_SRC_C} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/src)
-    # file(COPY ${SVT_SRC_H} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/src)
-    # file(GLOB SVT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/cmake_aux/Modules/*.cmake")
-    # file(COPY ${SVT_CMAKE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/cmake_aux/Modules)
-
     add_custom_command(OUTPUT ${OUTPUT}
                        COMMAND ${PYTHON} ${SETUP_PY} build
                        COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
@@ -145,6 +139,9 @@ if((BUILD_PYTHON OR BUILD_PYTHON_DIST) AND PYTHON)
 
     if(BUILD_PYTHON_DIST)
         install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)")
+
+        #set(PYTHON_WHEEL "${CMAKE_CURRENT_BINARY_DIR}/dist/pguresvt-${PGURE-SVT_VERSION_FULL}-py3-none-any.whl")
+        #install(CODE "execute_process(COMMAND auditwheel repair ${PYTHON_WHEEL})")
     endif()
 
 endif()

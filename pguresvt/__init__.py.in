@@ -21,4 +21,4 @@ from .pguresvt import SVT
 
 
 __all__ = ["SVT"]
-__version__ = "${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}"
+__version__ = "${PGURE-SVT_VERSION_FULL}"

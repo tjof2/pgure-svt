@@ -1,3 +1,1 @@
 include LICENSE
-#recursive-include src *.c *.h *.cpp *.hpp
-#recursive-include cmake_aux/Modules *.cmake
