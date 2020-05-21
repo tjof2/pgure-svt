@@ -107,15 +107,15 @@ find_program(PYTHON "python")
 if(BUILD_PYTHON_DIST AND PYTHON)
     set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-    set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
+    set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py")
     set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
     set(DEPS        "${CMAKE_CURRENT_BINARY_DIR}/pguresvt/*.py")
     set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
 
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/pguresvt.py.in
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/pguresvt.py
                    ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/pguresvt.py)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/__init__.py.in
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/__init__.py
                    ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/__init__.py)
 
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/hspysvt.py
