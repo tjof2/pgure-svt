@@ -36,7 +36,7 @@ void HotPixelFilter(arma::cube &sequence, const double threshold)
   uint32_t Ny = sequence.n_cols;
   uint32_t T = sequence.n_slices;
 
-  arma::vec medianwindow(8, arma::fill::zeros);
+  arma::vec medianWindow(8, arma::fill::zeros);
 
   double mad_scale = 1.0 / 0.6745;
 
@@ -48,22 +48,22 @@ void HotPixelFilter(arma::cube &sequence, const double threshold)
 
     for (size_t j = 0; j < outliers.n_elem; j++)
     {
-      medianwindow.zeros();
+      medianWindow.zeros();
       arma::uvec sub = arma::ind2sub(arma::size(Nx, Ny), outliers(j));
 
       if ((sub(0) > 0) && (sub(0) < Nx - 1) && (sub(1) > 0) && (sub(1) < Ny - 1))
       {
-        medianwindow(0) = sequence(sub(0) - 1, sub(1) - 1, i);
-        medianwindow(1) = sequence(sub(0) - 1, sub(1), i);
-        medianwindow(2) = sequence(sub(0) - 1, sub(1) + 1, i);
-        medianwindow(3) = sequence(sub(0), sub(1) - 1, i);
-        medianwindow(4) = sequence(sub(0), sub(1) + 1, i);
-        medianwindow(5) = sequence(sub(0) + 1, sub(1) - 1, i);
-        medianwindow(6) = sequence(sub(0) + 1, sub(1), i);
-        medianwindow(7) = sequence(sub(0) + 1, sub(1) + 1, i);
+        medianWindow(0) = sequence(sub(0) - 1, sub(1) - 1, i);
+        medianWindow(1) = sequence(sub(0) - 1, sub(1), i);
+        medianWindow(2) = sequence(sub(0) - 1, sub(1) + 1, i);
+        medianWindow(3) = sequence(sub(0), sub(1) - 1, i);
+        medianWindow(4) = sequence(sub(0), sub(1) + 1, i);
+        medianWindow(5) = sequence(sub(0) + 1, sub(1) - 1, i);
+        medianWindow(6) = sequence(sub(0) + 1, sub(1), i);
+        medianWindow(7) = sequence(sub(0) + 1, sub(1) + 1, i);
 
-        medianwindow = arma::sort(medianwindow);
-        sequence(sub(0), sub(1), i) = (medianwindow(3) + medianwindow(4)) / 2;
+        medianWindow = arma::sort(medianWindow);
+        sequence(sub(0), sub(1), i) = (medianWindow(3) + medianWindow(4)) / 2;
       }
       else
       {

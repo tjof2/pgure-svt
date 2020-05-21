@@ -36,41 +36,35 @@
 #include <vector>
 #include <armadillo>
 #include <nlopt.hpp>
+
 #include "svt.hpp"
+#include "utils.hpp"
 
 class PGURE
 {
 public:
-  PGURE()
+  PGURE(const arma::cube &U,
+        const arma::icube patches,
+        const double alpha,
+        const double mu,
+        const double sigma,
+        const uint32_t blockSize,
+        const uint32_t blockOverlap,
+        const int randomSeed,
+        const bool expWeighting) : U(U),
+                                   patches(patches),
+                                   alpha(alpha),
+                                   mu(mu),
+                                   sigma(sigma),
+                                   blockSize(blockSize),
+                                   blockOverlap(blockOverlap),
+                                   randomSeed(randomSeed),
+                                   expWeighting(expWeighting)
   {
-    svt0 = new SVT;
-    svt1 = new SVT;
-    svt2p = new SVT;
-    svt2m = new SVT;
-  }
-  ~PGURE()
-  {
-    delete svt0;
-    delete svt1;
-    delete svt2p;
-    delete svt2m;
-  }
+    Nx = U.n_rows;
+    Ny = U.n_cols;
+    T = U.n_slices;
 
-  void Initialize(const arma::cube &u, const arma::icube patches,
-                  const uint32_t blocksize, const uint32_t blockoverlap,
-                  double alphaIn, double muIn, double sigmaIn)
-  {
-    U = u;
-
-    Nx = u.n_rows;
-    Ny = u.n_cols;
-    T = u.n_slices;
-    Bs = blocksize;
-    Bo = blockoverlap;
-
-    alpha = alphaIn;
-    mu = muIn;
-    sigma = sigmaIn;
     sigmasq = sigma * sigma;
 
     Uhat.set_size(Nx, Ny, T);
@@ -82,27 +76,54 @@ public:
     eps1 = U.max() * 1E-4;
     eps2 = U.max() * 1E-2;
 
+    // Seed the engine
+    if (randomSeed < 0)
+    {
+      std::uint_least32_t seed;
+      pguresvt::sysrandom(&seed, sizeof(seed));
+      rand_engine.seed(seed);
+    }
+    else
+    {
+      rand_engine.seed(randomSeed);
+    }
+
     // Generate random samples for stochastic evaluation
     delta1.set_size(Nx, Ny, T);
     delta2.set_size(Nx, Ny, T);
+
     GenerateRandomPerturbations();
+
     U1 = U + (delta1 * eps1);
     U2p = U + (delta2 * eps2);
     U2m = U - (delta2 * eps2);
 
     // Initialize the block SVDs
-    svt0->Initialize(patches, Nx, Ny, T, Bs, Bo);
-    svt1->Initialize(patches, Nx, Ny, T, Bs, Bo);
-    svt2p->Initialize(patches, Nx, Ny, T, Bs, Bo);
-    svt2m->Initialize(patches, Nx, Ny, T, Bs, Bo);
+    svt0 = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
+    svt1 = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
+    svt2p = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
+    svt2m = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
 
-    // Initialize the block SVDs
     svt0->Decompose(U);
     svt1->Decompose(U1);
     svt2p->Decompose(U2p);
     svt2m->Decompose(U2m);
+  }
 
-    return;
+  ~PGURE()
+  {
+    delete svt0;
+    delete svt1;
+    delete svt2p;
+    delete svt2m;
+
+    Uhat.reset();
+    U1.reset();
+    U2p.reset();
+    U2m.reset();
+
+    delta1.reset();
+    delta2.reset();
   }
 
   arma::cube Reconstruct(const double user_lambda)
@@ -110,8 +131,7 @@ public:
     return svt0->Reconstruct(user_lambda);
   }
 
-  double CalculatePGURE(const std::vector<double> &x, std::vector<double> &grad,
-                        void *data)
+  double CalculatePGURE(const std::vector<double> &x, std::vector<double> &grad, void *data)
   {
     Uhat = svt0->Reconstruct(x[0]);
     U1 = svt1->Reconstruct(x[0]);
@@ -130,14 +150,18 @@ public:
   double Optimize(const double tol, const double start, const double bound, const int eval);
 
 private:
-  uint32_t Nx, Ny, T, Bs, Bo;
+  arma::cube U;
+  arma::icube patches;
+  double alpha, mu, sigma, sigmasq;
+  uint32_t Nx, Ny, T, blockSize, blockOverlap;
+  int randomSeed;
+  bool expWeighting;
+
   double eps1, eps2;
   double lambda;
-  double alpha, mu, sigma, sigmasq;
 
   SVT *svt0, *svt1, *svt2p, *svt2m;
 
-  arma::cube U;
   arma::cube Uhat, U1, U2p, U2m;
   arma::cube delta1, delta2;
 
@@ -186,8 +210,7 @@ private:
 };
 
 // Wrapper for the PGURE optimization function
-double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad,
-                   void *data)
+double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad, void *data)
 {
   PGURE *obj = static_cast<PGURE *>(data);
   return obj->CalculatePGURE(x, grad, data);
@@ -197,9 +220,12 @@ double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad,
 // BOBYQA gradient-free algorithm
 double PGURE::Optimize(const double tol, const double start, const double bound, const int eval)
 {
+  double minf;
   double startingStep = 0.5 * start;
 
-  // Optimize PGURE
+  std::vector<double> x(1);
+  x[0] = start;
+
   nlopt::opt opt(nlopt::LN_BOBYQA, 1);
   opt.set_min_objective(obj_wrapper, this);
   opt.set_maxeval(eval);
@@ -209,13 +235,6 @@ double PGURE::Optimize(const double tol, const double start, const double bound,
   opt.set_xtol_abs(1E-12);
   opt.set_initial_step(startingStep);
 
-  std::vector<double> x(1);
-  x[0] = start;
-
-  // Objective value
-  double minf;
-
-  // Run the optimizer
   nlopt::result status = opt.optimize(x, minf);
 
   if (status <= 0)

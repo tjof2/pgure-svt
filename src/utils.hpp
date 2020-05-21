@@ -1,6 +1,8 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <cstdint>
 #include <iostream>
@@ -24,10 +26,11 @@ namespace pguresvt
         print(std::cout, std::fixed, std::setprecision(precision), arg, args...);
     }
 
-    bool strToBool(std::string const &s)
+    bool strToBool(std::string &s)
     {
-        // Little function to convert string "0"/"1" to boolean
-        return s != "0";
+        std::transform(s.begin(), s.end(), s.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        return (s.compare("1") == 0) || (s.compare("true") == 0);
     };
 
     inline double median(const arma::mat &X)
@@ -48,6 +51,16 @@ namespace pguresvt
     inline void SoftThreshold(arma::vec &out, const arma::vec &v, const arma::vec &zeros, const arma::vec &thresh)
     {
         out = arma::sign(v) % arma::max(arma::abs(v) - thresh, zeros);
+    }
+
+    size_t sysrandom(void *dst, size_t dstlen)
+    {
+        // See StackOverflow - https://stackoverflow.com/a/45069417
+        char *buffer = reinterpret_cast<char *>(dst);
+        std::ifstream stream("/dev/urandom", std::ios_base::binary | std::ios_base::in);
+        stream.read(buffer, dstlen);
+
+        return dstlen;
     }
 
 } // namespace pguresvt

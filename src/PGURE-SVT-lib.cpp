@@ -70,7 +70,7 @@ extern "C"
 // Main program
 extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
                         bool pgureOpt, double userLambda, double alpha,
-                        double mu, double sigma, int MotionP, double tol,
+                        double mu, double sigma, int motionWindow, double tol,
                         int MedianSize, double hotpixelthreshold,
                         int numthreads)
 {
@@ -90,18 +90,18 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
 
   int Nx = dims[0];
   int Ny = dims[1];
-  int num_images = dims[2];
+  int nImages = dims[2];
 
   // Copy the image sequence into the a cube
   // This is the dangerous bit - we want to avoid copying, so set
   // up the Armadillo data matrix to DIRECTLY read from auxiliary
   // memory, but be careful, this is also writable! Remember also
   // that Armadillo stores in column-major order.
-  arma::cube noisysequence(X, Nx, Ny, num_images, false, false);
-  arma::cube cleansequence(Y, Nx, Ny, num_images, false, false);
+  arma::cube noisysequence(X, Nx, Ny, nImages, false, false);
+  arma::cube cleansequence(Y, Nx, Ny, nImages, false, false);
 
   // Initialize the filtered sequence
-  arma::cube filteredsequence(Nx, Ny, num_images, arma::fill::zeros);
+  arma::cube filteredsequence(Nx, Ny, nImages, arma::fill::zeros);
 
   cleansequence.zeros();
   filteredsequence.zeros();
@@ -127,7 +127,7 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
     delete[] Buffer;
     delete[] FilteredBuffer;
   };
-  parallel(mfunc, static_cast<unsigned long long>(num_images));
+  parallel(mfunc, static_cast<unsigned long long>(nImages));
 
   // Initial outlier detection (for hot pixels)
   // using median absolute deviation
@@ -157,12 +157,12 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
       u = noisysequence.slices(0, 2 * framewindow);
       ufilter = filteredsequence.slices(0, 2 * framewindow);
     }
-    else if (timeiter >= (num_images - framewindow))
+    else if (timeiter >= (nImages - framewindow))
     {
-      u = noisysequence.slices(num_images - 2 * framewindow - 1,
-                               num_images - 1);
-      ufilter = filteredsequence.slices(num_images - 2 * framewindow - 1,
-                                        num_images - 1);
+      u = noisysequence.slices(nImages - 2 * framewindow - 1,
+                               nImages - 1);
+      ufilter = filteredsequence.slices(nImages - 2 * framewindow - 1,
+                                        nImages - 1);
     }
     else
     {
@@ -186,13 +186,14 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
 
     // Perform motion estimation
     MotionEstimator *motion = new MotionEstimator;
-    motion->Estimate(ufilter, timeiter, framewindow, num_images, Bs, MotionP);
+    motion->Estimate(ufilter, timeiter, framewindow, nImages, Bs, motionWindow);
     arma::icube sequencePatches = motion->GetEstimate();
     delete motion;
 
     // Perform PGURE optimization
-    PGURE *optimizer = new PGURE;
-    optimizer->Initialize(u, sequencePatches, Bs, Bo, alpha, sigma, mu);
+    int randomSeed = -1;
+    bool expWeighting = true;
+    PGURE *optimizer = new PGURE(u, sequencePatches, alpha, sigma, mu, Bs, Bo, randomSeed, expWeighting);
     // Determine optimum threshold value (max 1000 evaluations)
     if (pgureOpt)
     {
@@ -215,9 +216,9 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
     {
       cleansequence.slice(timeiter) = v.slice(timeiter);
     }
-    else if (timeiter >= (num_images - framewindow))
+    else if (timeiter >= (nImages - framewindow))
     {
-      int endseqFrame = timeiter - (num_images - T);
+      int endseqFrame = timeiter - (nImages - T);
       cleansequence.slice(timeiter) = v.slice(endseqFrame);
     }
     else
@@ -225,7 +226,7 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
       cleansequence.slice(timeiter) = v.slice(framewindow);
     }
   };
-  parallel(func, static_cast<unsigned long long>(num_images));
+  parallel(func, static_cast<unsigned long long>(nImages));
 
   // Finish the table off
   std::cout << std::setw(5 * ww + 5) << std::string(5 * ww + 5, '-')

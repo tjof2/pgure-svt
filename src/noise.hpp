@@ -74,7 +74,6 @@ public:
     uint32_t maxVsize = Nx * Ny;
     arma::vec means = -1 * arma::ones<arma::vec>(T * maxVsize);
     arma::vec vars = -1 * arma::ones<arma::vec>(T * maxVsize);
-    arma::vec minslice(T);
 
     // Perform quadtree decomposition of frames
     // to generate patches for noise estimation
@@ -103,11 +102,11 @@ public:
         int s = tree(2, n);
 
         // Extract cube from input and reshape to column vector
-        arma::cube tmpmm =
-            input.subcube(arma::span(x, x + s - 1), arma::span(y, y + s - 1),
-                          arma::span(i, i));
-        tmpmm.reshape(s * s, 1, 1);
-        arma::vec col = tmpmm.tube(0, 0, arma::size(s * s, 1));
+        arma::cube tmpM = input.subcube(arma::span(x, x + s - 1),
+                                        arma::span(y, y + s - 1),
+                                        arma::span(i, i));
+        tmpM.reshape(s * s, 1, 1);
+        arma::vec col = tmpM.tube(0, 0, arma::size(s * s, 1));
 
         // Add robust patch mean and variance to array
         // Get robust mean estimate
@@ -135,11 +134,11 @@ public:
 
     // Get sorted indices of means
     arma::uvec indices = arma::stable_sort_index(means);
-    arma::vec rmeans = means.elem(indices);
-    arma::vec rvars = vars.elem(indices);
+    arma::vec robustMeans = means.elem(indices);
+    arma::vec robustVars = vars.elem(indices);
 
     // Calculate alpha
-    arma::vec alphaBeta = WLSFit(rmeans, rvars);
+    arma::vec alphaBeta = WLSFit(robustMeans, robustVars);
 
     // Don't override user-defined alpha
     alpha = (alpha >= 0.) ? alpha : alphaBeta(0);
@@ -151,33 +150,25 @@ public:
     {
       // (Method 1 - PureDenoise@EPFL)
       int L = std::floor(1. * (Nx * Ny / means.n_elem));
-      mu = (mu >= 0.)
-               ? mu
-               : ComputeMode(RestrictArray(rmeans, 0, std::round(0.05 * L)));
-      dSi = ComputeMode(RestrictArray(rvars, 0, std::round(0.05 * L)));
+      mu = (mu >= 0.) ? mu : ComputeMode(RestrictArray(robustMeans, 0, std::round(0.05 * L)));
+      dSi = ComputeMode(RestrictArray(robustVars, 0, std::round(0.05 * L)));
       sigma = (sigma >= 0.) ? sigma : std::sqrt(dSi);
       break;
     }
     case 2:
     {
       // (Method 2 - PureDenoise@EPFL [commented out there]))
-      mu = (mu >= 0.) ? mu : ComputeMode(rmeans);
-      dSi = ComputeMode(rvars);
-      sigma = (sigma >= 0.)
-                  ? sigma
-                  : std::sqrt(std::max(
-                        dSi, std::max(alphaBeta(1) + alphaBeta(0) * dSi, 0.)));
+      mu = (mu >= 0.) ? mu : ComputeMode(robustMeans);
+      dSi = ComputeMode(robustVars);
+      sigma = (sigma >= 0.) ? sigma : std::sqrt(std::max(dSi, std::max(alphaBeta(1) + alphaBeta(0) * dSi, 0.)));
       break;
     }
     case 3:
     {
       // (Method 3 - tjof2@cam.ac.uk)
-      // This assumes that the DC offset is the mode
-      // of the means
-      mu = (mu >= 0.) ? mu : ComputeMode(rmeans);
-      sigma = (sigma >= 0.)
-                  ? sigma
-                  : std::sqrt(std::abs(alphaBeta(1) + alphaBeta(0) * mu));
+      // This assumes that the DC offset is the mode of the means
+      mu = (mu >= 0.) ? mu : ComputeMode(robustMeans);
+      sigma = (sigma >= 0.) ? sigma : std::sqrt(std::abs(alphaBeta(1) + alphaBeta(0) * mu));
       break;
     }
     case 4:
@@ -188,10 +179,8 @@ public:
       // of the means, and thus trys to avoid filtering
       // out actual information (e.g. an amorphous
       // substrate) during the SVT step
-      mu = (mu >= 0.) ? mu : rmeans(0);
-      sigma = (sigma >= 0.)
-                  ? sigma
-                  : std::sqrt(std::abs(alphaBeta(1) + alphaBeta(0) * mu));
+      mu = (mu >= 0.) ? mu : robustMeans(0);
+      sigma = (sigma >= 0.) ? sigma : std::sqrt(std::abs(alphaBeta(1) + alphaBeta(0) * mu));
       break;
     }
     }
@@ -212,18 +201,18 @@ private:
 
   // F-test lookup tables, supports up to 4096x4096 pixels
   // Default goes wth 2.5%
-  const arma::uvec DegOFreePlus1 = {2, 4, 8, 16, 32, 64,
-                                    128, 256, 512, 1024, 2048, 4096};
-  const arma::vec Ftest0100 = {5.39077, 1.97222, 1.38391, 1.17439,
+  const arma::uvec degOfFreePlus1 = {2, 4, 8, 16, 32, 64,
+                                     128, 256, 512, 1024, 2048, 4096};
+  const arma::vec fTest0100 = {5.39077, 1.97222, 1.38391, 1.17439,
                                1.08347, 1.04087, 1.02023, 1.01006,
                                1.00502, 1.00251, 1.00125, 1.00063};
-  const arma::vec Ftest0050 = {9.27663, 2.40345, 1.51833, 1.22924,
+  const arma::vec fTest0050 = {9.27663, 2.40345, 1.51833, 1.22924,
                                1.10838, 1.05276, 1.02604, 1.01293,
                                1.00645, 1.00322, 1.00161, 1.00081};
-  const arma::vec Ftest0025 = {15.4392, 2.86209, 1.64602, 1.27893,
+  const arma::vec fTest0025 = {15.4392, 2.86209, 1.64602, 1.27893,
                                1.13046, 1.06318, 1.03110, 1.01543,
                                1.00769, 1.00384, 1.00192, 1.00096};
-  const arma::vec Ftest0010 = {29.4567, 3.52219, 1.80896, 1.33932,
+  const arma::vec fTest0010 = {29.4567, 3.52219, 1.80896, 1.33932,
                                1.15670, 1.07543, 1.03702, 1.01834,
                                1.00913, 1.00455, 1.00227, 1.00114};
 
@@ -270,7 +259,7 @@ private:
     double stat = (Sz > Se) ? Sz / Se : Se / Sz;
 
     // Look-up value for F-test (2.5% default)
-    value = Ftest0025.elem(arma::find(DegOFreePlus1 == N));
+    value = fTest0025.elem(arma::find(degOfFreePlus1 == N));
 
     if (stat > value(0))
     {
@@ -499,19 +488,19 @@ private:
     s /= 2;
     uint32_t n = treeDelete[0].n_cols - 1;
 
-    arma::umat newtreeadd(3, 4);
-    newtreeadd << i << i + s << i << i + s << arma::endr << j << j << j + s
+    arma::umat newTreeAdd(3, 4);
+    newTreeAdd << i << i + s << i << i + s << arma::endr << j << j << j + s
                << j + s << arma::endr << s << s << s << s << arma::endr;
-    arma::umat newtree = arma::join_horiz(treeDelete[0], newtreeadd);
+    arma::umat newTree = arma::join_horiz(treeDelete[0], newTreeAdd);
 
-    arma::umat newdeleteadd(1, 1);
-    newdeleteadd << part << arma::endr;
-    arma::umat newdelete = arma::join_horiz(treeDelete[1], newdeleteadd);
+    arma::umat newDeleteAdd(1, 1);
+    newDeleteAdd << part << arma::endr;
+    arma::umat newDelete = arma::join_horiz(treeDelete[1], newDeleteAdd);
 
-    treeDelete[0].set_size(arma::size(newtree));
-    treeDelete[1].set_size(arma::size(newdelete));
-    treeDelete[0] = newtree;
-    treeDelete[1] = newdelete;
+    treeDelete[0].set_size(arma::size(newTree));
+    treeDelete[1].set_size(arma::size(newDelete));
+    treeDelete[0] = newTree;
+    treeDelete[1] = newDelete;
 
     uint32_t iter = n;
     do
