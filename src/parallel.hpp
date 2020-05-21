@@ -22,24 +22,24 @@
 #ifndef PARALLEL_HPP
 #define PARALLEL_HPP
 
+#include <cstdint>
 #include <thread>
 #include <vector>
 
-constexpr unsigned long parallel_mode = 1;
-
 template <typename Function, typename Integer_Type>
 void parallel(Function const &func, Integer_Type dim_first,
-              Integer_Type dim_last, unsigned long threshold = 1)
+              Integer_Type dim_last, uint32_t threshold = 1,
+              uint32_t parallel_mode = 1)
 {
-  if constexpr (parallel_mode == 0)
+  if (parallel_mode == 0)
   {
-    for (auto a : range(dim_first, dim_last))
+    for (auto a = dim_first; a != dim_last; ++a)
       func(a);
     return;
   }
-  else // for constexpr-if, must have else
+  else
   {
-    unsigned int const total_cores = std::thread::hardware_concurrency();
+    uint32_t const total_cores = std::thread::hardware_concurrency();
 
     // case of non-parallel or small jobs
     if ((total_cores <= 1) || ((dim_last - dim_first) <= threshold))
@@ -69,8 +69,7 @@ void parallel(Function const &func, Integer_Type dim_first,
     };
 
     threads.reserve(total_cores - 1);
-    std::uint_least64_t tasks_per_thread =
-        (dim_last - dim_first + total_cores - 1) / total_cores;
+    uint64_t tasks_per_thread = (dim_last - dim_first + total_cores - 1) / total_cores;
 
     for (auto index = 0UL; index != total_cores - 1; ++index)
     {

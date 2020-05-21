@@ -46,9 +46,10 @@
 #include <map>
 #include <random>
 #include <sstream>
-#include <stdarg.h>
+#include <cstdarg>
 #include <stdexcept>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <armadillo>
@@ -71,27 +72,23 @@ extern "C"
 #include "parallel.hpp"
 #include "utils.hpp"
 
-// Little function to convert string "0"/"1" to boolean
-bool strToBool(std::string const &s) { return s != "0"; };
-
 // Main program
 int main(int argc, char **argv)
 {
 
   // Overall program timer
-  auto overallstart = std::chrono::high_resolution_clock::now();
+  auto t0_start = std::chrono::high_resolution_clock::now();
 
   // Print program header
-  std::cout << std::endl
-            << "PGURE-SVT Denoising" << std::endl
-            << "Author: Tom Furnival" << std::endl
-            << "Email:  tjof2@cam.ac.uk" << std::endl
-            << std::endl;
+  pguresvt::print(std::cout,
+                  "PGURE-SVT Denoising\n",
+                  "Author: Tom Furnival\n",
+                  "Email:  tjof2@cam.ac.uk\n");
 
   // Read in the parameter file name
   if (argc != 2)
   {
-    std::cout << "  Usage: ./PGURE-SVT paramfile" << std::endl;
+    pguresvt::print(std::cout, "  Usage: ./PGURE-SVT paramfile");
     return -1;
   }
   std::map<std::string, std::string> programOptions;
@@ -105,9 +102,8 @@ int main(int argc, char **argv)
       programOptions.count("start_image") == 0 ||
       programOptions.count("end_image") == 0)
   {
-    std::cout << "**WARNING** Required parameters not specified" << std::endl;
-    std::cout << "            You must specify filename, start and end frame"
-              << std::endl;
+    pguresvt::print(std::cerr, "**WARNING** Required parameters not specified\n",
+                    "            You must specify filename, start and end frame");
     return -1;
   }
 
@@ -118,21 +114,20 @@ int main(int argc, char **argv)
   std::string filestem = filename.substr(0, lastindex);
 
   // Frames to process
-  int startimg = std::stoi(programOptions.at("start_image"));
-  int endimg = std::stoi(programOptions.at("end_image"));
-  int num_images = endimg - startimg + 1;
+  uint32_t startimg = std::stoi(programOptions.at("start_image"));
+  uint32_t endimg = std::stoi(programOptions.at("end_image"));
+  uint32_t num_images = endimg - startimg + 1;
 
   // Move onto optional parameters
   // Patch size and trajectory length
   // Check sizes to ensure SVD is done right way round
-  int Bs = (programOptions.count("patch_size") == 1)
-               ? std::stoi(programOptions.at("patch_size"))
-               : 4;
-  // int Overlap = (programOptions.count("patch_overlap") == 1) ?
-  // std::stoi(programOptions.at("patch_overlap")) : 1;
-  int T = (programOptions.count("trajectory_length") == 1)
-              ? std::stoi(programOptions.at("trajectory_length"))
-              : 15;
+  uint32_t Bs = (programOptions.count("patch_size") == 1)
+                    ? std::stoi(programOptions.at("patch_size"))
+                    : 4;
+
+  uint32_t T = (programOptions.count("trajectory_length") == 1)
+                   ? std::stoi(programOptions.at("trajectory_length"))
+                   : 15;
   T = (Bs * Bs < T) ? (Bs * Bs) - 1 : T;
   std::string casoratisize = std::to_string(Bs * Bs) + "x" + std::to_string(T);
 
@@ -149,7 +144,7 @@ int main(int argc, char **argv)
 
   // SVT thresholds and noise parameters initialized at -1 unless user-defined
   bool pgureOpt = (programOptions.count("pgure") == 1)
-                      ? strToBool(programOptions.at("pgure"))
+                      ? pguresvt::strToBool(programOptions.at("pgure"))
                       : true;
   double lambda;
   if (!pgureOpt)
@@ -160,23 +155,23 @@ int main(int argc, char **argv)
     }
     else
     {
-      std::cout << "**WARNING** PGURE optimization is turned OFF but no lambda "
-                   "specified in parameter file"
-                << std::endl;
+      pguresvt::print(std::cerr,
+                      "**WARNING** PGURE optimization is turned OFF but no lambda ",
+                      "specified in parameter file");
       return -1;
     }
   }
 
   // Move onto advanced parameters
   // Motion neigbourhood size
-  int MotionP = (programOptions.count("motion_neighbourhood") == 1)
-                    ? std::stoi(programOptions.at("motion_neighbourhood"))
-                    : 7;
+  uint32_t MotionP = (programOptions.count("motion_neighbourhood") == 1)
+                         ? std::stoi(programOptions.at("motion_neighbourhood"))
+                         : 7;
 
   // Size of median filter
-  int MedianSize = (programOptions.count("median_filter") == 1)
-                       ? std::stoi(programOptions.at("median_filter"))
-                       : 5;
+  uint32_t MedianSize = (programOptions.count("median_filter") == 1)
+                            ? std::stoi(programOptions.at("median_filter"))
+                            : 5;
 
   // PGURE tolerance
   double tol = 1E-7;
@@ -188,15 +183,14 @@ int main(int argc, char **argv)
   }
 
   // Block overlap
-  int Bo = (programOptions.count("patch_overlap") == 1)
-               ? std::stoi(programOptions.at("patch_overlap"))
-               : 1;
+  uint32_t Bo = (programOptions.count("patch_overlap") == 1)
+                    ? std::stoi(programOptions.at("patch_overlap"))
+                    : 1;
 
   // Noise method
-  // TODO:tjof2 document this option
-  int NoiseMethod = (programOptions.count("noise_method") == 1)
-                        ? std::stoi(programOptions.at("noise_method"))
-                        : 4;
+  uint32_t NoiseMethod = (programOptions.count("noise_method") == 1)
+                             ? std::stoi(programOptions.at("noise_method"))
+                             : 4;
 
   // Hot pixel threshold
   double hotpixelthreshold = (programOptions.count("hot_pixel") == 1)
@@ -207,13 +201,13 @@ int main(int argc, char **argv)
   std::string infilename = filestem + ".tif";
   if (!std::ifstream(infilename.c_str()))
   {
-    std::cout << "**WARNING** File " << infilename << " not found" << std::endl;
+    pguresvt::print(std::cerr, "**WARNING** File ", infilename, " not found");
     return -1;
   }
 
   // Load TIFF stack
-  int tiffWidth, tiffHeight;
-  unsigned short tiffDepth;
+  uint32_t tiffWidth, tiffHeight;
+  uint16_t tiffDepth;
   libtiff::TIFF *MultiPageTiff = libtiff::TIFFOpen(infilename.c_str(), "r");
   libtiff::TIFFGetField(MultiPageTiff, TIFFTAG_IMAGEWIDTH, &tiffWidth);
   libtiff::TIFFGetField(MultiPageTiff, TIFFTAG_IMAGELENGTH, &tiffHeight);
@@ -222,13 +216,13 @@ int main(int argc, char **argv)
   // Only work with square images
   if (tiffWidth != tiffHeight)
   {
-    std::cout << "**WARNING** Frame dimensions are not square" << std::endl;
+    pguresvt::print(std::cerr, "**WARNING** Frame dimensions are not square, got ", tiffWidth, "x", tiffHeight);
     return -1;
   }
   // Only work with 8-bit or 16-bit images
   if (tiffDepth != 8 && tiffDepth != 16)
   {
-    std::cout << "**WARNING** Images must be 8-bit or 16-bit" << std::endl;
+    pguresvt::print(std::cerr, "**WARNING** Images must be 8-bit or 16-bit, got ", tiffDepth, "-bit");
     return -1;
   }
 
@@ -237,8 +231,12 @@ int main(int argc, char **argv)
   arma::cube filteredsequence(tiffHeight, tiffWidth, 0);
   if (MultiPageTiff)
   {
-    int dircount = 0;
-    int imgcount = 0;
+    uint32_t dircount = 0;
+    uint32_t imgcount = 0;
+
+    int memsize = 512 * 1024;  // L2 cache size
+    int filtsize = MedianSize; // Median filter size in pixels
+
     do
     {
       if (dircount >= (startimg - 1) && dircount <= (endimg - 1))
@@ -246,42 +244,38 @@ int main(int argc, char **argv)
         inputsequence.resize(tiffHeight, tiffWidth, imgcount + 1);
         filteredsequence.resize(tiffHeight, tiffWidth, imgcount + 1);
 
-        unsigned short *Buffer = new unsigned short[tiffWidth * tiffHeight];
-        unsigned short *FilteredBuffer =
-            new unsigned short[tiffWidth * tiffHeight];
+        uint16_t *Buffer = new uint16_t[tiffWidth * tiffHeight];
+        uint16_t *FilteredBuffer = new uint16_t[tiffWidth * tiffHeight];
 
-        for (int tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
+        for (size_t tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
         {
           libtiff::TIFFReadScanline(MultiPageTiff, &Buffer[tiffRow * tiffWidth],
                                     tiffRow, 0);
         }
 
-        arma::Mat<unsigned short> TiffSlice(Buffer, tiffHeight, tiffWidth);
+        arma::Mat<uint16_t> TiffSlice(Buffer, tiffHeight, tiffWidth);
         inplace_trans(TiffSlice);
-        inputsequence.slice(imgcount) =
-            arma::conv_to<arma::mat>::from(TiffSlice);
+        inputsequence.slice(imgcount) = arma::conv_to<arma::mat>::from(TiffSlice);
 
         // Apply median filter (constant-time) to the 8-bit image
-        int memsize = 512 * 1024;  // L2 cache size
-        int filtsize = MedianSize; // Median filter size in pixels
         ConstantTimeMedianFilter(Buffer, FilteredBuffer, tiffWidth, tiffHeight,
                                  tiffWidth, tiffWidth, filtsize, 1, memsize);
-        arma::Mat<unsigned short> FilteredTiffSlice(FilteredBuffer, tiffHeight,
-                                                    tiffWidth);
+        arma::Mat<uint16_t> FilteredTiffSlice(FilteredBuffer, tiffHeight,
+                                              tiffWidth);
         inplace_trans(FilteredTiffSlice);
-        filteredsequence.slice(imgcount) =
-            arma::conv_to<arma::mat>::from(FilteredTiffSlice);
+        filteredsequence.slice(imgcount) = arma::conv_to<arma::mat>::from(FilteredTiffSlice);
         imgcount++;
       }
       dircount++;
     } while (libtiff::TIFFReadDirectory(MultiPageTiff));
     libtiff::TIFFClose(MultiPageTiff);
   }
+
   // Is number of frames compatible?
-  if (num_images > (int)inputsequence.n_slices)
+  if (num_images > inputsequence.n_slices)
   {
-    std::cout << "**WARNING** Sequence only has " << inputsequence.n_slices
-              << " frames" << std::endl;
+    pguresvt::print(std::cerr, "**WARNING** Sequence only has ",
+                    inputsequence.n_slices, " frames");
     return -1;
   }
 
@@ -291,30 +285,17 @@ int main(int argc, char **argv)
   cleansequence.zeros();
 
   // Get dimensions
-  int Nx = tiffHeight;
-  int Ny = tiffWidth;
+  uint32_t Nx = tiffHeight;
+  uint32_t Ny = tiffWidth;
 
   // Initial outlier detection (for hot pixels)
   // using median absolute deviation
-  pguresvt::utils::print_fixed(3, "Applying hot-pixel detector with threshold: ", hotpixelthreshold, " * MAD");
   HotPixelFilter(noisysequence, hotpixelthreshold);
 
-  // Print table headings
-  int ww = 10;
-  std::cout << std::endl;
-  std::cout << std::right << std::setw(5 * ww + 5)
-            << std::string(5 * ww + 5, '-') << std::endl;
-  std::cout << std::setw(5) << "Frame" << std::setw(ww) << "Gain"
-            << std::setw(ww) << "Offset" << std::setw(ww) << "Sigma"
-            << std::setw(ww) << "Lambda" << std::setw(ww) << "Time (s)"
-            << std::endl;
-  std::cout << std::setw(5 * ww + 5) << std::string(5 * ww + 5, '-')
-            << std::endl;
-
   // Loop over time windows
-  int framewindow = std::floor(T / 2);
+  uint32_t framewindow = std::floor(T / 2);
 
-  auto &&func = [&, lambda_ = lambda](int timeiter) {
+  auto &&func = [&, lambda_ = lambda](uint32_t timeiter) {
     auto lambda = lambda_;
     // Extract the subset of the image sequence
     arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
@@ -390,19 +371,13 @@ int main(int argc, char **argv)
       cleansequence.slice(timeiter) = v.slice(framewindow);
     }
   };
-  parallel(func, static_cast<unsigned long long>(num_images));
-
-  // Finish the table off
-  std::cout << std::setw(5 * ww + 5) << std::string(5 * ww + 5, '-')
-            << std::endl
-            << std::endl;
+  parallel(func, static_cast<uint32_t>(num_images));
 
   // Normalize to [0,65535] range
   cleansequence = (cleansequence - cleansequence.min()) /
                   (cleansequence.max() - cleansequence.min());
-  arma::Cube<unsigned short> outTiff(tiffWidth, tiffHeight, num_images);
-  outTiff =
-      arma::conv_to<arma::Cube<unsigned short>>::from(65535 * cleansequence);
+  arma::Cube<uint16_t> outTiff(tiffWidth, tiffHeight, num_images);
+  outTiff = arma::conv_to<arma::Cube<uint16_t>>::from(65535 * cleansequence);
 
   // Get the filename
   std::string outfilename = filestem + "-CLEANED.tif";
@@ -416,46 +391,37 @@ int main(int argc, char **argv)
   // Write the file
   if (!MultiPageTiffOut)
   {
-    std::cout << "**WARNING** File " << outfilename << " could not be written"
-              << std::endl;
+    pguresvt::print(std::cerr, "**WARNING** File ", outfilename, " could not be written");
     return -1;
   }
 
-  for (int tOut = 0; tOut < num_images; tOut++)
+  for (size_t tOut = 0; tOut < num_images; tOut++)
   {
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGEWIDTH, tiffWidth);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGELENGTH, tiffHeight);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_BITSPERSAMPLE, 16);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_SAMPLESPERPIXEL, 1);
-    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PLANARCONFIG,
-                          PLANARCONFIG_CONTIG);
-    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PHOTOMETRIC,
-                          PHOTOMETRIC_MINISBLACK);
-    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_ORIENTATION,
-                          ORIENTATION_TOPLEFT);
-
+    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
+    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
-    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PAGENUMBER, tOut,
-                          num_images);
-    for (int tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
+    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PAGENUMBER, tOut, num_images);
+
+    for (size_t tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
     {
-      arma::Mat<unsigned short> outSlice = outTiff.slice(tOut);
+      arma::Mat<uint16_t> outSlice = outTiff.slice(tOut);
       inplace_trans(outSlice);
-      unsigned short *OutBuffer = outSlice.memptr();
-      libtiff::TIFFWriteScanline(MultiPageTiffOut,
-                                 &OutBuffer[tiffRow * tiffWidth], tiffRow, 0);
+      uint16_t *OutBuffer = outSlice.memptr();
+      libtiff::TIFFWriteScanline(MultiPageTiffOut, &OutBuffer[tiffRow * tiffWidth], tiffRow, 0);
     }
     libtiff::TIFFWriteDirectory(MultiPageTiffOut);
   }
   libtiff::TIFFClose(MultiPageTiffOut);
 
   // Overall program timer
-  auto overallend = std::chrono::high_resolution_clock::now();
-  auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-      overallend - overallstart);
-  std::cout << "Total time: " << std::setprecision(5) << (elapsed.count() / 1E6)
-            << " seconds" << std::endl
-            << std::endl;
+  auto t0_end = std::chrono::high_resolution_clock::now();
+  auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t0_end - t0_start);
+  pguresvt::print_fixed(5, "Total time: ", elapsed.count() * 1E-6, " seconds\n");
 
   return 0;
 }

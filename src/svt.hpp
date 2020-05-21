@@ -30,10 +30,13 @@
 #define SVT_HPP
 
 #include <cstdlib>
+#include <cstdint>
 #include <algorithm>
 #include <cmath>
 #include <vector>
 #include <armadillo>
+
+#include "utils.hpp"
 
 class SVT
 {
@@ -43,8 +46,8 @@ public:
 
   // Allocate memory for SVD step
   void Initialize(const arma::icube &sequencePatches,
-                  const int w, const int h, const int l,
-                  const int blocksize, const int blockoverlap)
+                  const uint32_t w, const uint32_t h, const uint32_t l,
+                  const uint32_t blocksize, const uint32_t blockoverlap)
   {
     patches = sequencePatches;
 
@@ -63,19 +66,20 @@ public:
   void Decompose(const arma::cube &u)
   {
     // Do the local SVDs
-    arma::mat Ublock, Vblock;
+    arma::mat block, Ublock, Vblock;
     arma::vec Sblock;
 
+    block.set_size(Bs * Bs, T);
     Ublock.set_size(Bs * Bs, T);
     Sblock.set_size(T);
     Vblock.set_size(T, T);
 
     // Fix block overlap parameter
     arma::uvec firstpatches(vecSize);
-    int kiter = 0;
-    for (int i = 0; i < 1 + (Ny - Bs); i += Bo)
+    uint32_t kiter = 0;
+    for (size_t i = 0; i < 1 + (Ny - Bs); i += Bo)
     {
-      for (int j = 0; j < 1 + (Nx - Bs); j += Bo)
+      for (size_t j = 0; j < 1 + (Nx - Bs); j += Bo)
       {
         firstpatches(kiter) = i * (Ny - Bs) + j;
         kiter++;
@@ -86,13 +90,13 @@ public:
     // of the image sequence to ensure an
     // accurate PGURE reconstruction
     arma::uvec patchesbottomedge(1 + (Ny - Bs) / Bo);
-    for (int i = 0; i < 1 + (Ny - Bs); i += Bo)
+    for (size_t i = 0; i < 1 + (Ny - Bs); i += Bo)
     {
       patchesbottomedge(i / Bo) = (Ny - Bs + 1) * i + (Nx - Bs);
     }
 
     arma::uvec patchesrightedge(1 + (Nx - Bs) / Bo);
-    for (int i = 0; i < 1 + (Nx - Bs); i += Bo)
+    for (size_t i = 0; i < 1 + (Nx - Bs); i += Bo)
     {
       patchesrightedge(i / Bo) = (Ny - Bs + 1) * (Nx - Bs) + i;
     }
@@ -100,13 +104,10 @@ public:
     // Concatenate and find unique indices
     arma::uvec joinpatches(vecSize + 1 + (Ny - Bs) / Bo + 1 + (Nx - Bs) / Bo);
     joinpatches(arma::span(0, vecSize - 1)) = firstpatches;
-    joinpatches(arma::span(vecSize, vecSize + (Ny - Bs) / Bo)) =
-        patchesrightedge;
+    joinpatches(arma::span(vecSize, vecSize + (Ny - Bs) / Bo)) = patchesrightedge;
     joinpatches(arma::span(vecSize + (Ny - Bs) / Bo + 1,
-                           vecSize + (Ny - Bs) / Bo + 1 + (Nx - Bs) / Bo)) =
-        patchesbottomedge;
-    actualpatches =
-        arma::sort(joinpatches.elem(arma::find_unique(joinpatches)));
+                           vecSize + (Ny - Bs) / Bo + 1 + (Nx - Bs) / Bo)) = patchesbottomedge;
+    actualpatches = arma::sort(joinpatches.elem(arma::find_unique(joinpatches)));
 
     // Get new vector size
     newVecSize = actualpatches.n_elem;
@@ -115,25 +116,22 @@ public:
     U.resize(newVecSize);
     S.resize(newVecSize);
     V.resize(newVecSize);
-    for (int it = 0; it < newVecSize; it++)
+    for (size_t it = 0; it < newVecSize; it++)
     {
       U[it] = arma::zeros<arma::mat>(Bs * Bs, T);
       S[it] = arma::zeros<arma::vec>(T);
       V[it] = arma::zeros<arma::mat>(T, T);
     }
 
-    for (int it = 0; it < newVecSize; it++)
+    for (size_t it = 0; it < newVecSize; it++)
     {
-      arma::mat block(Bs * Bs, T);
-
       // Extract block
-      for (int k = 0; k < T; k++)
+      for (size_t k = 0; k < T; k++)
       {
         int newy = patches(0, actualpatches(it), k);
         int newx = patches(1, actualpatches(it), k);
-        block.col(k) =
-            arma::vectorise(u(arma::span(newy, newy + Bs - 1),
-                              arma::span(newx, newx + Bs - 1), arma::span(k)));
+        block.col(k) = arma::vectorise(u(arma::span(newy, newy + Bs - 1),
+                                         arma::span(newx, newx + Bs - 1), arma::span(k)));
       }
 
       // Do the SVD
@@ -150,43 +148,50 @@ public:
   {
     arma::cube v = arma::zeros<arma::cube>(Nx, Ny, T);
     arma::cube weights = arma::zeros<arma::cube>(Nx, Ny, T);
+    arma::vec wvec = arma::zeros<arma::vec>(T);
+    arma::vec zvec = arma::zeros<arma::vec>(T);
 
     arma::mat block, Ublock, Vblock;
-    arma::vec Sblock;
+    arma::vec Sblock, Snew;
 
     block.set_size(Bs * Bs, T);
     Ublock.set_size(Bs * Bs, T);
-    Sblock.set_size(T);
     Vblock.set_size(T, T);
+    Sblock.set_size(T);
+    Snew.set_size(T);
 
-    for (int it = 0; it < newVecSize; it++)
+    for (size_t it = 0; it < newVecSize; it++)
     {
       Ublock = U[it];
       Sblock = S[it];
       Vblock = V[it];
 
-      // Gaussian-weighted singular value thresholding
-      arma::vec wvec = arma::abs(
-          Sblock.max() * arma::exp(-1 * lambda * arma::square(Sblock) / 2));
-
-      // Apply threshold
-      arma::vec Snew =
-          arma::sign(Sblock) %
-          arma::max(arma::abs(Sblock) - wvec, arma::zeros<arma::vec>(T));
+      if (true)
+      {
+        // Gaussian-weighted singular value thresholding
+        wvec = arma::abs(Sblock.max() * arma::exp(-0.5 * lambda * arma::square(Sblock)));
+        pguresvt::SoftThreshold(Snew, Sblock, zvec, wvec);
+      }
+      else
+      {
+        // Simple singular value thresholding
+        pguresvt::SoftThreshold(Snew, Sblock, zvec, lambda);
+      }
 
       // Reconstruct from SVD
       block = Ublock * diagmat(Snew) * Vblock.t();
 
       // Deal with block weights (TODO: currently all weights = 1)
-      for (int k = 0; k < T; k++)
+      for (size_t k = 0; k < T; k++)
       {
         int newy = patches(0, actualpatches(it), k);
         int newx = patches(1, actualpatches(it), k);
-        v(arma::span(newy, newy + Bs - 1), arma::span(newx, newx + Bs - 1),
+        v(arma::span(newy, newy + Bs - 1),
+          arma::span(newx, newx + Bs - 1),
           arma::span(k, k)) += arma::reshape(block.col(k), Bs, Bs);
         weights(arma::span(newy, newy + Bs - 1),
-                arma::span(newx, newx + Bs - 1), arma::span(k, k)) +=
-            arma::ones<arma::mat>(Bs, Bs);
+                arma::span(newx, newx + Bs - 1),
+                arma::span(k, k)) += arma::ones<arma::mat>(Bs, Bs);
       }
     }
 
@@ -197,11 +202,10 @@ public:
   }
 
 private:
-  int Nx, Ny, T, Bs, Bo, vecSize, newVecSize;
+  uint32_t Nx, Ny, T, Bs, Bo, vecSize, newVecSize;
   arma::icube patches;
   arma::uvec actualpatches;
 
-  // Collate U, S, V
   std::vector<arma::mat> U, V;
   std::vector<arma::vec> S;
 };

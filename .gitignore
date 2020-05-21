@@ -45,6 +45,9 @@ cmake_install.cmake
 # Programs
 PGURE-SVT
 
+# Output TIFF files
+*CLEANED.tif
+
 # Directories
 build
 winbuild

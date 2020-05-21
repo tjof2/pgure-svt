@@ -46,9 +46,10 @@
 #include <map>
 #include <random>
 #include <sstream>
-#include <stdarg.h>
+#include <cstdarg>
 #include <stdexcept>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <armadillo>
@@ -65,9 +66,6 @@ extern "C"
 #include "pgure.hpp"
 #include "parallel.hpp"
 #include "utils.hpp"
-
-// Little function to convert string "0"/"1" to boolean
-bool strToBool(std::string const &s) { return s != "0"; };
 
 // Main program
 extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
@@ -133,7 +131,7 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
 
   // Initial outlier detection (for hot pixels)
   // using median absolute deviation
-  pguresvt::utils::print_fixed(3, "Applying hot-pixel detector with threshold: ", hotpixelthreshold, " * MAD");
+  pguresvt::print_fixed(3, "Applying hot-pixel detector with threshold: ", hotpixelthreshold, " * MAD");
   HotPixelFilter(noisysequence, hotpixelthreshold);
 
   // Print table headings

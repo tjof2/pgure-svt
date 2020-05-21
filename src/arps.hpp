@@ -34,6 +34,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <cstdint>
 #include <vector>
 #include <armadillo>
 
@@ -99,7 +100,7 @@ public:
       // Go backwards
       for (int i = -1; i >= -endseqFrame; i--)
       {
-        if (2 * timewindow == endseqFrame)
+        if (2 * (int)timewindow == endseqFrame)
         {
           ARPSMotionEstimation(A, i, endseqFrame + i + 1, endseqFrame + i,
                                endseqFrame + i);
@@ -176,8 +177,8 @@ private:
       int i = it % (1 + (Nx - Bs));
       int j = it / (1 + (Ny - Bs));
 
-      int x = j;
-      int y = i;
+      int x = (int)j;
+      int y = (int)i;
 
       arma::cube refblock = A(arma::span(i, i + Bs - 1),
                               arma::span(j, j + Bs - 1), arma::span(iARPS1));
@@ -189,7 +190,9 @@ private:
 
       chkMat(wind, wind) = 1;
 
-      int stepSize, maxIdx;
+      int stepSize;
+      int maxIdx;
+
       if (j == 0)
       {
         stepSize = 2;
@@ -200,8 +203,7 @@ private:
         int ytmp = std::abs(motions(0, it, iARPS3));
         int xtmp = std::abs(motions(1, it, iARPS3));
         stepSize = (xtmp <= ytmp) ? ytmp : xtmp;
-        if ((xtmp == stepSize && ytmp == 0) ||
-            (xtmp == 0 && ytmp == stepSize))
+        if ((xtmp == stepSize && ytmp == 0) || (xtmp == 0 && ytmp == stepSize))
         {
           maxIdx = 5;
         }
@@ -232,8 +234,7 @@ private:
       {
         int refBlkVer = y + LDSP(k, 1);
         int refBlkHor = x + LDSP(k, 0);
-        if (refBlkHor < 0 || refBlkHor + Bs - 1 >= Ny || refBlkVer < 0 ||
-            refBlkVer + Bs - 1 >= Nx)
+        if (refBlkHor < 0 || refBlkHor + Bs - 1 >= Ny || refBlkVer < 0 || refBlkVer + Bs - 1 >= Nx)
         {
           continue;
         }
@@ -286,7 +287,8 @@ private:
       costs(2) = cost;
 
       // Do the SDSP
-      int doneFlag = 0;
+      bool doneFlag = false;
+
       do
       {
         for (int k = 0; k < 5; k++)
@@ -294,8 +296,7 @@ private:
           int refBlkVer = y + SDSP(k, 1);
           int refBlkHor = x + SDSP(k, 0);
 
-          if (refBlkHor < 0 || refBlkHor + Bs - 1 >= Ny || refBlkVer < 0 ||
-              refBlkVer + Bs - 1 >= Nx)
+          if (refBlkHor < 0 || refBlkHor + Bs - 1 >= Ny || refBlkVer < 0 || refBlkVer + Bs - 1 >= Nx)
           {
             continue;
           }
@@ -303,13 +304,12 @@ private:
           {
             continue;
           }
-          else if (refBlkHor < j - wind || refBlkHor > j + wind ||
-                   refBlkVer < i - wind || refBlkVer > i + wind)
+          else if (refBlkHor < (int)(j - wind) || refBlkHor > (int)(j + wind) ||
+                   refBlkVer < (int)(i - wind) || refBlkVer > (int)(i + wind))
           {
             continue;
           }
-          else if (chkMat(y - i + SDSP(k, 1) + wind,
-                          x - j + SDSP(k, 0) + wind) == 1)
+          else if (chkMat(y - i + SDSP(k, 1) + wind, x - j + SDSP(k, 0) + wind) == 1)
           {
             continue;
           }
@@ -353,7 +353,7 @@ private:
 
         if (point(0) == 2)
         {
-          doneFlag = 1;
+          doneFlag = true;
         }
         else
         {
@@ -363,7 +363,7 @@ private:
           costs *= 1E8;
           costs(2) = cost;
         }
-      } while (doneFlag == 0);
+      } while (!doneFlag);
 
       int ystep = y - i;
       int xstep = x - j;

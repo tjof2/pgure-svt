@@ -3,11 +3,11 @@
 ##### REQUIRED #####
 
 # Specify the file name of the TIFF stack to be denoised
-filename             : ./images/demo.tif
+filename             : ./examplesequence.tif
 
 # The start and end frames of the sequence to be denoised
 start_image          : 1
-end_image            : 50
+end_image            : 25
 
 ##### OPTIONAL #####
 
@@ -65,4 +65,4 @@ motion_estimation    : 1
 
 # OpenMP num_threads
 # Default = 4
-#num_threads          : 4
+num_threads          : 1

@@ -31,8 +31,7 @@
 #define PGURE_HPP
 
 #include <cstdlib>
-#include <iostream>
-#include <iomanip>
+#include <cstdint>
 #include <random>
 #include <vector>
 #include <armadillo>
@@ -58,7 +57,7 @@ public:
   }
 
   void Initialize(const arma::cube &u, const arma::icube patches,
-                  const int blocksize, const int blockoverlap,
+                  const uint32_t blocksize, const uint32_t blockoverlap,
                   double alphaIn, double muIn, double sigmaIn)
   {
     U = u;
@@ -72,6 +71,7 @@ public:
     alpha = alphaIn;
     mu = muIn;
     sigma = sigmaIn;
+    sigmasq = sigma * sigma;
 
     Uhat.set_size(Nx, Ny, T);
     U1.set_size(Nx, Ny, T);
@@ -105,7 +105,7 @@ public:
     return;
   }
 
-  arma::cube Reconstruct(double user_lambda)
+  arma::cube Reconstruct(const double user_lambda)
   {
     return svt0->Reconstruct(user_lambda);
   }
@@ -119,17 +119,7 @@ public:
     U2m = svt2m->Reconstruct(x[0]);
 
     // Modified from [1] to include mean/offset
-    int NxNyT = Nx * Ny * T;
-    double pgURE;
-    pgURE = arma::accu(arma::square(arma::abs(Uhat - U))) / NxNyT -
-            (alpha + mu) * arma::accu(U) / NxNyT +
-            2 / eps1 *
-                arma::accu(delta1 % (alpha * U - alpha * mu + sigma * sigma) %
-                           (U1 - Uhat)) /
-                NxNyT -
-            2 * sigma * sigma * alpha / (eps2 * eps2) *
-                arma::accu(delta2 % (U2p - 2 * Uhat + U2m)) / NxNyT +
-            2 * mu * arma::accu(Uhat) / NxNyT + mu / NxNyT - sigma * sigma;
+    double pgURE = 1.0 / (Nx * Ny * T) * (arma::accu(arma::square(arma::abs(Uhat - U))) - (alpha + mu) * arma::accu(U) + (2 / eps1 * arma::accu(delta1 % (alpha * U - alpha * mu + sigmasq) % (U1 - Uhat))) - (2 * sigmasq * alpha / (eps2 * eps2) * arma::accu(delta2 % (U2p - 2 * Uhat + U2m))) + (2 * mu * arma::accu(Uhat)) + mu) - sigmasq;
 
     // Set new lambda
     lambda = x[0];
@@ -137,13 +127,13 @@ public:
     return pgURE;
   }
 
-  double Optimize(double tol, double start, double bound, int eval);
+  double Optimize(const double tol, const double start, const double bound, const int eval);
 
 private:
-  int Nx, Ny, T, Bs, Bo;
+  uint32_t Nx, Ny, T, Bs, Bo;
   double eps1, eps2;
   double lambda;
-  double alpha, mu, sigma;
+  double alpha, mu, sigma, sigmasq;
 
   SVT *svt0, *svt1, *svt2p, *svt2m;
 
@@ -177,7 +167,7 @@ private:
     });
 
     double kappa = 1.;
-    double vP = (1 / 2) + (kappa / 2) / std::sqrt(kappa * kappa + 4);
+    double vP = 0.5 + 0.5 * kappa / std::sqrt(kappa * kappa + 4);
     double vQ = 1 - vP;
     std::bernoulli_distribution binary_dist2(vP);
     delta2.imbue([&]() {
@@ -205,9 +195,9 @@ double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad,
 
 // Optimization function using NLopt and
 // BOBYQA gradient-free algorithm
-double PGURE::Optimize(double tol, double start, double bound, int eval)
+double PGURE::Optimize(const double tol, const double start, const double bound, const int eval)
 {
-  double startingStep = start / 2;
+  double startingStep = 0.5 * start;
 
   // Optimize PGURE
   nlopt::opt opt(nlopt::LN_BOBYQA, 1);
@@ -230,7 +220,7 @@ double PGURE::Optimize(double tol, double start, double bound, int eval)
 
   if (status <= 0)
   {
-    // TODO(tjof2): Need to implement warnings
+    // TODO: Need to implement warnings
   }
   return lambda;
 }
