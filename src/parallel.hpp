@@ -19,8 +19,8 @@
 
 ***************************************************************************/
 
-#ifndef PARALLEL_H
-#define PARALLEL_H
+#ifndef PARALLEL_HPP
+#define PARALLEL_HPP
 
 #include <thread>
 #include <vector>

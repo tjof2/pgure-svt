@@ -69,6 +69,7 @@ extern "C"
 #include "noise.hpp"
 #include "pgure.hpp"
 #include "parallel.hpp"
+#include "utils.hpp"
 
 // Little function to convert string "0"/"1" to boolean
 bool strToBool(std::string const &s) { return s != "0"; };
@@ -295,6 +296,7 @@ int main(int argc, char **argv)
 
   // Initial outlier detection (for hot pixels)
   // using median absolute deviation
+  pguresvt::utils::print_fixed(3, "Applying hot-pixel detector with threshold: ", hotpixelthreshold, " * MAD");
   HotPixelFilter(noisysequence, hotpixelthreshold);
 
   // Print table headings
@@ -344,7 +346,7 @@ int main(int argc, char **argv)
     if (pgureOpt)
     {
       NoiseEstimator *noise = new NoiseEstimator;
-      noise->Estimate(u, alpha, mu, sigma, 8, NoiseMethod);
+      noise->Estimate(u, alpha, mu, sigma, 8, NoiseMethod, 0);
       delete noise;
     }
 

@@ -26,13 +26,12 @@
 
 ***************************************************************************/
 
-#ifndef SVT_H
-#define SVT_H
+#ifndef SVT_HPP
+#define SVT_HPP
 
 #include <cstdlib>
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <vector>
 #include <armadillo>
 
@@ -43,8 +42,9 @@ public:
   ~SVT() {}
 
   // Allocate memory for SVD step
-  void Initialize(const arma::icube &sequencePatches, int w, int h, int l,
-                  int blocksize, int blockoverlap)
+  void Initialize(const arma::icube &sequencePatches,
+                  const int w, const int h, const int l,
+                  const int blocksize, const int blockoverlap)
   {
     patches = sequencePatches;
 
@@ -146,7 +146,7 @@ public:
   }
 
   // Reconstruct block in the image sequence after thresholding
-  arma::cube Reconstruct(double lambda)
+  arma::cube Reconstruct(const double lambda)
   {
     arma::cube v = arma::zeros<arma::cube>(Nx, Ny, T);
     arma::cube weights = arma::zeros<arma::cube>(Nx, Ny, T);

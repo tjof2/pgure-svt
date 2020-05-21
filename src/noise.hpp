@@ -31,11 +31,10 @@
 
 ***************************************************************************/
 
-#ifndef NOISE_H
-#define NOISE_H
+#ifndef NOISE_HPP
+#define NOISE_HPP
 
 #include <cstdlib>
-#include <iostream>
 #include <vector>
 #include <armadillo>
 
@@ -45,28 +44,29 @@ public:
   NoiseEstimator()
   {
     // Set Laplacian kernel to 3x3
-    laplacian = 1 / 8 * arma::ones<arma::mat>(3, 3);
+    laplacian = 0.125 * arma::ones<arma::mat>(3, 3);
     laplacian(1, 1) = -1;
     treeDelete.resize(2);
   };
 
   ~NoiseEstimator(){};
 
-  void Estimate(const arma::cube &input, double &alphaIn, double &muIn,
-                double &sigmaIn, int sizeIn, int method)
+  void Estimate(const arma::cube &input,
+                double &alphaIn, double &muIn, double &sigmaIn,
+                const int sizeIn, const int method, const int wtypeIn)
   {
     // Read from parameters
     alpha = alphaIn;
     mu = muIn;
     sigma = sigmaIn;
     size = sizeIn;
+    wtype = wtypeIn; // 0 - "Huber", 1 - "BiSquare"
 
     // Set some parameters
     dSi = 0.;
     Nx = input.n_cols;
     Ny = input.n_rows;
     T = input.n_slices;
-    wtype = 0; // 0 - "Huber", 1 - "BiSquare"
 
     // Perform quadtree decomposition of frames
     // to generate patches for noise estimation
@@ -448,7 +448,7 @@ private:
     return params;
   };
 
-  arma::vec RestrictArray(const arma::vec &a, int Is, int Ie)
+  arma::vec RestrictArray(const arma::vec &a, const int Is, const int Ie)
   {
     arma::vec b(Ie - Is + 1);
     for (int i = Is; i <= Ie; i++)
@@ -483,7 +483,7 @@ private:
   };
 
   // Recursive quadtree function
-  void QuadTree(const arma::mat &A, int part)
+  void QuadTree(const arma::mat &A, const int part)
   {
 
     int i = treeDelete[0](0, part);

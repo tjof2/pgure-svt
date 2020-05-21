@@ -27,8 +27,8 @@
 
 ***************************************************************************/
 
-#ifndef PGURE_H
-#define PGURE_H
+#ifndef PGURE_HPP
+#define PGURE_HPP
 
 #include <cstdlib>
 #include <iostream>
@@ -57,9 +57,9 @@ public:
     delete svt2m;
   }
 
-  void Initialize(const arma::cube &u, const arma::icube patches, int blocksize,
-                  int blockoverlap, double alphaIn, double muIn,
-                  double sigmaIn)
+  void Initialize(const arma::cube &u, const arma::icube patches,
+                  const int blocksize, const int blockoverlap,
+                  double alphaIn, double muIn, double sigmaIn)
   {
     U = u;
 

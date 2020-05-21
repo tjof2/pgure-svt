@@ -19,37 +19,36 @@
 
 ***************************************************************************/
 
-#ifndef HOTPIXEL_H
-#define HOTPIXEL_H
+#ifndef HOTPIXEL_HPP
+#define HOTPIXEL_HPP
 
 #include <cmath>
 #include <cstdlib>
-#include <iostream>
 #include <vector>
 #include <armadillo>
 
-void HotPixelFilter(arma::cube &sequence, double threshold)
+void HotPixelFilter(arma::cube &sequence, const double threshold)
 {
   int Nx = sequence.n_rows;
   int Ny = sequence.n_cols;
   int T = sequence.n_slices;
 
-  std::cout << std::endl
-            << "Applying hot-pixel detector with threshold: " << threshold
-            << " * MAD" << std::endl;
+  arma::vec medianwindow(8, arma::fill::zeros);
 
   for (int i = 0; i < T; i++)
   {
-    double median = arma::median(arma::vectorise(sequence.slice(i)));
+    double median = arma::median(arma::median(sequence.slice(i)));
     double medianAbsDev =
-        arma::median(arma::vectorise(arma::abs(sequence.slice(i) - median))) /
+        arma::median(arma::median(arma::abs(sequence.slice(i) - median))) /
         0.6745;
     arma::uvec outliers = arma::find(arma::abs(sequence.slice(i) - median) >
                                      threshold * medianAbsDev);
+
     for (size_t j = 0; j < outliers.n_elem; j++)
     {
+      medianwindow.zeros();
       arma::uvec sub = arma::ind2sub(arma::size(Nx, Ny), outliers(j));
-      arma::vec medianwindow(8);
+
       if ((int)sub(0) > 0 && (int)sub(0) < Nx - 1 && (int)sub(1) > 0 &&
           (int)sub(1) < Ny - 1)
       {
@@ -67,9 +66,8 @@ void HotPixelFilter(arma::cube &sequence, double threshold)
       }
       else
       {
-        // Edge pixels are replaced by the median
-        // of the frame (as they are not *usually*
-        // very important! CAREFUL THOUGH)
+        // Edge pixels are currently replaced by the median of the frame
+        // (as they are not usually very important)
         sequence(sub(0), sub(1), i) = median;
       }
     }

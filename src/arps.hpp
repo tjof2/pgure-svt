@@ -29,12 +29,11 @@
 
 ***************************************************************************/
 
-#ifndef ARPS_H
-#define ARPS_H
+#ifndef ARPS_HPP
+#define ARPS_HPP
 
 #include <cmath>
 #include <cstdlib>
-#include <iostream>
 #include <vector>
 #include <armadillo>
 
@@ -44,14 +43,16 @@ public:
   MotionEstimator() {}
   ~MotionEstimator() {}
 
-  void Estimate(const arma::cube &A, int iter, int timewindow, int num_images,
-                int blocksize, int MotionP)
+  void Estimate(const arma::cube &A, const int iter,
+                const int timewindow, const int num_images,
+                const int blocksize, const int MotionP)
   {
     Nx = A.n_rows;
     Ny = A.n_cols;
     T = A.n_slices;
     wind = MotionP;
     Bs = blocksize;
+    OoBsSq = 1.0 / (Bs * Bs);
     vecSize = (1 + (Nx - Bs)) * (1 + (Ny - Bs));
 
     patches = arma::zeros<arma::icube>(2, vecSize, 2 * timewindow + 1);
@@ -140,17 +141,26 @@ public:
 private:
   arma::icube patches, motions;
   int Nx, Ny, T, Bs, vecSize, wind;
+  double OoBsSq;
 
   // Adaptive Rood Pattern Search (ARPS) method
-  void ARPSMotionEstimation(const arma::cube &A, int curFr, int iARPS1,
-                            int iARPS2, int iARPS3)
+  void ARPSMotionEstimation(const arma::cube &A, const int curFr,
+                            const int iARPS1, const int iARPS2, const int iARPS3)
   {
+    double norm = 0;
+    arma::vec costs = arma::ones<arma::vec>(6) * 1E8;
+    arma::umat chkMat = arma::zeros<arma::umat>(2 * wind + 1, 2 * wind + 1);
+    arma::imat LDSP = arma::zeros<arma::imat>(6, 2);
+    arma::imat SDSP = arma::zeros<arma::imat>(5, 2);
+
     for (int it = 0; it < vecSize; it++)
     {
-      arma::vec costs = arma::ones<arma::vec>(6) * 1E8;
-      arma::umat chkMat = arma::zeros<arma::umat>(2 * wind + 1, 2 * wind + 1);
-      arma::imat LDSP = arma::zeros<arma::imat>(6, 2);
-      arma::imat SDSP = arma::zeros<arma::imat>(5, 2);
+      costs.ones();
+      costs *= 1E8;
+      chkMat.zeros();
+      LDSP.zeros();
+      SDSP.zeros();
+
       SDSP(0, 0) = 0;
       SDSP(0, 1) = -1;
       SDSP(1, 0) = -1;
@@ -173,10 +183,10 @@ private:
                               arma::span(j, j + Bs - 1), arma::span(iARPS1));
       arma::cube newblock = A(arma::span(i, i + Bs - 1),
                               arma::span(j, j + Bs - 1), arma::span(iARPS2));
-      costs(2) =
-          std::pow(arma::norm(refblock.slice(0) - newblock.slice(0), "fro"),
-                   2) /
-          (Bs * Bs);
+
+      norm = arma::norm(refblock.slice(0) - newblock.slice(0), "fro");
+      costs(2) = norm * norm * OoBsSq;
+
       chkMat(wind, wind) = 1;
 
       int stepSize, maxIdx;
@@ -216,6 +226,7 @@ private:
       // Currently not used, but motion estimation can be predictive
       // if this value is larger than 0!
       double pMot = 0.0;
+
       // Do the LDSP
       for (int k = 0; k < maxIdx; k++)
       {
@@ -237,22 +248,17 @@ private:
                 arma::span(refBlkHor, refBlkHor + Bs - 1), arma::span(iARPS2));
           if (curFr == 0)
           {
-            costs(k) =
-                std::pow(
-                    arma::norm(refblock.slice(0) - powblock.slice(0), "fro"),
-                    2) /
-                (Bs * Bs);
+            norm = arma::norm(refblock.slice(0) - powblock.slice(0), "fro");
+            costs(k) = norm * norm * OoBsSq;
           }
           else if (curFr < 0)
           {
             arma::ivec predpos = arma::vectorise(
                 patches(arma::span(), arma::span(it), arma::span(iARPS1)) -
                 motions(arma::span(), arma::span(it), arma::span(iARPS3)));
+            norm = arma::norm(refblock.slice(0) - powblock.slice(0), "fro");
             costs(k) =
-                std::pow(
-                    arma::norm(refblock.slice(0) - powblock.slice(0), "fro"),
-                    2) /
-                    (Bs * Bs) +
+                norm * norm * OoBsSq +
                 pMot * std::sqrt(std::pow(predpos(0) - refBlkVer, 2) +
                                  std::pow(predpos(1) - refBlkHor, 2));
           }
@@ -261,11 +267,9 @@ private:
             arma::ivec predpos = arma::vectorise(
                 patches(arma::span(), arma::span(it), arma::span(iARPS1)) +
                 motions(arma::span(), arma::span(it), arma::span(iARPS3)));
+            norm = arma::norm(refblock.slice(0) - powblock.slice(0), "fro");
             costs(k) =
-                std::pow(
-                    arma::norm(refblock.slice(0) - powblock.slice(0), "fro"),
-                    2) /
-                    (Bs * Bs) +
+                norm * norm * OoBsSq +
                 pMot * std::sqrt(std::pow(predpos(0) - refBlkVer, 2) +
                                  std::pow(predpos(1) - refBlkHor, 2));
           }
@@ -316,22 +320,17 @@ private:
                                     arma::span(iARPS2));
             if (curFr == 0)
             {
-              costs(k) =
-                  std::pow(
-                      arma::norm(refblock.slice(0) - powblock.slice(0), "fro"),
-                      2) /
-                  (Bs * Bs);
+              norm = arma::norm(refblock.slice(0) - powblock.slice(0), "fro");
+              costs(k) = norm * norm * OoBsSq;
             }
             else if (curFr < 0)
             {
               arma::ivec predpos = arma::vectorise(
                   patches(arma::span(), arma::span(it), arma::span(iARPS1)) -
                   motions(arma::span(), arma::span(it), arma::span(iARPS3)));
+              norm = arma::norm(refblock.slice(0) - powblock.slice(0), "fro");
               costs(k) =
-                  std::pow(
-                      arma::norm(refblock.slice(0) - powblock.slice(0), "fro"),
-                      2) /
-                      (Bs * Bs) +
+                  norm * norm * OoBsSq +
                   pMot * std::sqrt(std::pow(predpos(0) - refBlkVer, 2) +
                                    std::pow(predpos(1) - refBlkHor, 2));
             }
@@ -340,11 +339,9 @@ private:
               arma::ivec predpos = arma::vectorise(
                   patches(arma::span(), arma::span(it), arma::span(iARPS1)) +
                   motions(arma::span(), arma::span(it), arma::span(iARPS3)));
+              norm = arma::norm(refblock.slice(0) - powblock.slice(0), "fro");
               costs(k) =
-                  std::pow(
-                      arma::norm(refblock.slice(0) - powblock.slice(0), "fro"),
-                      2) /
-                      (Bs * Bs) +
+                  norm * norm * OoBsSq +
                   pMot * std::sqrt(std::pow(predpos(0) - refBlkVer, 2) +
                                    std::pow(predpos(1) - refBlkHor, 2));
             }
