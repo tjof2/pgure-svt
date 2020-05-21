@@ -38,7 +38,6 @@
 
 ***************************************************************************/
 
-// C++ headers
 #include <chrono>
 #include <ctime>
 #include <fstream>
@@ -52,20 +51,13 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
-
-// OpenMP library
-#include <omp.h>
-
-// Armadillo library
 #include <armadillo>
 
-// Constant-time median filter
 extern "C"
 {
 #include "medfilter.h"
 }
 
-// Own headers
 #include "arps.hpp"
 #include "hotpixel.hpp"
 #include "params.hpp"
@@ -85,22 +77,14 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
 {
 
   // Overall program timer
-  auto overallstart = std::chrono::steady_clock::now();
+  auto overallstart = std::chrono::high_resolution_clock::now();
 
   // Print program header
-  std::cout << std::endl;
-  std::cout << "PGURE-SVT Denoising" << std::endl;
-  std::cout << "Author: Tom Furnival" << std::endl;
-  std::cout << "Email:  tjof2@cam.ac.uk" << std::endl
+  std::cout << std::endl
+            << "PGURE-SVT Denoising" << std::endl
+            << "Author: Tom Furnival" << std::endl
+            << "Email:  tjof2@cam.ac.uk" << std::endl
             << std::endl;
-  std::cout << "Version 0.3.2 - May 2016" << std::endl
-            << std::endl;
-
-// Set up OMP
-#if defined(_OPENMP)
-  omp_set_dynamic(0);
-  omp_set_num_threads(numthreads);
-#endif
 
   int NoiseMethod = 4;
   double lambda = (userLambda >= 0.) ? userLambda : 0.;
@@ -110,11 +94,15 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
   int num_images = dims[2];
 
   // Copy the image sequence into the a cube
-  arma::cube noisysequence(X, Nx, Ny, num_images);
+  // This is the dangerous bit - we want to avoid copying, so set
+  // up the Armadillo data matrix to DIRECTLY read from auxiliary
+  // memory, but be careful, this is also writable! Remember also
+  // that Armadillo stores in column-major order.
+  arma::cube noisysequence(X, Nx, Ny, num_images, false, false);
+  arma::cube cleansequence(Y, Nx, Ny, num_images, false, false);
 
-  // Generate the clean and filtered sequences
-  arma::cube cleansequence(Nx, Ny, num_images);
-  arma::cube filteredsequence(Nx, Ny, num_images);
+  // Initialize the filtered sequence
+  arma::cube filteredsequence(Nx, Ny, num_images, arma::fill::zeros);
 
   cleansequence.zeros();
   filteredsequence.zeros();
@@ -142,23 +130,6 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
   };
   parallel(mfunc, static_cast<unsigned long long>(num_images));
 
-  /*
-  for (int i = 0; i < num_images; i++) {
-    arma::Mat<unsigned short> curslice = arma::conv_to<arma::Mat<unsigned
-  short>>::from(noisysequence.slice(i).eval());
-    inplace_trans(curslice);
-    Buffer = curslice.memptr();
-    ConstantTimeMedianFilter(Buffer,
-                             FilteredBuffer,
-                             Nx, Ny, Nx, Ny,
-                             filtsize, 1, memsize);
-                arma::Mat<unsigned short> filslice(FilteredBuffer, Nx, Ny);
-                inplace_trans(filslice);
-                filteredsequence.slice(i) =
-  arma::conv_to<arma::mat>::from(filslice);
-  }
-  */
-
   // Initial outlier detection (for hot pixels)
   // using median absolute deviation
   HotPixelFilter(noisysequence, hotpixelthreshold);
@@ -177,7 +148,7 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
 
   // Loop over time windows
   int framewindow = std::floor(T / 2);
-  // for(int timeiter = 0; timeiter < num_images; timeiter++) {
+
   auto &&func = [&, lambda_ = lambda](int timeiter) {
     // Extract the subset of the image sequence
     arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
@@ -262,15 +233,12 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
             << std::endl;
 
   // Overall program timer
-  auto overallend = std::chrono::steady_clock::now();
+  auto overallend = std::chrono::high_resolution_clock::now();
   auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
       overallend - overallstart);
   std::cout << "Total time: " << std::setprecision(5) << (elapsed.count() / 1E6)
             << " seconds" << std::endl
             << std::endl;
-
-  // Copy back to Python
-  memcpy(Y, cleansequence.memptr(), cleansequence.n_elem * sizeof(double));
 
   return 0;
 }

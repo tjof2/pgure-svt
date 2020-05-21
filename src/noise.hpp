@@ -37,8 +37,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-
-// Armadillo library
 #include <armadillo>
 
 class NoiseEstimator

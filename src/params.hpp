@@ -58,8 +58,7 @@ void ParseParameters(std::istream &cfgfile,
         }
       }
     }
-    // Set the parameter
-    options[id] = val;
+    options[id] = val; // Set the parameter
   }
   return;
 }

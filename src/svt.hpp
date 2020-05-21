@@ -29,17 +29,11 @@
 #ifndef SVT_H
 #define SVT_H
 
-// C++ headers
 #include <cstdlib>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <vector>
-
-// OpenMP library
-#include <omp.h>
-
-// Armadillo library
 #include <armadillo>
 
 class SVT
@@ -128,7 +122,6 @@ public:
       V[it] = arma::zeros<arma::mat>(T, T);
     }
 
-    //#pragma omp parallel for private(Ublock, Sblock, Vblock)
     for (int it = 0; it < newVecSize; it++)
     {
       arma::mat block(Bs * Bs, T);
@@ -166,21 +159,11 @@ public:
     Sblock.set_size(T);
     Vblock.set_size(T, T);
 
-    /*
-    #pragma omp parallel for shared(v, weights) \
-               private(block, Ublock, Sblock, Vblock)
-    */
     for (int it = 0; it < newVecSize; it++)
     {
       Ublock = U[it];
       Sblock = S[it];
       Vblock = V[it];
-
-      // Basic singular value thresholding
-      // arma::vec Snew = arma::sign(Sblock)
-      //                      % arma::max(
-      //                          arma::abs(Sblock) - lambda,
-      //                          arma::zeros<arma::vec>(T));
 
       // Gaussian-weighted singular value thresholding
       arma::vec wvec = arma::abs(

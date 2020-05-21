@@ -38,7 +38,6 @@
 
 ***************************************************************************/
 
-// C++ headers
 #include <chrono>
 #include <ctime>
 #include <fstream>
@@ -52,26 +51,18 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
-
-// OpenMP library
-#include <omp.h>
-
-// Armadillo library
 #include <armadillo>
 
-// LibTIFF
 namespace libtiff
 {
 #include "tiffio.h"
 }
 
-// Constant-time median filter
 extern "C"
 {
 #include "medfilter.h"
 }
 
-// Own headers
 #include "arps.hpp"
 #include "hotpixel.hpp"
 #include "params.hpp"
@@ -87,22 +78,14 @@ int main(int argc, char **argv)
 {
 
   // Overall program timer
-  auto overallstart = std::chrono::steady_clock::now();
+  auto overallstart = std::chrono::high_resolution_clock::now();
 
   // Print program header
-  std::cout << std::endl;
-  std::cout << "PGURE-SVT Denoising" << std::endl;
-  std::cout << "Author: Tom Furnival" << std::endl;
-  std::cout << "Email:  tjof2@cam.ac.uk" << std::endl
+  std::cout << std::endl
+            << "PGURE-SVT Denoising" << std::endl
+            << "Author: Tom Furnival" << std::endl
+            << "Email:  tjof2@cam.ac.uk" << std::endl
             << std::endl;
-  std::cout << "Version 0.3.2 - May 2016" << std::endl
-            << std::endl;
-
-  /////////////////////////////
-  //                           //
-  //    PARAMETER IMPORT     //
-  //                           //
-  /////////////////////////////
 
   // Read in the parameter file name
   if (argc != 2)
@@ -219,15 +202,6 @@ int main(int argc, char **argv)
                                  ? std::stoi(programOptions.at("hot_pixel"))
                                  : 10;
 
-// Set up OMP
-#if defined(_OPENMP)
-  int num_threads = (programOptions.count("num_threads") == 1)
-                        ? std::stoi(programOptions.at("num_threads"))
-                        : 4;
-  omp_set_dynamic(0);
-  omp_set_num_threads(num_threads);
-#endif
-
   // Check file exists
   std::string infilename = filestem + ".tif";
   if (!std::ifstream(infilename.c_str()))
@@ -337,106 +311,6 @@ int main(int argc, char **argv)
 
   // Loop over time windows
   int framewindow = std::floor(T / 2);
-  /*
-  for(int timeiter = 0; timeiter < num_images; timeiter++) {
-
-      // Time the loop iteration
-      auto startLoopTimer = std::chrono::steady_clock::now();
-
-      // Extract the subset of the image sequence
-      arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
-      if(timeiter < framewindow) {
-          u = noisysequence.slices(0,2*framewindow);
-          ufilter = filteredsequence.slices(0,2*framewindow);
-      }
-      else if(timeiter >= (num_images - framewindow)) {
-          u = noisysequence.slices(num_images-2*framewindow-1,num_images-1);
-          ufilter =
-  filteredsequence.slices(num_images-2*framewindow-1,num_images-1);
-      }
-      else {
-          u = noisysequence.slices(timeiter - framewindow, timeiter +
-  framewindow);
-          ufilter = filteredsequence.slices(timeiter - framewindow, timeiter +
-  framewindow);
-      }
-
-      // Basic sequence normalization
-      double inputmax = u.max();
-      u /= inputmax;
-      ufilter /= ufilter.max();
-
-      // Perform noise estimation
-      if(pgureOpt) {
-          NoiseEstimator *noise = new NoiseEstimator;
-          noise->Estimate(u,
-                          alpha,
-                          mu,
-                          sigma,
-                          8,
-                          NoiseMethod);
-          delete noise;
-      }
-
-      // Perform motion estimation
-      MotionEstimator *motion = new MotionEstimator;
-      motion->Estimate(ufilter,
-                       timeiter,
-                       framewindow,
-                       num_images,
-                       Bs,
-                       MotionP);
-      arma::icube sequencePatches = motion->GetEstimate();
-      delete motion;
-
-      // Perform PGURE optimization
-      PGURE *optimizer = new PGURE;
-      optimizer->Initialize(u,
-                            sequencePatches,
-                            Bs,
-                            Bo,
-                            alpha,
-                            sigma,
-                            mu);
-      // Determine optimum threshold value (max 1000 evaluations)
-      if(pgureOpt) {
-          lambda = (timeiter == 0) ? arma::accu(u)/(Nx*Ny*T) : lambda;
-          lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
-          v = optimizer->Reconstruct(lambda);
-      }
-      else {
-          v = optimizer->Reconstruct(lambda);
-      }
-      delete optimizer;
-
-      // Rescale back to original range
-      v *= inputmax;
-
-      // Place frames back into sequence
-      if(timeiter < framewindow) {
-          cleansequence.slice(timeiter) = v.slice(timeiter);
-      }
-      else if(timeiter >= (num_images - framewindow)) {
-          int endseqFrame = timeiter - (num_images - T);
-          cleansequence.slice(timeiter) = v.slice(endseqFrame);
-      }
-      else {
-          cleansequence.slice(timeiter) = v.slice(framewindow);
-      }
-
-      // Finish timing
-      auto endLoopTimer = std::chrono::steady_clock::now();
-      auto elapsedLoopTimer =
-  std::chrono::duration_cast<std::chrono::microseconds>(endLoopTimer -
-  startLoopTimer);
-
-      // Output a table row with noise estimates, lambda and timing
-      std::ostringstream framestring;
-      framestring << timeiter+1;
-
-      std::cout<<std::fixed<<std::setw(5)<<framestring.str()<<std::setw(ww)<<std::setprecision(3)<<alpha<<std::setw(ww)<<std::setprecision(3)<<mu<<std::setw(ww)<<std::setprecision(3)<<sigma<<std::setw(ww)<<std::setprecision(3)<<lambda<<std::setw(ww)<<std::setprecision(3)<<(elapsedLoopTimer.count()/1E6)<<std::endl;
-  }
-  */
 
   auto &&func = [&, lambda_ = lambda](int timeiter) {
     auto lambda = lambda_;
@@ -574,7 +448,7 @@ int main(int argc, char **argv)
   libtiff::TIFFClose(MultiPageTiffOut);
 
   // Overall program timer
-  auto overallend = std::chrono::steady_clock::now();
+  auto overallend = std::chrono::high_resolution_clock::now();
   auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
       overallend - overallstart);
   std::cout << "Total time: " << std::setprecision(5) << (elapsed.count() / 1E6)

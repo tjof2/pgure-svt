@@ -2,18 +2,6 @@
 
     Copyright (C) 2015-2020 Tom Furnival
 
-    Noise estimation functions:
-        - Estimate noise parameters based on method in [1]
-        - Quadtree segmentation of image based on method in [2]
-
-    References:
-    [1]     "Patch-Based Nonlocal Functional for Denoising Fluorescence
-            Microscopy Image Sequences", (2010), Boulanger, J et al.
-            http://dx.doi.org/10.1109/TMI.2009.2033991
-    [2]     "Deconvolution of 3D Fluorescence Micrographs with Automatic
-            Risk Minimization", (2008), Ramani, S et al.
-            http://dx.doi.org/10.1109/ISBI.2008.4541100
-
     This file is part of  PGURE-SVT.
 
     PGURE-SVT is free software: you can redistribute it and/or modify
@@ -31,19 +19,17 @@
 
 ***************************************************************************/
 
-#ifndef PARALLEL_HPP_DEFINED_ALREADY
-#define PARALLEL_HPP_DEFINED_ALREADY
+#ifndef PARALLEL_H
+#define PARALLEL_H
 
 #include <thread>
 #include <vector>
 
 constexpr unsigned long parallel_mode = 1;
 
-// originally from
-// https://github.com/fengwang/matrix/blob/master/matrix.hpp#L222
 template <typename Function, typename Integer_Type>
 void parallel(Function const &func, Integer_Type dim_first,
-              Integer_Type dim_last, unsigned long threshold = 1) // 1d parallel
+              Integer_Type dim_last, unsigned long threshold = 1)
 {
   if constexpr (parallel_mode == 0)
   {
@@ -51,14 +37,13 @@ void parallel(Function const &func, Integer_Type dim_first,
       func(a);
     return;
   }
-  else // <- this is constexpr-if, `else` is a must
+  else // for constexpr-if, must have else
   {
     unsigned int const total_cores = std::thread::hardware_concurrency();
 
     // case of non-parallel or small jobs
     if ((total_cores <= 1) || ((dim_last - dim_first) <= threshold))
     {
-      // for ( auto a : range( dim_first, dim_last ) )
       for (auto a = dim_first; a != dim_last; ++a)
         func(a);
       return;
@@ -87,7 +72,6 @@ void parallel(Function const &func, Integer_Type dim_first,
     std::uint_least64_t tasks_per_thread =
         (dim_last - dim_first + total_cores - 1) / total_cores;
 
-    // for ( auto index : range( total_cores-1 ) )
     for (auto index = 0UL; index != total_cores - 1; ++index)
     {
       Integer_Type first = tasks_per_thread * index + dim_first;
@@ -110,4 +94,19 @@ void parallel(Function const &func, Integer_Type dim_last)
   parallel(func, Integer_Type{0}, dim_last);
 }
 
-#endif // PARALLEL_HPP_DEFINED_ALREADY
+#endif
+
+/*
+TODO: support OMP
+
+include <omp.h>
+
+// Set up OMP
+#if defined(_OPENMP)
+  omp_set_dynamic(0);
+  omp_set_num_threads(numthreads);
+#endif
+
+#pragma omp parallel for shared(v, weights) \
+            private(block, Ublock, Sblock, Vblock)
+*/

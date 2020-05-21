@@ -22,13 +22,10 @@
 #ifndef HOTPIXEL_H
 #define HOTPIXEL_H
 
-// C++ headers
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-
-// Armadillo library
 #include <armadillo>
 
 void HotPixelFilter(arma::cube &sequence, double threshold)

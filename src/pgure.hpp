@@ -30,20 +30,13 @@
 #ifndef PGURE_H
 #define PGURE_H
 
-// C++ headers
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
 #include <random>
 #include <vector>
-
-// Armadillo library
 #include <armadillo>
-
-// NLopt library
 #include <nlopt.hpp>
-
-// Own header
 #include "svt.hpp"
 
 class PGURE

@@ -32,16 +32,10 @@
 #ifndef ARPS_H
 #define ARPS_H
 
-// OpenMP library
-#include <omp.h>
-
-// C++ headers
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-
-// Armadillo library
 #include <armadillo>
 
 class MotionEstimator
@@ -147,12 +141,10 @@ private:
   arma::icube patches, motions;
   int Nx, Ny, T, Bs, vecSize, wind;
 
-  // Adaptive Rood Pattern Search ( ARPS) method
+  // Adaptive Rood Pattern Search (ARPS) method
   void ARPSMotionEstimation(const arma::cube &A, int curFr, int iARPS1,
                             int iARPS2, int iARPS3)
   {
-
-    //#pragma omp parallel for
     for (int it = 0; it < vecSize; it++)
     {
       arma::vec costs = arma::ones<arma::vec>(6) * 1E8;
