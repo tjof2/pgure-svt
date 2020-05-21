@@ -13,8 +13,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/")
 
 option(USE_OPENBLAS "Whether to use BLAS or OpenBLAS" ON)
 option(USE_OPENMP "Whether to use OpenMP" ON)
-option(BUILD_LIBRARY "Build the shared library" ON)
-option(BUILD_PYTHON_DIST "Build Python distribution" ON)
+option(BUILD_LIBRARY "Build the shared library" OFF)
+option(BUILD_PYTHON_DIST "Build Python distribution" OFF)
 option(BUILD_EXECUTABLE "Build a standalone executable" ON)
 option(INSTALL_PYTHON "Install Python wrapper as a package" OFF)
 
@@ -135,7 +135,7 @@ if(BUILD_PYTHON_DIST AND PYTHON)
     add_custom_target(python ALL DEPENDS ${OUTPUT})
 
     message(STATUS "Building Python distribution")
-    # execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)
+    execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)
 
     # Install Python package
     if(INSTALL_PYTHON)
