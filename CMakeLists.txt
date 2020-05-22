@@ -15,9 +15,9 @@ message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_FULL}")
 
 option(USE_OPENBLAS "Whether to use BLAS or OpenBLAS" ON)
 option(USE_OPENMP "Whether to use OpenMP" ON)
-option(BUILD_EXECUTABLE "Build a standalone executable" ON)
+option(BUILD_EXECUTABLE "Build a standalone executable" OFF)
 option(BUILD_LIBRARY "Build the shared library" ON)
-option(BUILD_PYTHON_DIST "Build Python distribution" OFF)
+option(BUILD_PYTHON "Build Python distribution" ON)
 option(INSTALL_PYTHON "Install Python wrapper as a package" OFF)
 
 ########################################
@@ -74,13 +74,13 @@ endif()
 ########################################
 
 # Enable OpenMP & std::thread
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -pthread -std=c++17 -DARMA_DONT_USE_WRAPPER ")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -pthread -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DARMA_DONT_USE_WRAPPER ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
 
 if (OPENMP_FOUND AND USE_OPENMP)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
 ########################################
@@ -99,8 +99,8 @@ endif()
 
 ########################################
 
-# Build Python package
 find_program(PYTHON "python")
+
 if(BUILD_PYTHON_DIST AND PYTHON)
     set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
