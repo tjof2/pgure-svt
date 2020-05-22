@@ -1,31 +1,21 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2020 Tom Furnival
+  Copyright (C) 2015-2020 Tom Furnival
 
-    Perform Adaptive Rood Pattern Search (ARPS) for motion estimation [1].
-    Based on MATLAB code by Aroh Barjatya [2].
+  This file is part of  PGURE-SVT.
 
-    References:
-    [1]     "Adaptive rood pattern search for fast block-matching motion
-            estimation", (2002), Nie, Y and Kai-Kuang, M
-            http://dx.doi.org/10.1109/TIP.2002.806251
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    [2]     http://uk.mathworks.com/matlabcentral/fileexchange/8761-block-matching-algorithms-for-motion-estimation
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    This file is part of  PGURE-SVT.
-
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 

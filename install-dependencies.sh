@@ -1,8 +1,4 @@
 #!/bin/sh
-#   This script builds from source:
-#       - Armadillo 9.800.2
-#       - NLopt 2.6.1
-#
 # Copyright 2015-2020 Tom Furnival
 #
 # This file is part of PGURE-SVT.
@@ -24,19 +20,23 @@ set -ex
 mkdir build_deps
 cd build_deps
 
+# Versions to install
+ARMA_VER="9.880.1"
+NLOP_VER="2.6.2"
+
 # Armadillo
-wget http://sourceforge.net/projects/arma/files/armadillo-9.800.2.tar.xz
-tar -xvf armadillo-9.800.2.tar.xz > log-file 2>&1
-cd armadillo-9.800.2
+wget http://sourceforge.net/projects/arma/files/armadillo-${ARMA_VER}.tar.xz
+tar -xvf armadillo-${ARMA_VER}.tar.xz > arma.log 2>&1
+cd armadillo-${ARMA_VER}
 cmake .
 make
 sudo make install
 cd ../
 
 # NLopt
-wget https://github.com/stevengj/nlopt/archive/v2.6.2.tar.gz
-tar -xzvf v2.6.2.tar.gz > log-file 2>&1
-cd nlopt-2.6.2
+wget https://github.com/stevengj/nlopt/archive/v${NLOP_VER}.tar.gz
+tar -xzvf v${NLOP_VER}.tar.gz > nlopt.log 2>&1
+cd nlopt-${NLOP_VER}
 cmake .
 make
 sudo make install

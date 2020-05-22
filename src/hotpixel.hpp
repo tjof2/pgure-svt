@@ -1,21 +1,21 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2020 Tom Furnival
+  Copyright (C) 2015-2020 Tom Furnival
 
-    This file is part of PGURE-SVT.
+  This file is part of  PGURE-SVT.
 
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 
@@ -63,7 +63,7 @@ void HotPixelFilter(arma::cube &sequence, const double threshold)
         medianWindow(7) = sequence(sub(0) + 1, sub(1) + 1, i);
 
         medianWindow = arma::sort(medianWindow);
-        sequence(sub(0), sub(1), i) = (medianWindow(3) + medianWindow(4)) / 2;
+        sequence(sub(0), sub(1), i) = 0.5 * (medianWindow(3) + medianWindow(4));
       }
       else
       {

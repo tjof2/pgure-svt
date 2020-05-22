@@ -1,29 +1,21 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2020 Tom Furnival
+  Copyright (C) 2015-2020 Tom Furnival
 
-    Optimization of PGURE between noisy and denoised image sequences.
-    PGURE is an extension of the formula presented in [1].
+  This file is part of  PGURE-SVT.
 
-    References:
-    [1]     "An Unbiased Risk Estimator for Image Denoising in the Presence
-            of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
-            http://dx.doi.org/10.1109/TIP.2014.2300821
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This file is part of  PGURE-SVT.
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 
@@ -64,6 +56,7 @@ public:
     Nx = U.n_rows;
     Ny = U.n_cols;
     T = U.n_slices;
+    OoNxNyT = 1.0 / (Nx * Ny * T);
 
     sigmasq = sigma * sigma;
 
@@ -139,7 +132,7 @@ public:
     U2m = svt2m->Reconstruct(x[0]);
 
     // Modified from [1] to include mean/offset
-    double pgURE = 1.0 / (Nx * Ny * T) * (arma::accu(arma::square(arma::abs(Uhat - U))) - (alpha + mu) * arma::accu(U) + (2 / eps1 * arma::accu(delta1 % (alpha * U - alpha * mu + sigmasq) % (U1 - Uhat))) - (2 * sigmasq * alpha / (eps2 * eps2) * arma::accu(delta2 % (U2p - 2 * Uhat + U2m))) + (2 * mu * arma::accu(Uhat)) + mu) - sigmasq;
+    double pgURE = OoNxNyT * (arma::accu(arma::square(arma::abs(Uhat - U))) - (alpha + mu) * arma::accu(U) + (2 / eps1 * arma::accu(delta1 % (alpha * U - alpha * mu + sigmasq) % (U1 - Uhat))) - (2 * sigmasq * alpha / (eps2 * eps2) * arma::accu(delta2 % (U2p - 2 * Uhat + U2m))) + (2 * mu * arma::accu(Uhat)) + mu) - sigmasq;
 
     // Set new lambda
     lambda = x[0];
@@ -157,13 +150,15 @@ private:
   int randomSeed;
   bool expWeighting;
 
+  double OoNxNyT;
   double eps1, eps2;
   double lambda;
 
   SVT *svt0, *svt1, *svt2p, *svt2m;
 
   arma::cube Uhat, U1, U2p, U2m;
-  arma::cube delta1, delta2;
+  arma::icube delta1;
+  arma::cube delta2;
 
   std::mt19937 rand_engine;
 
@@ -177,34 +172,22 @@ private:
   // Perturbations used in empirical calculation of d'f(y) and d''f(y)
   void GenerateRandomPerturbations()
   {
-    std::bernoulli_distribution binary_dist1(0.5);
-    delta1.imbue([&]() {
-      bool bernRand = binary_dist1(rand_engine);
-      if (bernRand == true)
-      {
-        return -1;
-      }
-      else
-      {
-        return 1;
-      }
-    });
+    auto bernoulliFunc = [&](std::bernoulli_distribution &dist, auto value1, auto value2) {
+      return (dist(rand_engine)) ? value1 : value2;
+    };
 
     double kappa = 1.;
     double vP = 0.5 + 0.5 * kappa / std::sqrt(kappa * kappa + 4);
     double vQ = 1 - vP;
+    double vQvP = std::sqrt(vQ / vP);
+    double vPvQ = std::sqrt(vP / vQ);
+
+    std::bernoulli_distribution binary_dist1(0.5);
     std::bernoulli_distribution binary_dist2(vP);
-    delta2.imbue([&]() {
-      bool bernRand = binary_dist2(rand_engine);
-      if (bernRand == true)
-      {
-        return -1 * std::sqrt(vQ / vP);
-      }
-      else
-      {
-        return std::sqrt(vP / vQ);
-      }
-    });
+
+    delta1.imbue([&]() { return bernoulliFunc(binary_dist1, -1, 1); });
+    delta2.imbue([&]() { return bernoulliFunc(binary_dist2, -1 * vQvP, vPvQ); });
+
     return;
   }
 };
@@ -237,9 +220,10 @@ double PGURE::Optimize(const double tol, const double start, const double bound,
 
   nlopt::result status = opt.optimize(x, minf);
 
-  if (status <= 0)
+  if (status == 5)
   {
-    // TODO: Need to implement warnings
+    pguresvt::print(std::cerr, "WARNING: optimization terminated after max_eval (", eval, ") was reached.\n",
+                    "Consider increasing the max_eval or increasing the convergence tolerance (tol=", tol, ").");
   }
   return lambda;
 }

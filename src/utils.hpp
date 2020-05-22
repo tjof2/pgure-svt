@@ -1,3 +1,24 @@
+/***************************************************************************
+
+  Copyright (C) 2015-2020 Tom Furnival
+
+  This file is part of  PGURE-SVT.
+
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+
+***************************************************************************/
+
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
@@ -21,7 +42,7 @@ namespace pguresvt
     }
 
     template <typename Arg, typename... Args>
-    void print_fixed(const uint32_t precision, Arg &&arg, Args &&... args)
+    void printFixed(const uint32_t precision, Arg &&arg, Args &&... args)
     {
         print(std::cout, std::fixed, std::setprecision(precision), arg, args...);
     }
@@ -43,12 +64,12 @@ namespace pguresvt
         return arma::mean(arma::mean(X));
     }
 
-    inline void SoftThreshold(arma::vec &out, const arma::vec &v, const arma::vec &zeros, const double thresh)
+    inline void softThreshold(arma::vec &out, const arma::vec &v, const arma::vec &zeros, const double thresh)
     {
         out = arma::sign(v) % arma::max(arma::abs(v) - thresh, zeros);
     }
 
-    inline void SoftThreshold(arma::vec &out, const arma::vec &v, const arma::vec &zeros, const arma::vec &thresh)
+    inline void softThreshold(arma::vec &out, const arma::vec &v, const arma::vec &zeros, const arma::vec &thresh)
     {
         out = arma::sign(v) % arma::max(arma::abs(v) - thresh, zeros);
     }

@@ -1,40 +1,21 @@
 /***************************************************************************
 
-    PGURE-SVT Denoising
+  Copyright (C) 2015-2020 Tom Furnival
 
-    Author: Tom Furnival
-    Email:  tjof2@cam.ac.uk
+  This file is part of  PGURE-SVT.
 
-    Copyright (C) 2015-2020 Tom Furnival
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This program uses Singular Value Thresholding (SVT) [1], combined
-    with an unbiased risk estimator (PGURE) to denoise a video sequence
-    of microscopy images [2]. Noise parameters for a mixed Poisson-Gaussian
-    noise model are automatically estimated during the denoising.
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    References:
-    [1] "Unbiased Risk Estimates for Singular Value Thresholding and
-        Spectral Estimators", (2013), Candes, EJ et al.
-        http://dx.doi.org/10.1109/TSP.2013.2270464
-
-    [2] "An Unbiased Risk Estimator for Image Denoising in the Presence
-        of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
-        http://dx.doi.org/10.1109/TIP.2014.2300821
-
-    This file is part of PGURE-SVT.
-
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 
@@ -97,14 +78,14 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
   // up the Armadillo data matrix to DIRECTLY read from auxiliary
   // memory, but be careful, this is also writable! Remember also
   // that Armadillo stores in column-major order.
-  arma::cube noisysequence(X, Nx, Ny, nImages, false, false);
-  arma::cube cleansequence(Y, Nx, Ny, nImages, false, false);
+  arma::cube noisySeq(X, Nx, Ny, nImages, false, false);
+  arma::cube cleanSeq(Y, Nx, Ny, nImages, false, false);
 
   // Initialize the filtered sequence
-  arma::cube filteredsequence(Nx, Ny, nImages, arma::fill::zeros);
+  arma::cube filteredSeq(Nx, Ny, nImages, arma::fill::zeros);
 
-  cleansequence.zeros();
-  filteredsequence.zeros();
+  cleanSeq.zeros();
+  filteredSeq.zeros();
 
   // Parameters for median filter
   int memsize = 512 * 1024;  // L2 cache size
@@ -116,14 +97,14 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
     unsigned short *FilteredBuffer = new unsigned short[Nx * Ny];
     arma::Mat<unsigned short> curslice =
         arma::conv_to<arma::Mat<unsigned short>>::from(
-            noisysequence.slice(i).eval());
+            noisySeq.slice(i).eval());
     inplace_trans(curslice);
     Buffer = curslice.memptr();
     ConstantTimeMedianFilter(Buffer, FilteredBuffer, Nx, Ny, Nx, Ny, filtsize,
                              1, memsize);
     arma::Mat<unsigned short> filslice(FilteredBuffer, Nx, Ny);
     inplace_trans(filslice);
-    filteredsequence.slice(i) = arma::conv_to<arma::mat>::from(filslice);
+    filteredSeq.slice(i) = arma::conv_to<arma::mat>::from(filslice);
     delete[] Buffer;
     delete[] FilteredBuffer;
   };
@@ -131,8 +112,8 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
 
   // Initial outlier detection (for hot pixels)
   // using median absolute deviation
-  pguresvt::print_fixed(3, "Applying hot-pixel detector with threshold: ", hotpixelthreshold, " * MAD");
-  HotPixelFilter(noisysequence, hotpixelthreshold);
+  pguresvt::printFixed(3, "Applying hot-pixel detector with threshold: ", hotpixelthreshold, " * MAD");
+  HotPixelFilter(noisySeq, hotpixelthreshold);
 
   // Print table headings
   int ww = 10;
@@ -154,26 +135,26 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
     arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
     if (timeiter < framewindow)
     {
-      u = noisysequence.slices(0, 2 * framewindow);
-      ufilter = filteredsequence.slices(0, 2 * framewindow);
+      u = noisySeq.slices(0, 2 * framewindow);
+      ufilter = filteredSeq.slices(0, 2 * framewindow);
     }
     else if (timeiter >= (nImages - framewindow))
     {
-      u = noisysequence.slices(nImages - 2 * framewindow - 1,
-                               nImages - 1);
-      ufilter = filteredsequence.slices(nImages - 2 * framewindow - 1,
-                                        nImages - 1);
+      u = noisySeq.slices(nImages - 2 * framewindow - 1,
+                          nImages - 1);
+      ufilter = filteredSeq.slices(nImages - 2 * framewindow - 1,
+                                   nImages - 1);
     }
     else
     {
-      u = noisysequence.slices(timeiter - framewindow, timeiter + framewindow);
-      ufilter = filteredsequence.slices(timeiter - framewindow,
-                                        timeiter + framewindow);
+      u = noisySeq.slices(timeiter - framewindow, timeiter + framewindow);
+      ufilter = filteredSeq.slices(timeiter - framewindow,
+                                   timeiter + framewindow);
     }
 
     // Basic sequence normalization
-    double inputmax = u.max();
-    u /= inputmax;
+    double inputMax = u.max();
+    u /= inputMax;
     ufilter /= ufilter.max();
 
     // Perform noise estimation
@@ -209,21 +190,21 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
     delete optimizer;
 
     // Rescale back to original range
-    v *= inputmax;
+    v *= inputMax;
 
     // Place frames back into sequence
     if (timeiter < framewindow)
     {
-      cleansequence.slice(timeiter) = v.slice(timeiter);
+      cleanSeq.slice(timeiter) = v.slice(timeiter);
     }
     else if (timeiter >= (nImages - framewindow))
     {
       int endseqFrame = timeiter - (nImages - T);
-      cleansequence.slice(timeiter) = v.slice(endseqFrame);
+      cleanSeq.slice(timeiter) = v.slice(endseqFrame);
     }
     else
     {
-      cleansequence.slice(timeiter) = v.slice(framewindow);
+      cleanSeq.slice(timeiter) = v.slice(framewindow);
     }
   };
   parallel(func, static_cast<unsigned long long>(nImages));

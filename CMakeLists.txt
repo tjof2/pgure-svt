@@ -1,22 +1,7 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-project (PGURE-SVT)
-set (PGURE-SVT_VERSION_MAJOR 0)
-set (PGURE-SVT_VERSION_MINOR 4)
-set (PGURE-SVT_VERSION_PATCH 3)
-set (PGURE-SVT_VERSION_FULL "${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}")
-
-message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_FULL}")
-
 set(OS unix)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/")
-
-option(USE_OPENBLAS "Whether to use BLAS or OpenBLAS" ON)
-option(USE_OPENMP "Whether to use OpenMP" ON)
-option(BUILD_LIBRARY "Build the shared library" OFF)
-option(BUILD_PYTHON_DIST "Build Python distribution" OFF)
-option(BUILD_EXECUTABLE "Build a standalone executable" ON)
-option(INSTALL_PYTHON "Install Python wrapper as a package" OFF)
 
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
@@ -24,7 +9,19 @@ enable_language(C)
 
 ########################################
 
-# Look for packages
+project (PGURE-SVT)
+set (PGURE-SVT_VERSION_FULL "0.4.3")
+message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_FULL}")
+
+option(USE_OPENBLAS "Whether to use BLAS or OpenBLAS" ON)
+option(USE_OPENMP "Whether to use OpenMP" ON)
+option(BUILD_EXECUTABLE "Build a standalone executable" ON)
+option(BUILD_LIBRARY "Build the shared library" OFF)
+option(BUILD_PYTHON_DIST "Build Python distribution" OFF)
+option(INSTALL_PYTHON "Install Python wrapper as a package" OFF)
+
+########################################
+
 find_package(OpenMP)
 include(FindArmadillo)
 include(FindTiff)
@@ -41,7 +38,7 @@ endif()
 
 if(!TIFF_FOUND)
     if(BUILD_EXECUTABLE)
-        message(SEND_ERROR "ERROR: libtiff not found; Standalone program will not be compiled")
+        message(SEND_ERROR "ERROR: libtiff not found; Standalone program cannot be compiled")
     endif()
 else()
 	set(SVT_LIBS ${SVT_LIBS} ${TIFF_LIBRARIES})
@@ -88,14 +85,12 @@ endif()
 
 ########################################
 
-# Build executable
 if(BUILD_EXECUTABLE AND TIFF_FOUND)
     add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT-bin.cpp)
     target_link_libraries(PGURE-SVT ${SVT_LIBS})
     install(TARGETS PGURE-SVT DESTINATION bin)
 endif()
 
-# Build library
 if(BUILD_LIBRARY)
     add_library(pguresvt SHARED src/medfilter.c src/PGURE-SVT-lib.cpp)
     target_link_libraries(pguresvt ${SVT_LIBS})

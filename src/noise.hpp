@@ -1,33 +1,21 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2020 Tom Furnival
+  Copyright (C) 2015-2020 Tom Furnival
 
-    Noise estimation functions:
-        - Estimate noise parameters based on method in [1]
-        - Quadtree segmentation of image based on method in [2]
+  This file is part of  PGURE-SVT.
 
-    References:
-    [1]     "Patch-Based Nonlocal Functional for Denoising Fluorescence
-            Microscopy Image Sequences", (2010), Boulanger, J et al.
-            http://dx.doi.org/10.1109/TMI.2009.2033991
-    [2]     "Deconvolution of 3D Fluorescence Micrographs with Automatic
-            Risk Minimization", (2008), Ramani, S et al.
-            http://dx.doi.org/10.1109/ISBI.2008.4541100
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This file is part of  PGURE-SVT.
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 

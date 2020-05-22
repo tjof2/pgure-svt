@@ -1,28 +1,21 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2020 Tom Furnival
+  Copyright (C) 2015-2020 Tom Furnival
 
-    SVT calculation based on [1].
+  This file is part of  PGURE-SVT.
 
-    References:
-    [1]     "Unbiased Risk Estimates for Singular Value Thresholding and
-            Spectral Estimators", (2013), Candes, EJ et al.
-            http://dx.doi.org/10.1109/TSP.2013.2270464
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This file is part of  PGURE-SVT.
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 
@@ -53,7 +46,17 @@ public:
                                  blockOverlap(blockOverlap),
                                  expWeighting(expWeighting)
   {
-    vecSize = (1 + (Nx - blockSize) / blockOverlap) * (1 + (Ny - blockSize) / blockOverlap);
+    nxMbs = Nx - blockSize;
+    nyMbs = Ny - blockSize;
+    nxMbsDbo = nxMbs / blockOverlap;
+    nyMbsDbo = nyMbs / blockOverlap;
+    vecSize = (1 + nxMbsDbo) * (1 + nyMbsDbo);
+
+    block.set_size(blockSize * blockSize, T);
+    Ublock.set_size(blockSize * blockSize, T);
+    Vblock.set_size(T, T);
+    Sblock.set_size(T);
+    Sthresh.set_size(T);
   };
 
   ~SVT()
@@ -67,23 +70,14 @@ public:
   // subject to the block overlap restriction
   void Decompose(const arma::cube &u)
   {
-    // Do the local SVDs
-    arma::mat block, Ublock, Vblock;
-    arma::vec Sblock;
-
-    block.set_size(blockSize * blockSize, T);
-    Ublock.set_size(blockSize * blockSize, T);
-    Sblock.set_size(T);
-    Vblock.set_size(T, T);
-
     // Fix block overlap parameter
     arma::uvec firstPatches(vecSize);
     uint32_t kiter = 0;
-    for (size_t i = 0; i < 1 + (Ny - blockSize); i += blockOverlap)
+    for (size_t i = 0; i < 1 + nyMbs; i += blockOverlap)
     {
-      for (size_t j = 0; j < 1 + (Nx - blockSize); j += blockOverlap)
+      for (size_t j = 0; j < 1 + nxMbs; j += blockOverlap)
       {
-        firstPatches(kiter) = i * (Ny - blockSize) + j;
+        firstPatches(kiter) = i * nyMbs + j;
         kiter++;
       }
     }
@@ -91,24 +85,23 @@ public:
     // Code must include right and bottom edges
     // of the image sequence to ensure an
     // accurate PGURE reconstruction
-    arma::uvec patchesBottomEdge(1 + (Ny - blockSize) / blockOverlap);
-    for (size_t i = 0; i < 1 + (Ny - blockSize); i += blockOverlap)
+    arma::uvec patchesBottomEdge(1 + nyMbsDbo);
+    for (size_t i = 0; i < 1 + nyMbs; i += blockOverlap)
     {
-      patchesBottomEdge(i / blockOverlap) = (Ny - blockSize + 1) * i + (Nx - blockSize);
+      patchesBottomEdge(i / blockOverlap) = (nyMbs + 1) * i + nxMbs;
     }
 
-    arma::uvec patchesRightEdge(1 + (Nx - blockSize) / blockOverlap);
-    for (size_t i = 0; i < 1 + (Nx - blockSize); i += blockOverlap)
+    arma::uvec patchesRightEdge(1 + nxMbsDbo);
+    for (size_t i = 0; i < 1 + nxMbs; i += blockOverlap)
     {
-      patchesRightEdge(i / blockOverlap) = (Ny - blockSize + 1) * (Nx - blockSize) + i;
+      patchesRightEdge(i / blockOverlap) = (nyMbs + 1) * nxMbs + i;
     }
 
     // Concatenate and find unique indices
-    arma::uvec joinPatches(vecSize + 1 + (Ny - blockSize) / blockOverlap + 1 + (Nx - blockSize) / blockOverlap);
+    arma::uvec joinPatches(vecSize + 1 + nyMbsDbo + 1 + nxMbsDbo);
     joinPatches(arma::span(0, vecSize - 1)) = firstPatches;
-    joinPatches(arma::span(vecSize, vecSize + (Ny - blockSize) / blockOverlap)) = patchesRightEdge;
-    joinPatches(arma::span(vecSize + (Ny - blockSize) / blockOverlap + 1,
-                           vecSize + (Ny - blockSize) / blockOverlap + 1 + (Nx - blockSize) / blockOverlap)) = patchesBottomEdge;
+    joinPatches(arma::span(vecSize, vecSize + nyMbsDbo)) = patchesRightEdge;
+    joinPatches(arma::span(vecSize + nyMbsDbo + 1, vecSize + nyMbsDbo + 1 + nxMbsDbo)) = patchesBottomEdge;
     actualPatches = arma::sort(joinPatches.elem(arma::find_unique(joinPatches)));
 
     // Get new vector size
@@ -118,26 +111,22 @@ public:
     U.resize(newVecSize);
     S.resize(newVecSize);
     V.resize(newVecSize);
-    for (size_t it = 0; it < newVecSize; it++)
-    {
-      U[it] = arma::zeros<arma::mat>(blockSize * blockSize, T);
-      S[it] = arma::zeros<arma::vec>(T);
-      V[it] = arma::zeros<arma::mat>(T, T);
-    }
 
     for (size_t it = 0; it < newVecSize; it++)
     {
       // Extract block
       for (size_t k = 0; k < T; k++)
       {
-        int newy = patches(0, actualPatches(it), k);
-        int newx = patches(1, actualPatches(it), k);
-        block.col(k) = arma::vectorise(u(arma::span(newy, newy + blockSize - 1),
-                                         arma::span(newx, newx + blockSize - 1), arma::span(k)));
+        int newY = patches(0, actualPatches(it), k);
+        int newX = patches(1, actualPatches(it), k);
+        block.col(k) = arma::vectorise(
+            u(arma::span(newY, newY + blockSize - 1),
+              arma::span(newX, newX + blockSize - 1),
+              arma::span(k)));
       }
 
-      // Do the SVD
       arma::svd_econ(Ublock, Sblock, Vblock, block);
+
       U[it] = Ublock;
       S[it] = Sblock;
       V[it] = Vblock;
@@ -150,17 +139,9 @@ public:
   {
     arma::cube v = arma::zeros<arma::cube>(Nx, Ny, T);
     arma::cube weights = arma::zeros<arma::cube>(Nx, Ny, T);
+    arma::mat weightsInc = arma::ones<arma::mat>(blockSize, blockSize);
     arma::vec zvec = arma::zeros<arma::vec>(T);
     arma::vec wvec = arma::zeros<arma::vec>(T);
-
-    arma::mat block, Ublock, Vblock;
-    arma::vec Sblock, Snew;
-
-    block.set_size(blockSize * blockSize, T);
-    Ublock.set_size(blockSize * blockSize, T);
-    Vblock.set_size(T, T);
-    Sblock.set_size(T);
-    Snew.set_size(T);
 
     for (size_t it = 0; it < newVecSize; it++)
     {
@@ -168,33 +149,31 @@ public:
       Sblock = S[it];
       Vblock = V[it];
 
-      if (expWeighting)
+      if (expWeighting) // Gaussian-weighted singular value thresholding
       {
-        // Gaussian-weighted singular value thresholding
         wvec = arma::abs(Sblock.max() * arma::exp(-0.5 * lambda * arma::square(Sblock)));
-        pguresvt::SoftThreshold(Snew, Sblock, zvec, wvec);
+        pguresvt::softThreshold(Sthresh, Sblock, zvec, wvec);
       }
-      else
+      else // Simple singular value thresholding
       {
-        // Simple singular value thresholding
-        pguresvt::SoftThreshold(Snew, Sblock, zvec, lambda);
+        pguresvt::softThreshold(Sthresh, Sblock, zvec, lambda);
       }
 
       // Reconstruct from SVD
-      block = Ublock * diagmat(Snew) * Vblock.t();
+      block = Ublock * diagmat(Sthresh) * Vblock.t();
 
       for (size_t k = 0; k < T; k++)
       {
-        int newy = patches(0, actualPatches(it), k);
-        int newx = patches(1, actualPatches(it), k);
+        int newY = patches(0, actualPatches(it), k);
+        int newX = patches(1, actualPatches(it), k);
 
-        v(arma::span(newy, newy + blockSize - 1),
-          arma::span(newx, newx + blockSize - 1),
+        v(arma::span(newY, newY + blockSize - 1),
+          arma::span(newX, newX + blockSize - 1),
           arma::span(k, k)) += arma::reshape(block.col(k), blockSize, blockSize);
 
-        weights(arma::span(newy, newy + blockSize - 1),
-                arma::span(newx, newx + blockSize - 1),
-                arma::span(k, k)) += arma::ones<arma::mat>(blockSize, blockSize);
+        weights(arma::span(newY, newY + blockSize - 1),
+                arma::span(newX, newX + blockSize - 1),
+                arma::span(k, k)) += weightsInc;
       }
     }
 
@@ -207,10 +186,15 @@ public:
 
 private:
   arma::icube patches;
-  uint32_t Nx, Ny, T, blockSize, blockOverlap, vecSize, newVecSize;
+  uint32_t Nx, Ny, T;
+  uint32_t blockSize, blockOverlap;
   bool expWeighting;
 
+  uint32_t vecSize, newVecSize, nxMbs, nyMbs, nxMbsDbo, nyMbsDbo;
+
   arma::uvec actualPatches;
+  arma::mat block, Ublock, Vblock;
+  arma::vec Sblock, Sthresh;
 
   std::vector<arma::mat> U, V;
   std::vector<arma::vec> S;
