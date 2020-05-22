@@ -1,0 +1,31 @@
+# Example parameter file for PGURE-SVT
+# To use the default values of a parameter, comment
+# out the line using the '#' symbol.
+
+##### REQUIRED #####
+filename    : ./example.tif  # TIFF file to be denoised
+start_frame : 1              # Start frame
+end_frame   : 25             # End frame
+
+##### OPTIONAL #####
+patch_size            : 16    # Patch size in pixels (default = 4)
+patch_overlap         : 2     # Patch overlap in pixels (default = 1)
+trajectory_length     : 15    # Trajectory of each patch in frames, must be odd (default = 15)
+
+# Setting a negative value will enable automatic estimation of that parameter
+noise_alpha           : 0.1   # Detector gain noise parameter (default = -1)
+noise_mu              : 0.1   # Detector offset noise parameter (default = -1)
+noise_sigma           : 0.1   # Gaussian noise parameter (default = -1)
+
+optimize_pgure        : false # Optimize lambda using PGURE approach (default = true)
+lambda                : 0.15  # Singular value threshold to use if not optimizing (ignored if optimize_pgure = true)
+#tolerance            : 1E-7  # Relative tolerance of PGURE optimization (default = 1E-7)
+
+motion_estimation     : true  # Use ARPS motion estimation to reduce blurring (default = true)
+#motion_neighbourhood : 7     # Size of ARPS motion estimation neighbourhood in pixels (default = 7)
+#median_filter        : 5     # Size of median filter for ARPS in pixels (default = 5)
+
+#hot_pixel            : 10    # Hot pixel threshold detection (default = 10)
+exponential_weighting : true  # Use exponential singular value weighting (default = true)
+random_seed           : 1     # Random seed (default = -1, i.e. no seed)
+#num_threads          : 4     # OpenMP num_threads (default = 4)

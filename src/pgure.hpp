@@ -1,84 +1,64 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2020 Tom Furnival
+  Copyright (C) 2015-2020 Tom Furnival
 
-    Optimization of PGURE between noisy and denoised image sequences.
-    PGURE is an extension of the formula presented in [1].
+  This file is part of  PGURE-SVT.
 
-    References:
-    [1]     "An Unbiased Risk Estimator for Image Denoising in the Presence
-            of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
-            http://dx.doi.org/10.1109/TIP.2014.2300821
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This file is part of  PGURE-SVT.
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 
-#ifndef PGURE_H
-#define PGURE_H
+#ifndef PGURE_HPP
+#define PGURE_HPP
 
-// C++ headers
 #include <cstdlib>
-#include <iostream>
-#include <iomanip>
+#include <cstdint>
 #include <random>
 #include <vector>
-
-// Armadillo library
 #include <armadillo>
-
-// NLopt library
 #include <nlopt.hpp>
 
-// Own header
 #include "svt.hpp"
+#include "utils.hpp"
 
 class PGURE
 {
 public:
-  PGURE()
+  PGURE(const arma::cube &U,
+        const arma::icube patches,
+        const double alpha,
+        const double mu,
+        const double sigma,
+        const uint32_t blockSize,
+        const uint32_t blockOverlap,
+        const int randomSeed,
+        const bool expWeighting) : U(U),
+                                   patches(patches),
+                                   alpha(alpha),
+                                   mu(mu),
+                                   sigma(sigma),
+                                   blockSize(blockSize),
+                                   blockOverlap(blockOverlap),
+                                   randomSeed(randomSeed),
+                                   expWeighting(expWeighting)
   {
-    svt0 = new SVT;
-    svt1 = new SVT;
-    svt2p = new SVT;
-    svt2m = new SVT;
-  }
-  ~PGURE()
-  {
-    delete svt0;
-    delete svt1;
-    delete svt2p;
-    delete svt2m;
-  }
+    Nx = U.n_rows;
+    Ny = U.n_cols;
+    T = U.n_slices;
+    OoNxNyT = 1.0 / (Nx * Ny * T);
 
-  void Initialize(const arma::cube &u, const arma::icube patches, int blocksize,
-                  int blockoverlap, double alphaIn, double muIn,
-                  double sigmaIn)
-  {
-    U = u;
-
-    Nx = u.n_rows;
-    Ny = u.n_cols;
-    T = u.n_slices;
-    Bs = blocksize;
-    Bo = blockoverlap;
-
-    alpha = alphaIn;
-    mu = muIn;
-    sigma = sigmaIn;
+    sigmasq = sigma * sigma;
 
     Uhat.set_size(Nx, Ny, T);
     U1.set_size(Nx, Ny, T);
@@ -89,36 +69,62 @@ public:
     eps1 = U.max() * 1E-4;
     eps2 = U.max() * 1E-2;
 
+    // Seed the engine
+    if (randomSeed < 0)
+    {
+      std::uint_least32_t seed;
+      pguresvt::sysrandom(&seed, sizeof(seed));
+      rand_engine.seed(seed);
+    }
+    else
+    {
+      rand_engine.seed(randomSeed);
+    }
+
     // Generate random samples for stochastic evaluation
     delta1.set_size(Nx, Ny, T);
     delta2.set_size(Nx, Ny, T);
+
     GenerateRandomPerturbations();
+
     U1 = U + (delta1 * eps1);
     U2p = U + (delta2 * eps2);
     U2m = U - (delta2 * eps2);
 
     // Initialize the block SVDs
-    svt0->Initialize(patches, Nx, Ny, T, Bs, Bo);
-    svt1->Initialize(patches, Nx, Ny, T, Bs, Bo);
-    svt2p->Initialize(patches, Nx, Ny, T, Bs, Bo);
-    svt2m->Initialize(patches, Nx, Ny, T, Bs, Bo);
+    svt0 = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
+    svt1 = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
+    svt2p = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
+    svt2m = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
 
-    // Initialize the block SVDs
     svt0->Decompose(U);
     svt1->Decompose(U1);
     svt2p->Decompose(U2p);
     svt2m->Decompose(U2m);
-
-    return;
   }
 
-  arma::cube Reconstruct(double user_lambda)
+  ~PGURE()
+  {
+    delete svt0;
+    delete svt1;
+    delete svt2p;
+    delete svt2m;
+
+    Uhat.reset();
+    U1.reset();
+    U2p.reset();
+    U2m.reset();
+
+    delta1.reset();
+    delta2.reset();
+  }
+
+  arma::cube Reconstruct(const double user_lambda)
   {
     return svt0->Reconstruct(user_lambda);
   }
 
-  double CalculatePGURE(const std::vector<double> &x, std::vector<double> &grad,
-                        void *data)
+  double CalculatePGURE(const std::vector<double> &x, std::vector<double> &grad, void *data)
   {
     Uhat = svt0->Reconstruct(x[0]);
     U1 = svt1->Reconstruct(x[0]);
@@ -126,17 +132,7 @@ public:
     U2m = svt2m->Reconstruct(x[0]);
 
     // Modified from [1] to include mean/offset
-    int NxNyT = Nx * Ny * T;
-    double pgURE;
-    pgURE = arma::accu(arma::square(arma::abs(Uhat - U))) / NxNyT -
-            (alpha + mu) * arma::accu(U) / NxNyT +
-            2 / eps1 *
-                arma::accu(delta1 % (alpha * U - alpha * mu + sigma * sigma) %
-                           (U1 - Uhat)) /
-                NxNyT -
-            2 * sigma * sigma * alpha / (eps2 * eps2) *
-                arma::accu(delta2 % (U2p - 2 * Uhat + U2m)) / NxNyT +
-            2 * mu * arma::accu(Uhat) / NxNyT + mu / NxNyT - sigma * sigma;
+    double pgURE = OoNxNyT * (arma::accu(arma::square(arma::abs(Uhat - U))) - (alpha + mu) * arma::accu(U) + (2 / eps1 * arma::accu(delta1 % (alpha * U - alpha * mu + sigmasq) % (U1 - Uhat))) - (2 * sigmasq * alpha / (eps2 * eps2) * arma::accu(delta2 % (U2p - 2 * Uhat + U2m))) + (2 * mu * arma::accu(Uhat)) + mu) - sigmasq;
 
     // Set new lambda
     lambda = x[0];
@@ -144,19 +140,25 @@ public:
     return pgURE;
   }
 
-  double Optimize(double tol, double start, double bound, int eval);
+  double Optimize(const double tol, const double start, const double bound, const int eval);
 
 private:
-  int Nx, Ny, T, Bs, Bo;
+  arma::cube U;
+  arma::icube patches;
+  double alpha, mu, sigma, sigmasq;
+  uint32_t Nx, Ny, T, blockSize, blockOverlap;
+  int randomSeed;
+  bool expWeighting;
+
+  double OoNxNyT;
   double eps1, eps2;
   double lambda;
-  double alpha, mu, sigma;
 
   SVT *svt0, *svt1, *svt2p, *svt2m;
 
-  arma::cube U;
   arma::cube Uhat, U1, U2p, U2m;
-  arma::cube delta1, delta2;
+  arma::icube delta1;
+  arma::cube delta2;
 
   std::mt19937 rand_engine;
 
@@ -170,41 +172,28 @@ private:
   // Perturbations used in empirical calculation of d'f(y) and d''f(y)
   void GenerateRandomPerturbations()
   {
-    std::bernoulli_distribution binary_dist1(0.5);
-    delta1.imbue([&]() {
-      bool bernRand = binary_dist1(rand_engine);
-      if (bernRand == true)
-      {
-        return -1;
-      }
-      else
-      {
-        return 1;
-      }
-    });
+    auto bernoulliFunc = [&](std::bernoulli_distribution &dist, auto value1, auto value2) {
+      return (dist(rand_engine)) ? value1 : value2;
+    };
 
     double kappa = 1.;
-    double vP = (1 / 2) + (kappa / 2) / std::sqrt(kappa * kappa + 4);
+    double vP = 0.5 + 0.5 * kappa / std::sqrt(kappa * kappa + 4);
     double vQ = 1 - vP;
+    double vQvP = std::sqrt(vQ / vP);
+    double vPvQ = std::sqrt(vP / vQ);
+
+    std::bernoulli_distribution binary_dist1(0.5);
     std::bernoulli_distribution binary_dist2(vP);
-    delta2.imbue([&]() {
-      bool bernRand = binary_dist2(rand_engine);
-      if (bernRand == true)
-      {
-        return -1 * std::sqrt(vQ / vP);
-      }
-      else
-      {
-        return std::sqrt(vP / vQ);
-      }
-    });
+
+    delta1.imbue([&]() { return bernoulliFunc(binary_dist1, -1, 1); });
+    delta2.imbue([&]() { return bernoulliFunc(binary_dist2, -1 * vQvP, vPvQ); });
+
     return;
   }
 };
 
 // Wrapper for the PGURE optimization function
-double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad,
-                   void *data)
+double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad, void *data)
 {
   PGURE *obj = static_cast<PGURE *>(data);
   return obj->CalculatePGURE(x, grad, data);
@@ -212,11 +201,14 @@ double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad,
 
 // Optimization function using NLopt and
 // BOBYQA gradient-free algorithm
-double PGURE::Optimize(double tol, double start, double bound, int eval)
+double PGURE::Optimize(const double tol, const double start, const double bound, const int eval)
 {
-  double startingStep = start / 2;
+  double minf;
+  double startingStep = 0.5 * start;
 
-  // Optimize PGURE
+  std::vector<double> x(1);
+  x[0] = start;
+
   nlopt::opt opt(nlopt::LN_BOBYQA, 1);
   opt.set_min_objective(obj_wrapper, this);
   opt.set_maxeval(eval);
@@ -226,18 +218,12 @@ double PGURE::Optimize(double tol, double start, double bound, int eval)
   opt.set_xtol_abs(1E-12);
   opt.set_initial_step(startingStep);
 
-  std::vector<double> x(1);
-  x[0] = start;
-
-  // Objective value
-  double minf;
-
-  // Run the optimizer
   nlopt::result status = opt.optimize(x, minf);
 
-  if (status <= 0)
+  if (status == 5)
   {
-    // TODO(tjof2): Need to implement warnings
+    pguresvt::print(std::cerr, "WARNING: optimization terminated after max_eval (", eval, ") was reached.\n",
+                    "Consider increasing the max_eval or increasing the convergence tolerance (tol=", tol, ").");
   }
   return lambda;
 }

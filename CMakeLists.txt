@@ -1,21 +1,7 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-project (PGURE-SVT)
-set (PGURE-SVT_VERSION_MAJOR 0)
-set (PGURE-SVT_VERSION_MINOR 4)
-set (PGURE-SVT_VERSION_PATCH 3)
-set (PGURE-SVT_VERSION_FULL "${PGURE-SVT_VERSION_MAJOR}.${PGURE-SVT_VERSION_MINOR}.${PGURE-SVT_VERSION_PATCH}")
-
-message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_FULL}")
-
 set(OS unix)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_aux/Modules/")
-
-option(BUILD_LIBRARY "Build the shared library" ON)
-option(BUILD_PYTHON "Install Python wrapper as a package" ON)
-option(BUILD_PYTHON_DIST "Build Python distribution" OFF)
-option(BUILD_EXECUTABLE "Build a standalone executable" OFF)
-option(USE_OPENBLAS "Whether to use BLAS or OpenBLAS" ON)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/")
 
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
@@ -23,7 +9,19 @@ enable_language(C)
 
 ########################################
 
-# Look for packages
+project (PGURE-SVT)
+set (PGURE-SVT_VERSION_FULL "0.4.3")
+message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_FULL}")
+
+option(USE_OPENBLAS "Whether to use BLAS or OpenBLAS" ON)
+option(USE_OPENMP "Whether to use OpenMP" ON)
+option(BUILD_EXECUTABLE "Build a standalone executable" ON)
+option(BUILD_LIBRARY "Build the shared library" ON)
+option(BUILD_PYTHON_DIST "Build Python distribution" OFF)
+option(INSTALL_PYTHON "Install Python wrapper as a package" OFF)
+
+########################################
+
 find_package(OpenMP)
 include(FindArmadillo)
 include(FindTiff)
@@ -35,12 +33,12 @@ include(FindNLOPT)
 
 if(NLOPT_FOUND)
 	set(SVT_LIBS ${SVT_LIBS} ${NLOPT_LIBRARIES})
-	set(SVT_INCL ${SVT_INCL} ${NLOPT_INCLUDE_DIR})
+    set(SVT_INCL ${SVT_INCL} ${NLOPT_INCLUDE_DIR})
 endif()
 
 if(!TIFF_FOUND)
     if(BUILD_EXECUTABLE)
-        message(SEND_ERROR "ERROR: libtiff not found; Standalone program will not be compiled")
+        message(SEND_ERROR "ERROR: libtiff not found; Standalone program cannot be compiled")
     endif()
 else()
 	set(SVT_LIBS ${SVT_LIBS} ${TIFF_LIBRARIES})
@@ -69,52 +67,52 @@ if(LAPACK_FOUND)
 endif()
 
 if(ARMADILLO_FOUND)
-	set(SVT_LIBS ${SVT_LIBS} ${ARMADILLO_LIBRARIES})
+    set(SVT_LIBS ${SVT_LIBS} ${ARMADILLO_LIBRARIES})
+    message(STATUS "Armadillo config: ${ARMADILLO_INCLUDE_DIR}/armadillo_bits/config.hpp")
 endif()
-
-message(STATUS ${SVT_LIBS})
 
 ########################################
 
-# Enable OpenMP
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fPIC -Wall -march=native -std=c++17")
-# enable std::thread
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-if (OPENMP_FOUND)
+# Enable OpenMP & std::thread
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -pthread -std=c++17 -DARMA_DONT_USE_WRAPPER ")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
+
+if (OPENMP_FOUND AND USE_OPENMP)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
 ########################################
 
-# Build executable
 if(BUILD_EXECUTABLE AND TIFF_FOUND)
     add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT-bin.cpp)
     target_link_libraries(PGURE-SVT ${SVT_LIBS})
     install(TARGETS PGURE-SVT DESTINATION bin)
 endif()
 
-# Build library
 if(BUILD_LIBRARY)
     add_library(pguresvt SHARED src/medfilter.c src/PGURE-SVT-lib.cpp)
     target_link_libraries(pguresvt ${SVT_LIBS})
     install(TARGETS pguresvt DESTINATION lib)
 endif()
 
-# Install Python package
+########################################
+
+# Build Python package
 find_program(PYTHON "python")
-if((BUILD_PYTHON OR BUILD_PYTHON_DIST) AND PYTHON)
+if(BUILD_PYTHON_DIST AND PYTHON)
     set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-    set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
+    set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py")
     set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
     set(DEPS        "${CMAKE_CURRENT_BINARY_DIR}/pguresvt/*.py")
     set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
 
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/pguresvt.py.in
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/pguresvt.py
                    ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/pguresvt.py)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/__init__.py.in
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/__init__.py
                    ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/__init__.py)
 
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/hspysvt.py
@@ -133,15 +131,12 @@ if((BUILD_PYTHON OR BUILD_PYTHON_DIST) AND PYTHON)
 
     add_custom_target(python ALL DEPENDS ${OUTPUT})
 
-    if(BUILD_PYTHON)
+    message(STATUS "Building Python distribution")
+    execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)
+
+    # Install Python package
+    if(INSTALL_PYTHON)
         install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
-    endif()
-
-    if(BUILD_PYTHON_DIST)
-        install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)")
-
-        #set(PYTHON_WHEEL "${CMAKE_CURRENT_BINARY_DIR}/dist/pguresvt-${PGURE-SVT_VERSION_FULL}-py3-none-any.whl")
-        #install(CODE "execute_process(COMMAND auditwheel repair ${PYTHON_WHEEL})")
     endif()
 
 endif()

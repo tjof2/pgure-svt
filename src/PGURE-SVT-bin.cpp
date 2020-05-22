@@ -1,44 +1,24 @@
 /***************************************************************************
 
-    PGURE-SVT Denoising
+  Copyright (C) 2015-2020 Tom Furnival
 
-    Author: Tom Furnival
-    Email:  tjof2@cam.ac.uk
+  This file is part of  PGURE-SVT.
 
-    Copyright (C) 2015-2020 Tom Furnival
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This program uses Singular Value Thresholding (SVT) [1], combined
-    with an unbiased risk estimator (PGURE) to denoise a video sequence
-    of microscopy images [2]. Noise parameters for a mixed Poisson-Gaussian
-    noise model are automatically estimated during the denoising.
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    References:
-    [1] "Unbiased Risk Estimates for Singular Value Thresholding and
-        Spectral Estimators", (2013), Candes, EJ et al.
-        http://dx.doi.org/10.1109/TSP.2013.2270464
-
-    [2] "An Unbiased Risk Estimator for Image Denoising in the Presence
-        of Mixed Poisson–Gaussian Noise", (2014), Le Montagner, Y et al.
-        http://dx.doi.org/10.1109/TIP.2014.2300821
-
-    This file is part of PGURE-SVT.
-
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 
-// C++ headers
 #include <chrono>
 #include <ctime>
 #include <fstream>
@@ -47,447 +27,265 @@
 #include <map>
 #include <random>
 #include <sstream>
-#include <stdarg.h>
+#include <cstdarg>
 #include <stdexcept>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstdint>
 #include <string>
 #include <vector>
-
-// OpenMP library
-#include <omp.h>
-
-// Armadillo library
 #include <armadillo>
 
-// LibTIFF
 namespace libtiff
 {
 #include "tiffio.h"
 }
 
-// Constant-time median filter
 extern "C"
 {
 #include "medfilter.h"
 }
 
-// Own headers
 #include "arps.hpp"
 #include "hotpixel.hpp"
 #include "params.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
 #include "parallel.hpp"
+#include "utils.hpp"
 
-// Little function to convert string "0"/"1" to boolean
-bool strToBool(std::string const &s) { return s != "0"; };
-
-// Main program
 int main(int argc, char **argv)
 {
 
-  // Overall program timer
-  auto overallstart = std::chrono::steady_clock::now();
+  pguresvt::print(std::cout,
+                  "PGURE-SVT Denoising\n",
+                  "Author: Tom Furnival\n",
+                  "Email:  tjof2@cam.ac.uk\n");
 
-  // Print program header
-  std::cout << std::endl;
-  std::cout << "PGURE-SVT Denoising" << std::endl;
-  std::cout << "Author: Tom Furnival" << std::endl;
-  std::cout << "Email:  tjof2@cam.ac.uk" << std::endl
-            << std::endl;
-  std::cout << "Version 0.3.2 - May 2016" << std::endl
-            << std::endl;
-
-  /////////////////////////////
-  //                           //
-  //    PARAMETER IMPORT     //
-  //                           //
-  /////////////////////////////
-
-  // Read in the parameter file name
-  if (argc != 2)
+  if (argc != 2) // Print usage if parameter file not present as argument
   {
-    std::cout << "  Usage: ./PGURE-SVT paramfile" << std::endl;
+    pguresvt::print(std::cout, "  Usage: ./PGURE-SVT paramfile");
     return -1;
   }
-  std::map<std::string, std::string> programOptions;
+
+  std::map<std::string, std::string> opts;
   std::ifstream paramFile(argv[1], std::ios::in);
 
-  // Parse the parameter file
-  ParseParameters(paramFile, programOptions);
+  ParseParameters(paramFile, opts);
 
-  // Check all required parameters are specified
-  if (programOptions.count("filename") == 0 ||
-      programOptions.count("start_image") == 0 ||
-      programOptions.count("end_image") == 0)
+  if (opts.count("filename") == 0 ||
+      opts.count("start_frame") == 0 ||
+      opts.count("end_frame") == 0) // Check all required parameters are specified
   {
-    std::cout << "**WARNING** Required parameters not specified" << std::endl;
-    std::cout << "            You must specify filename, start and end frame"
-              << std::endl;
+    pguresvt::print(std::cerr, "**ERROR**\n", "Required parameters not specified\n",
+                    "You must specify 'filename', 'start_frame' and 'end_frame'\n");
     return -1;
   }
 
   // Extract parameters
-  // File path
-  std::string filename = programOptions.at("filename");
-  int lastindex = filename.find_last_of(".");
-  std::string filestem = filename.substr(0, lastindex);
+  std::string filename = opts.at("filename");
+  std::string filestem = filename.substr(0, filename.find_last_of("."));
 
-  // Frames to process
-  int startimg = std::stoi(programOptions.at("start_image"));
-  int endimg = std::stoi(programOptions.at("end_image"));
-  int num_images = endimg - startimg + 1;
+  uint32_t startImage = std::stoi(opts.at("start_frame"));
+  uint32_t endImage = std::stoi(opts.at("end_frame"));
+  uint32_t nImages = endImage - startImage + 1;
 
   // Move onto optional parameters
-  // Patch size and trajectory length
-  // Check sizes to ensure SVD is done right way round
-  int Bs = (programOptions.count("patch_size") == 1)
-               ? std::stoi(programOptions.at("patch_size"))
-               : 4;
-  // int Overlap = (programOptions.count("patch_overlap") == 1) ?
-  // std::stoi(programOptions.at("patch_overlap")) : 1;
-  int T = (programOptions.count("trajectory_length") == 1)
-              ? std::stoi(programOptions.at("trajectory_length"))
-              : 15;
-  T = (Bs * Bs < T) ? (Bs * Bs) - 1 : T;
-  std::string casoratisize = std::to_string(Bs * Bs) + "x" + std::to_string(T);
+  uint32_t blockSize = (opts.count("patch_size") == 1) ? std::stoi(opts.at("patch_size")) : 4;
+  uint32_t T = (opts.count("trajectory_length") == 1) ? std::stoi(opts.at("trajectory_length")) : 15;
+  T = (blockSize * blockSize < T) ? (blockSize * blockSize) - 1 : T;
 
-  // Noise parameters initialized at -1 unless user-defined
-  double alpha = (programOptions.count("alpha") == 1)
-                     ? std::stod(programOptions.at("alpha"))
-                     : -1.;
-  double mu = (programOptions.count("mu") == 1)
-                  ? std::stod(programOptions.at("mu"))
-                  : -1.;
-  double sigma = (programOptions.count("sigma") == 1)
-                     ? std::stod(programOptions.at("sigma"))
-                     : -1.;
+  // Noise parameters (initialized at -1 unless user-defined)
+  double alpha = (opts.count("noise_alpha") == 1) ? std::stod(opts.at("noise_alpha")) : -1.;
+  double mu = (opts.count("noise_mu") == 1) ? std::stod(opts.at("noise_mu")) : -1.;
+  double sigma = (opts.count("noise_sigma") == 1) ? std::stod(opts.at("noise_sigma")) : -1.;
 
-  // SVT thresholds and noise parameters initialized at -1 unless user-defined
-  bool pgureOpt = (programOptions.count("pgure") == 1)
-                      ? strToBool(programOptions.at("pgure"))
-                      : true;
-  double lambda;
-  if (!pgureOpt)
+  // SVT threshold (initialized at -1 unless user-defined)
+  bool optPGURE = (opts.count("optimize_pgure") == 1) ? pguresvt::strToBool(opts.at("optimize_pgure")) : true;
+  double lambda = 0.0;
+  if (!optPGURE)
   {
-    if (programOptions.count("lambda") == 1)
+    if (opts.count("lambda") == 1)
     {
-      lambda = std::stod(programOptions.at("lambda"));
+      lambda = std::stod(opts.at("lambda"));
     }
     else
     {
-      std::cout << "**WARNING** PGURE optimization is turned OFF but no lambda "
-                   "specified in parameter file"
-                << std::endl;
+      pguresvt::print(std::cerr,
+                      "**ERROR**\nPGURE optimization is turned OFF but ",
+                      "no lambda specified in parameter file\n");
       return -1;
     }
   }
 
-  // Move onto advanced parameters
-  // Motion neigbourhood size
-  int MotionP = (programOptions.count("motion_neighbourhood") == 1)
-                    ? std::stoi(programOptions.at("motion_neighbourhood"))
-                    : 7;
+  uint32_t motionWindow = (opts.count("motion_neighbourhood") == 1) ? std::stoi(opts.at("motion_neighbourhood")) : 7;
+  uint32_t medianSize = (opts.count("median_filter") == 1) ? std::stoi(opts.at("median_filter")) : 5;
+  uint32_t blockOverlap = (opts.count("patch_overlap") == 1) ? std::stoi(opts.at("patch_overlap")) : 1;
+  uint32_t noiseMethod = (opts.count("noise_method") == 1) ? std::stoi(opts.at("noise_method")) : 4;
 
-  // Size of median filter
-  int MedianSize = (programOptions.count("median_filter") == 1)
-                       ? std::stoi(programOptions.at("median_filter"))
-                       : 5;
+  double hotPixelThreshold = (opts.count("hot_pixel") == 1) ? std::stoi(opts.at("hot_pixel")) : 10;
+  int randomSeed = (opts.count("random_seed") == 1) ? std::stoi(opts.at("random_seed")) : -1;
+  bool expWeighting = (opts.count("exponential_weighting") == 1) ? pguresvt::strToBool(opts.at("exponential_weighting")) : true;
 
-  // PGURE tolerance
   double tol = 1E-7;
-  if (programOptions.count("tolerance") == 1)
+  if (opts.count("tolerance") == 1) // PGURE tolerance parsing
   {
-    std::istringstream osTol(programOptions.at("tolerance"));
+    std::istringstream osTol(opts.at("tolerance"));
     double tol;
     osTol >> tol;
   }
 
-  // Block overlap
-  int Bo = (programOptions.count("patch_overlap") == 1)
-               ? std::stoi(programOptions.at("patch_overlap"))
-               : 1;
+  // Overall program timer now we've loaded the parameters
+  auto t0Start = std::chrono::high_resolution_clock::now();
 
-  // Noise method
-  // TODO:tjof2 document this option
-  int NoiseMethod = (programOptions.count("noise_method") == 1)
-                        ? std::stoi(programOptions.at("noise_method"))
-                        : 4;
-
-  // Hot pixel threshold
-  double hotpixelthreshold = (programOptions.count("hot_pixel") == 1)
-                                 ? std::stoi(programOptions.at("hot_pixel"))
-                                 : 10;
-
-// Set up OMP
-#if defined(_OPENMP)
-  int num_threads = (programOptions.count("num_threads") == 1)
-                        ? std::stoi(programOptions.at("num_threads"))
-                        : 4;
-  omp_set_dynamic(0);
-  omp_set_num_threads(num_threads);
-#endif
-
-  // Check file exists
-  std::string infilename = filestem + ".tif";
-  if (!std::ifstream(infilename.c_str()))
+  std::string inFilename = filestem + ".tif";
+  if (!std::ifstream(inFilename.c_str())) // Check file exists
   {
-    std::cout << "**WARNING** File " << infilename << " not found" << std::endl;
+    pguresvt::print(std::cerr, "**ERROR**\nFile ", inFilename, " not found\n");
     return -1;
   }
 
   // Load TIFF stack
-  int tiffWidth, tiffHeight;
-  unsigned short tiffDepth;
-  libtiff::TIFF *MultiPageTiff = libtiff::TIFFOpen(infilename.c_str(), "r");
+  uint32_t tiffWidth, tiffHeight;
+  uint16_t tiffDepth;
+  libtiff::TIFF *MultiPageTiff = libtiff::TIFFOpen(inFilename.c_str(), "r");
   libtiff::TIFFGetField(MultiPageTiff, TIFFTAG_IMAGEWIDTH, &tiffWidth);
   libtiff::TIFFGetField(MultiPageTiff, TIFFTAG_IMAGELENGTH, &tiffHeight);
   libtiff::TIFFGetField(MultiPageTiff, TIFFTAG_BITSPERSAMPLE, &tiffDepth);
 
-  // Only work with square images
-  if (tiffWidth != tiffHeight)
+  if (tiffWidth != tiffHeight) // Only work with square images
   {
-    std::cout << "**WARNING** Frame dimensions are not square" << std::endl;
-    return -1;
-  }
-  // Only work with 8-bit or 16-bit images
-  if (tiffDepth != 8 && tiffDepth != 16)
-  {
-    std::cout << "**WARNING** Images must be 8-bit or 16-bit" << std::endl;
+    pguresvt::print(std::cerr, "**ERROR**\nFrame dimensions are not square, got ", tiffWidth, "x", tiffHeight, "\n");
     return -1;
   }
 
-  // Import the image sequence
-  arma::cube inputsequence(tiffHeight, tiffWidth, 0);
-  arma::cube filteredsequence(tiffHeight, tiffWidth, 0);
-  if (MultiPageTiff)
+  if (tiffDepth != 8 && tiffDepth != 16) // Only work with 8-bit or 16-bit images
   {
-    int dircount = 0;
-    int imgcount = 0;
+    pguresvt::print(std::cerr, "**ERROR**\nImages must be 8-bit or 16-bit, got ", tiffDepth, "-bit depth \n");
+    return -1;
+  }
+
+  arma::cube inputSeq(tiffHeight, tiffWidth, 0);
+  arma::cube filteredSeq(tiffHeight, tiffWidth, 0);
+
+  int memsize = 512 * 1024;  // L2 cache size
+  int filtsize = medianSize; // Median filter size in pixels
+
+  if (MultiPageTiff) // Import the image sequence
+  {
+    uint32_t dircount = 0;
+    uint32_t imgcount = 0;
+
     do
     {
-      if (dircount >= (startimg - 1) && dircount <= (endimg - 1))
+      if (dircount >= (startImage - 1) && dircount <= (endImage - 1))
       {
-        inputsequence.resize(tiffHeight, tiffWidth, imgcount + 1);
-        filteredsequence.resize(tiffHeight, tiffWidth, imgcount + 1);
+        inputSeq.resize(tiffHeight, tiffWidth, imgcount + 1);
+        filteredSeq.resize(tiffHeight, tiffWidth, imgcount + 1);
 
-        unsigned short *Buffer = new unsigned short[tiffWidth * tiffHeight];
-        unsigned short *FilteredBuffer =
-            new unsigned short[tiffWidth * tiffHeight];
+        uint16_t *Buffer = new uint16_t[tiffWidth * tiffHeight];
+        uint16_t *FilteredBuffer = new uint16_t[tiffWidth * tiffHeight];
 
-        for (int tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
+        for (size_t tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
         {
-          libtiff::TIFFReadScanline(MultiPageTiff, &Buffer[tiffRow * tiffWidth],
-                                    tiffRow, 0);
+          libtiff::TIFFReadScanline(MultiPageTiff, &Buffer[tiffRow * tiffWidth], tiffRow, 0);
         }
 
-        arma::Mat<unsigned short> TiffSlice(Buffer, tiffHeight, tiffWidth);
-        inplace_trans(TiffSlice);
-        inputsequence.slice(imgcount) =
-            arma::conv_to<arma::mat>::from(TiffSlice);
+        arma::Mat<uint16_t> curSlice(Buffer, tiffHeight, tiffWidth);
+        inplace_trans(curSlice);
+        inputSeq.slice(imgcount) = arma::conv_to<arma::mat>::from(curSlice);
 
-        // Apply median filter (constant-time) to the 8-bit image
-        int memsize = 512 * 1024;  // L2 cache size
-        int filtsize = MedianSize; // Median filter size in pixels
+        // Apply median filter to the image
         ConstantTimeMedianFilter(Buffer, FilteredBuffer, tiffWidth, tiffHeight,
                                  tiffWidth, tiffWidth, filtsize, 1, memsize);
-        arma::Mat<unsigned short> FilteredTiffSlice(FilteredBuffer, tiffHeight,
-                                                    tiffWidth);
-        inplace_trans(FilteredTiffSlice);
-        filteredsequence.slice(imgcount) =
-            arma::conv_to<arma::mat>::from(FilteredTiffSlice);
+
+        arma::Mat<uint16_t> filtSlice(FilteredBuffer, tiffHeight, tiffWidth);
+        inplace_trans(filtSlice);
+        filteredSeq.slice(imgcount) = arma::conv_to<arma::mat>::from(filtSlice);
         imgcount++;
+        delete[] Buffer;
+        delete[] FilteredBuffer;
       }
       dircount++;
     } while (libtiff::TIFFReadDirectory(MultiPageTiff));
     libtiff::TIFFClose(MultiPageTiff);
   }
+
   // Is number of frames compatible?
-  if (num_images > (int)inputsequence.n_slices)
+  if (nImages > inputSeq.n_slices)
   {
-    std::cout << "**WARNING** Sequence only has " << inputsequence.n_slices
-              << " frames" << std::endl;
+    pguresvt::print(std::cerr, "**ERROR**\n Sequence only has ", inputSeq.n_slices, " frames, expected ", nImages, "\n");
     return -1;
   }
 
+  // TIFF import timer
+  auto t0End = std::chrono::high_resolution_clock::now();
+  auto t0Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t0End - t0Start);
+  pguresvt::printFixed(4, "TIFF import: ", std::setw(10), t0Elapsed.count() * 1E-6, " seconds");
+
+  auto t1Start = std::chrono::high_resolution_clock::now();
+
   // Copy image sequence and sizes
-  arma::cube noisysequence = inputsequence;
-  arma::cube cleansequence = inputsequence;
-  cleansequence.zeros();
+  arma::cube cleanSeq = inputSeq;
+  cleanSeq.zeros();
 
   // Get dimensions
-  int Nx = tiffHeight;
-  int Ny = tiffWidth;
+  uint32_t Nx = tiffHeight;
+  uint32_t Ny = tiffWidth;
+  double OoNxNyT = 1.0 / (Nx * Ny * T);
 
   // Initial outlier detection (for hot pixels)
   // using median absolute deviation
-  HotPixelFilter(noisysequence, hotpixelthreshold);
-
-  // Print table headings
-  int ww = 10;
-  std::cout << std::endl;
-  std::cout << std::right << std::setw(5 * ww + 5)
-            << std::string(5 * ww + 5, '-') << std::endl;
-  std::cout << std::setw(5) << "Frame" << std::setw(ww) << "Gain"
-            << std::setw(ww) << "Offset" << std::setw(ww) << "Sigma"
-            << std::setw(ww) << "Lambda" << std::setw(ww) << "Time (s)"
-            << std::endl;
-  std::cout << std::setw(5 * ww + 5) << std::string(5 * ww + 5, '-')
-            << std::endl;
+  HotPixelFilter(inputSeq, hotPixelThreshold);
 
   // Loop over time windows
-  int framewindow = std::floor(T / 2);
-  /*
-  for(int timeiter = 0; timeiter < num_images; timeiter++) {
+  uint32_t frameWindow = std::floor(T / 2);
 
-      // Time the loop iteration
-      auto startLoopTimer = std::chrono::steady_clock::now();
-
-      // Extract the subset of the image sequence
-      arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
-      if(timeiter < framewindow) {
-          u = noisysequence.slices(0,2*framewindow);
-          ufilter = filteredsequence.slices(0,2*framewindow);
-      }
-      else if(timeiter >= (num_images - framewindow)) {
-          u = noisysequence.slices(num_images-2*framewindow-1,num_images-1);
-          ufilter =
-  filteredsequence.slices(num_images-2*framewindow-1,num_images-1);
-      }
-      else {
-          u = noisysequence.slices(timeiter - framewindow, timeiter +
-  framewindow);
-          ufilter = filteredsequence.slices(timeiter - framewindow, timeiter +
-  framewindow);
-      }
-
-      // Basic sequence normalization
-      double inputmax = u.max();
-      u /= inputmax;
-      ufilter /= ufilter.max();
-
-      // Perform noise estimation
-      if(pgureOpt) {
-          NoiseEstimator *noise = new NoiseEstimator;
-          noise->Estimate(u,
-                          alpha,
-                          mu,
-                          sigma,
-                          8,
-                          NoiseMethod);
-          delete noise;
-      }
-
-      // Perform motion estimation
-      MotionEstimator *motion = new MotionEstimator;
-      motion->Estimate(ufilter,
-                       timeiter,
-                       framewindow,
-                       num_images,
-                       Bs,
-                       MotionP);
-      arma::icube sequencePatches = motion->GetEstimate();
-      delete motion;
-
-      // Perform PGURE optimization
-      PGURE *optimizer = new PGURE;
-      optimizer->Initialize(u,
-                            sequencePatches,
-                            Bs,
-                            Bo,
-                            alpha,
-                            sigma,
-                            mu);
-      // Determine optimum threshold value (max 1000 evaluations)
-      if(pgureOpt) {
-          lambda = (timeiter == 0) ? arma::accu(u)/(Nx*Ny*T) : lambda;
-          lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
-          v = optimizer->Reconstruct(lambda);
-      }
-      else {
-          v = optimizer->Reconstruct(lambda);
-      }
-      delete optimizer;
-
-      // Rescale back to original range
-      v *= inputmax;
-
-      // Place frames back into sequence
-      if(timeiter < framewindow) {
-          cleansequence.slice(timeiter) = v.slice(timeiter);
-      }
-      else if(timeiter >= (num_images - framewindow)) {
-          int endseqFrame = timeiter - (num_images - T);
-          cleansequence.slice(timeiter) = v.slice(endseqFrame);
-      }
-      else {
-          cleansequence.slice(timeiter) = v.slice(framewindow);
-      }
-
-      // Finish timing
-      auto endLoopTimer = std::chrono::steady_clock::now();
-      auto elapsedLoopTimer =
-  std::chrono::duration_cast<std::chrono::microseconds>(endLoopTimer -
-  startLoopTimer);
-
-      // Output a table row with noise estimates, lambda and timing
-      std::ostringstream framestring;
-      framestring << timeiter+1;
-
-      std::cout<<std::fixed<<std::setw(5)<<framestring.str()<<std::setw(ww)<<std::setprecision(3)<<alpha<<std::setw(ww)<<std::setprecision(3)<<mu<<std::setw(ww)<<std::setprecision(3)<<sigma<<std::setw(ww)<<std::setprecision(3)<<lambda<<std::setw(ww)<<std::setprecision(3)<<(elapsedLoopTimer.count()/1E6)<<std::endl;
-  }
-  */
-
-  auto &&func = [&, lambda_ = lambda](int timeiter) {
+  auto &&func = [&, lambda_ = lambda](uint32_t timeIter) {
     auto lambda = lambda_;
+
     // Extract the subset of the image sequence
-    arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
-    if (timeiter < framewindow)
+    arma::cube u(Nx, Ny, T), uFilter(Nx, Ny, T), v(Nx, Ny, T);
+    if (timeIter < frameWindow)
     {
-      u = noisysequence.slices(0, 2 * framewindow);
-      ufilter = filteredsequence.slices(0, 2 * framewindow);
+      u = inputSeq.slices(0, 2 * frameWindow);
+      uFilter = filteredSeq.slices(0, 2 * frameWindow);
     }
-    else if (timeiter >= (num_images - framewindow))
+    else if (timeIter >= (nImages - frameWindow))
     {
-      u = noisysequence.slices(num_images - 2 * framewindow - 1,
-                               num_images - 1);
-      ufilter = filteredsequence.slices(num_images - 2 * framewindow - 1,
-                                        num_images - 1);
+      u = inputSeq.slices(nImages - 2 * frameWindow - 1, nImages - 1);
+      uFilter = filteredSeq.slices(nImages - 2 * frameWindow - 1, nImages - 1);
     }
     else
     {
-      u = noisysequence.slices(timeiter - framewindow, timeiter + framewindow);
-      ufilter = filteredsequence.slices(timeiter - framewindow,
-                                        timeiter + framewindow);
+      u = inputSeq.slices(timeIter - frameWindow, timeIter + frameWindow);
+      uFilter = filteredSeq.slices(timeIter - frameWindow, timeIter + frameWindow);
     }
 
     // Basic sequence normalization
-    double inputmax = u.max();
-    u /= inputmax;
-    ufilter /= ufilter.max();
+    double inputMax = u.max();
+    u /= inputMax;
+    uFilter /= uFilter.max();
 
     // Perform noise estimation
-    if (pgureOpt)
+    if (optPGURE)
     {
       NoiseEstimator *noise = new NoiseEstimator;
-      noise->Estimate(u, alpha, mu, sigma, 8, NoiseMethod);
+      noise->Estimate(u, alpha, mu, sigma, 8, noiseMethod, 0);
       delete noise;
     }
 
     // Perform motion estimation
-    MotionEstimator *motion = new MotionEstimator;
-    motion->Estimate(ufilter, timeiter, framewindow, num_images, Bs, MotionP);
+    MotionEstimator *motion = new MotionEstimator(uFilter, blockSize, timeIter, frameWindow, motionWindow, nImages);
+    motion->Estimate();
     arma::icube sequencePatches = motion->GetEstimate();
     delete motion;
 
     // Perform PGURE optimization
-    PGURE *optimizer = new PGURE;
-    optimizer->Initialize(u, sequencePatches, Bs, Bo, alpha, sigma, mu);
-    // Determine optimum threshold value (max 1000 evaluations)
-    if (pgureOpt)
+    PGURE *optimizer = new PGURE(u, sequencePatches, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
+    if (optPGURE) // Determine optimum threshold value (max 1000 evaluations)
     {
-      lambda = (timeiter == 0) ? arma::accu(u) / (Nx * Ny * T) : lambda;
-      lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
+      lambda = (timeIter == 0) ? arma::accu(u) * OoNxNyT : lambda;
+      lambda = optimizer->Optimize(tol, lambda, u.max(), 1000);
       v = optimizer->Reconstruct(lambda);
     }
     else
@@ -496,90 +294,78 @@ int main(int argc, char **argv)
     }
     delete optimizer;
 
-    // Rescale back to original range
-    v *= inputmax;
+    v *= inputMax; // Rescale back to original range
 
-    // Place frames back into sequence
-    if (timeiter < framewindow)
+    if (timeIter < frameWindow) // Place frames back into sequence
     {
-      cleansequence.slice(timeiter) = v.slice(timeiter);
+      cleanSeq.slice(timeIter) = v.slice(timeIter);
     }
-    else if (timeiter >= (num_images - framewindow))
+    else if (timeIter >= (nImages - frameWindow))
     {
-      int endseqFrame = timeiter - (num_images - T);
-      cleansequence.slice(timeiter) = v.slice(endseqFrame);
+      cleanSeq.slice(timeIter) = v.slice(timeIter - (nImages - T));
     }
     else
     {
-      cleansequence.slice(timeiter) = v.slice(framewindow);
+      cleanSeq.slice(timeIter) = v.slice(frameWindow);
     }
   };
-  parallel(func, static_cast<unsigned long long>(num_images));
+  parallel(func, static_cast<uint32_t>(nImages));
 
-  // Finish the table off
-  std::cout << std::setw(5 * ww + 5) << std::string(5 * ww + 5, '-')
-            << std::endl
-            << std::endl;
+  // PGURE-SVT timer
+  auto t1End = std::chrono::high_resolution_clock::now();
+  auto t1Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t1End - t1Start);
+  pguresvt::printFixed(4, "PGURE-SVT:   ", std::setw(10), t1Elapsed.count() * 1E-6, " seconds");
+
+  auto t2Start = std::chrono::high_resolution_clock::now();
 
   // Normalize to [0,65535] range
-  cleansequence = (cleansequence - cleansequence.min()) /
-                  (cleansequence.max() - cleansequence.min());
-  arma::Cube<unsigned short> outTiff(tiffWidth, tiffHeight, num_images);
-  outTiff =
-      arma::conv_to<arma::Cube<unsigned short>>::from(65535 * cleansequence);
+  cleanSeq = 65535 * (cleanSeq - cleanSeq.min()) / (cleanSeq.max() - cleanSeq.min());
+
+  arma::Cube<uint16_t> outTiff(tiffWidth, tiffHeight, nImages);
+  outTiff = arma::conv_to<arma::Cube<uint16_t>>::from(cleanSeq);
 
   // Get the filename
-  std::string outfilename = filestem + "-CLEANED.tif";
+  std::string outFilename = filestem + "-CLEANED.tif";
 
   // Set the output file headers
-  libtiff::TIFF *MultiPageTiffOut = libtiff::TIFFOpen(outfilename.c_str(), "w");
+  libtiff::TIFF *MultiPageTiffOut = libtiff::TIFFOpen(outFilename.c_str(), "w");
   libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGEWIDTH, tiffWidth);
   libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGELENGTH, tiffHeight);
   libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_BITSPERSAMPLE, 16);
 
-  // Write the file
-  if (!MultiPageTiffOut)
+  if (!MultiPageTiffOut) // Try to write the file
   {
-    std::cout << "**WARNING** File " << outfilename << " could not be written"
-              << std::endl;
+    pguresvt::print(std::cerr, "**ERROR**\nFile ", outFilename, " could not be written\n");
     return -1;
   }
 
-  for (int tOut = 0; tOut < num_images; tOut++)
+  for (size_t tOut = 0; tOut < nImages; tOut++) // Now write the data
   {
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGEWIDTH, tiffWidth);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_IMAGELENGTH, tiffHeight);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_BITSPERSAMPLE, 16);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_SAMPLESPERPIXEL, 1);
-    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PLANARCONFIG,
-                          PLANARCONFIG_CONTIG);
-    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PHOTOMETRIC,
-                          PHOTOMETRIC_MINISBLACK);
-    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_ORIENTATION,
-                          ORIENTATION_TOPLEFT);
-
+    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
+    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
     libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
-    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PAGENUMBER, tOut,
-                          num_images);
-    for (int tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
+    libtiff::TIFFSetField(MultiPageTiffOut, TIFFTAG_PAGENUMBER, tOut, nImages);
+
+    for (size_t tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
     {
-      arma::Mat<unsigned short> outSlice = outTiff.slice(tOut);
+      arma::Mat<uint16_t> outSlice = outTiff.slice(tOut);
       inplace_trans(outSlice);
-      unsigned short *OutBuffer = outSlice.memptr();
-      libtiff::TIFFWriteScanline(MultiPageTiffOut,
-                                 &OutBuffer[tiffRow * tiffWidth], tiffRow, 0);
+      uint16_t *OutBuffer = outSlice.memptr();
+      libtiff::TIFFWriteScanline(MultiPageTiffOut, &OutBuffer[tiffRow * tiffWidth], tiffRow, 0);
     }
     libtiff::TIFFWriteDirectory(MultiPageTiffOut);
   }
   libtiff::TIFFClose(MultiPageTiffOut);
 
-  // Overall program timer
-  auto overallend = std::chrono::steady_clock::now();
-  auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-      overallend - overallstart);
-  std::cout << "Total time: " << std::setprecision(5) << (elapsed.count() / 1E6)
-            << " seconds" << std::endl
-            << std::endl;
+  // Export TIFF timer
+  auto t2End = std::chrono::high_resolution_clock::now();
+  auto t2Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t2End - t2Start);
+  pguresvt::printFixed(4, "TIFF export: ", std::setw(10), t2Elapsed.count() * 1E-6, " seconds\n");
 
   return 0;
 }

@@ -1,26 +1,26 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2020 Tom Furnival
+  Copyright (C) 2015-2020 Tom Furnival
 
-    This file is part of PGURE-SVT.
+  This file is part of  PGURE-SVT.
 
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 
-#ifndef PARAMS_H
-#define PARAMS_H
+#ifndef PARAMS_HPP
+#define PARAMS_HPP
 
 #include <iostream>
 #include <map>
@@ -44,22 +44,28 @@ void ParseParameters(std::istream &cfgfile,
     {
       continue; // Ignore comment lines
     }
-    else if (!(iss >> eq) || eq != ":" || iss.get() != EOF)
+    else if (!(iss >> eq) || !(eq.compare(":")) || iss.get() != EOF)
     {
       while (iss >> temp)
       {
-        if (iss >> std::ws)
+        if (temp.find("#") != std::string::npos) // Support inline comments
         {
-          val += temp;
+          break;
         }
         else
         {
-          val += temp + " ";
+          if (iss >> std::ws)
+          {
+            val += temp;
+          }
+          else
+          {
+            val += temp + " ";
+          }
         }
       }
     }
-    // Set the parameter
-    options[id] = val;
+    options[id] = val; // Set the parameter
   }
   return;
 }

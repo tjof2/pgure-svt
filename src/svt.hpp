@@ -1,89 +1,83 @@
 /***************************************************************************
 
-    Copyright (C) 2015-2020 Tom Furnival
+  Copyright (C) 2015-2020 Tom Furnival
 
-    SVT calculation based on [1].
+  This file is part of  PGURE-SVT.
 
-    References:
-    [1]     "Unbiased Risk Estimates for Singular Value Thresholding and
-            Spectral Estimators", (2013), Candes, EJ et al.
-            http://dx.doi.org/10.1109/TSP.2013.2270464
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This file is part of  PGURE-SVT.
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
-    PGURE-SVT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PGURE-SVT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************************************************/
 
-#ifndef SVT_H
-#define SVT_H
+#ifndef SVT_HPP
+#define SVT_HPP
 
-// C++ headers
 #include <cstdlib>
+#include <cstdint>
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <vector>
-
-// OpenMP library
-#include <omp.h>
-
-// Armadillo library
 #include <armadillo>
+
+#include "utils.hpp"
 
 class SVT
 {
 public:
-  SVT() {}
-  ~SVT() {}
-
-  // Allocate memory for SVD step
-  void Initialize(const arma::icube &sequencePatches, int w, int h, int l,
-                  int blocksize, int blockoverlap)
+  SVT(const arma::icube &patches,
+      const uint32_t Nx,
+      const uint32_t Ny,
+      const uint32_t T,
+      const uint32_t blockSize,
+      const uint32_t blockOverlap,
+      const bool expWeighting) : patches(patches),
+                                 Nx(Nx), Ny(Ny), T(T),
+                                 blockSize(blockSize),
+                                 blockOverlap(blockOverlap),
+                                 expWeighting(expWeighting)
   {
-    patches = sequencePatches;
+    nxMbs = Nx - blockSize;
+    nyMbs = Ny - blockSize;
+    nxMbsDbo = nxMbs / blockOverlap;
+    nyMbsDbo = nyMbs / blockOverlap;
+    vecSize = (1 + nxMbsDbo) * (1 + nyMbsDbo);
 
-    Nx = w;
-    Ny = h;
-    T = l;
+    block.set_size(blockSize * blockSize, T);
+    Ublock.set_size(blockSize * blockSize, T);
+    Vblock.set_size(T, T);
+    Sblock.set_size(T);
+    Sthresh.set_size(T);
+  };
 
-    Bs = blocksize;
-    Bo = blockoverlap;
-    vecSize = (1 + (Nx - Bs) / Bo) * (1 + (Ny - Bs) / Bo);
-    return;
-  }
+  ~SVT()
+  {
+    U.clear();
+    S.clear();
+    V.clear();
+  };
 
   // Perform SVD on each block in the image sequence,
   // subject to the block overlap restriction
   void Decompose(const arma::cube &u)
   {
-    // Do the local SVDs
-    arma::mat Ublock, Vblock;
-    arma::vec Sblock;
-
-    Ublock.set_size(Bs * Bs, T);
-    Sblock.set_size(T);
-    Vblock.set_size(T, T);
-
     // Fix block overlap parameter
-    arma::uvec firstpatches(vecSize);
-    int kiter = 0;
-    for (int i = 0; i < 1 + (Ny - Bs); i += Bo)
+    arma::uvec firstPatches(vecSize);
+    uint32_t kiter = 0;
+    for (size_t i = 0; i < 1 + nyMbs; i += blockOverlap)
     {
-      for (int j = 0; j < 1 + (Nx - Bs); j += Bo)
+      for (size_t j = 0; j < 1 + nxMbs; j += blockOverlap)
       {
-        firstpatches(kiter) = i * (Ny - Bs) + j;
+        firstPatches(kiter) = i * nyMbs + j;
         kiter++;
       }
     }
@@ -91,134 +85,117 @@ public:
     // Code must include right and bottom edges
     // of the image sequence to ensure an
     // accurate PGURE reconstruction
-    arma::uvec patchesbottomedge(1 + (Ny - Bs) / Bo);
-    for (int i = 0; i < 1 + (Ny - Bs); i += Bo)
+    arma::uvec patchesBottomEdge(1 + nyMbsDbo);
+    for (size_t i = 0; i < 1 + nyMbs; i += blockOverlap)
     {
-      patchesbottomedge(i / Bo) = (Ny - Bs + 1) * i + (Nx - Bs);
+      patchesBottomEdge(i / blockOverlap) = (nyMbs + 1) * i + nxMbs;
     }
 
-    arma::uvec patchesrightedge(1 + (Nx - Bs) / Bo);
-    for (int i = 0; i < 1 + (Nx - Bs); i += Bo)
+    arma::uvec patchesRightEdge(1 + nxMbsDbo);
+    for (size_t i = 0; i < 1 + nxMbs; i += blockOverlap)
     {
-      patchesrightedge(i / Bo) = (Ny - Bs + 1) * (Nx - Bs) + i;
+      patchesRightEdge(i / blockOverlap) = (nyMbs + 1) * nxMbs + i;
     }
 
     // Concatenate and find unique indices
-    arma::uvec joinpatches(vecSize + 1 + (Ny - Bs) / Bo + 1 + (Nx - Bs) / Bo);
-    joinpatches(arma::span(0, vecSize - 1)) = firstpatches;
-    joinpatches(arma::span(vecSize, vecSize + (Ny - Bs) / Bo)) =
-        patchesrightedge;
-    joinpatches(arma::span(vecSize + (Ny - Bs) / Bo + 1,
-                           vecSize + (Ny - Bs) / Bo + 1 + (Nx - Bs) / Bo)) =
-        patchesbottomedge;
-    actualpatches =
-        arma::sort(joinpatches.elem(arma::find_unique(joinpatches)));
+    arma::uvec joinPatches(vecSize + 1 + nyMbsDbo + 1 + nxMbsDbo);
+    joinPatches(arma::span(0, vecSize - 1)) = firstPatches;
+    joinPatches(arma::span(vecSize, vecSize + nyMbsDbo)) = patchesRightEdge;
+    joinPatches(arma::span(vecSize + nyMbsDbo + 1, vecSize + nyMbsDbo + 1 + nxMbsDbo)) = patchesBottomEdge;
+    actualPatches = arma::sort(joinPatches.elem(arma::find_unique(joinPatches)));
 
     // Get new vector size
-    newVecSize = actualpatches.n_elem;
+    newVecSize = actualPatches.n_elem;
 
     // Memory allocation
     U.resize(newVecSize);
     S.resize(newVecSize);
     V.resize(newVecSize);
-    for (int it = 0; it < newVecSize; it++)
-    {
-      U[it] = arma::zeros<arma::mat>(Bs * Bs, T);
-      S[it] = arma::zeros<arma::vec>(T);
-      V[it] = arma::zeros<arma::mat>(T, T);
-    }
 
-    //#pragma omp parallel for private(Ublock, Sblock, Vblock)
-    for (int it = 0; it < newVecSize; it++)
+    for (size_t it = 0; it < newVecSize; it++)
     {
-      arma::mat block(Bs * Bs, T);
-
       // Extract block
-      for (int k = 0; k < T; k++)
+      for (size_t k = 0; k < T; k++)
       {
-        int newy = patches(0, actualpatches(it), k);
-        int newx = patches(1, actualpatches(it), k);
-        block.col(k) =
-            arma::vectorise(u(arma::span(newy, newy + Bs - 1),
-                              arma::span(newx, newx + Bs - 1), arma::span(k)));
+        int newY = patches(0, actualPatches(it), k);
+        int newX = patches(1, actualPatches(it), k);
+        block.col(k) = arma::vectorise(
+            u(arma::span(newY, newY + blockSize - 1),
+              arma::span(newX, newX + blockSize - 1),
+              arma::span(k)));
       }
 
-      // Do the SVD
       arma::svd_econ(Ublock, Sblock, Vblock, block);
+
       U[it] = Ublock;
       S[it] = Sblock;
       V[it] = Vblock;
     }
     return;
-  }
+  };
 
   // Reconstruct block in the image sequence after thresholding
-  arma::cube Reconstruct(double lambda)
+  arma::cube Reconstruct(const double lambda)
   {
     arma::cube v = arma::zeros<arma::cube>(Nx, Ny, T);
     arma::cube weights = arma::zeros<arma::cube>(Nx, Ny, T);
+    arma::mat weightsInc = arma::ones<arma::mat>(blockSize, blockSize);
+    arma::vec zvec = arma::zeros<arma::vec>(T);
+    arma::vec wvec = arma::zeros<arma::vec>(T);
 
-    arma::mat block, Ublock, Vblock;
-    arma::vec Sblock;
-
-    block.set_size(Bs * Bs, T);
-    Ublock.set_size(Bs * Bs, T);
-    Sblock.set_size(T);
-    Vblock.set_size(T, T);
-
-    /*
-    #pragma omp parallel for shared(v, weights) \
-               private(block, Ublock, Sblock, Vblock)
-    */
-    for (int it = 0; it < newVecSize; it++)
+    for (size_t it = 0; it < newVecSize; it++)
     {
       Ublock = U[it];
       Sblock = S[it];
       Vblock = V[it];
 
-      // Basic singular value thresholding
-      // arma::vec Snew = arma::sign(Sblock)
-      //                      % arma::max(
-      //                          arma::abs(Sblock) - lambda,
-      //                          arma::zeros<arma::vec>(T));
-
-      // Gaussian-weighted singular value thresholding
-      arma::vec wvec = arma::abs(
-          Sblock.max() * arma::exp(-1 * lambda * arma::square(Sblock) / 2));
-
-      // Apply threshold
-      arma::vec Snew =
-          arma::sign(Sblock) %
-          arma::max(arma::abs(Sblock) - wvec, arma::zeros<arma::vec>(T));
+      if (expWeighting) // Gaussian-weighted singular value thresholding
+      {
+        wvec = arma::abs(Sblock.max() * arma::exp(-0.5 * lambda * arma::square(Sblock)));
+        pguresvt::softThreshold(Sthresh, Sblock, zvec, wvec);
+      }
+      else // Simple singular value thresholding
+      {
+        pguresvt::softThreshold(Sthresh, Sblock, zvec, lambda);
+      }
 
       // Reconstruct from SVD
-      block = Ublock * diagmat(Snew) * Vblock.t();
+      block = Ublock * diagmat(Sthresh) * Vblock.t();
 
-      // Deal with block weights (TODO: currently all weights = 1)
-      for (int k = 0; k < T; k++)
+      for (size_t k = 0; k < T; k++)
       {
-        int newy = patches(0, actualpatches(it), k);
-        int newx = patches(1, actualpatches(it), k);
-        v(arma::span(newy, newy + Bs - 1), arma::span(newx, newx + Bs - 1),
-          arma::span(k, k)) += arma::reshape(block.col(k), Bs, Bs);
-        weights(arma::span(newy, newy + Bs - 1),
-                arma::span(newx, newx + Bs - 1), arma::span(k, k)) +=
-            arma::ones<arma::mat>(Bs, Bs);
+        int newY = patches(0, actualPatches(it), k);
+        int newX = patches(1, actualPatches(it), k);
+
+        v(arma::span(newY, newY + blockSize - 1),
+          arma::span(newX, newX + blockSize - 1),
+          arma::span(k, k)) += arma::reshape(block.col(k), blockSize, blockSize);
+
+        weights(arma::span(newY, newY + blockSize - 1),
+                arma::span(newX, newX + blockSize - 1),
+                arma::span(k, k)) += weightsInc;
       }
     }
 
-    // Include the weighting
+    // Apply weighting
     v /= weights;
     v.elem(find_nonfinite(v)).zeros();
+
     return v;
-  }
+  };
 
 private:
-  int Nx, Ny, T, Bs, Bo, vecSize, newVecSize;
   arma::icube patches;
-  arma::uvec actualpatches;
+  uint32_t Nx, Ny, T;
+  uint32_t blockSize, blockOverlap;
+  bool expWeighting;
 
-  // Collate U, S, V
+  uint32_t vecSize, newVecSize, nxMbs, nyMbs, nxMbsDbo, nyMbsDbo;
+
+  arma::uvec actualPatches;
+  arma::mat block, Ublock, Vblock;
+  arma::vec Sblock, Sthresh;
+
   std::vector<arma::mat> U, V;
   std::vector<arma::vec> S;
 };

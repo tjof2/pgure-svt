@@ -20,7 +20,7 @@ import hyperspy.api as hs
 from pguresvt import hspysvt
 
 # Load example dataset
-s = hs.load("./examples/examplesequence.tif")
+s = hs.load("./example.tif")
 
 # Take the first 15 frames, and plot the result
 s = s.inav[:15]
