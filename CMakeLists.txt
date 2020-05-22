@@ -10,7 +10,7 @@ enable_language(C)
 ########################################
 
 project (PGURE-SVT)
-set (PGURE-SVT_VERSION_FULL "0.4.3")
+set (PGURE-SVT_VERSION_FULL "0.5.0")
 message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_FULL}")
 
 option(USE_OPENBLAS "Whether to use BLAS or OpenBLAS" ON)

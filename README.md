@@ -30,12 +30,18 @@ If you use this code in a publication, please cite our work:
 ## Contents
 
 
-- [Installation](#installation)
-    - [Building from source (Linux/OSX)](#building-from-source-linuxosx)
-    - [Windows](#windows)
-- [Usage](#usage)
-    - [Python](#python)
-    - [Standalone executable](#standalone-executable)
+- [PGURE-SVT](#pgure-svt)
+  - [Contents](#contents)
+  - [Installation](#installation)
+      - [Building from source (Linux/OSX)](#building-from-source-linuxosx)
+        - [Dependencies](#dependencies)
+        - [Compilation](#compilation)
+      - [Windows](#windows)
+  - [Usage](#usage)
+      - [Python](#python)
+        - [Options](#options)
+        - [Integration with HyperSpy](#integration-with-hyperspy)
+      - [Standalone executable](#standalone-executable)
 
 ## Installation
 
@@ -58,8 +64,8 @@ When installing the Armadillo linear algebra library, it is recommended that you
 By default, the system will build a C++ library for linking with Python. Installation of the standalone executable must be specified by the user. To build PGURE-SVT:
 
 ```bash
-tar -xzf pgure-svt-0.4.2.tar.gz
-cd pgure-svt-0.4.2
+tar -xzf pgure-svt-0.5.0.tar.gz
+cd pgure-svt-0.5.0
 mkdir build
 cd build
 ```
