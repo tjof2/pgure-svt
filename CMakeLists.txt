@@ -16,7 +16,7 @@ message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_FULL}")
 option(USE_OPENBLAS "Whether to use BLAS or OpenBLAS" ON)
 option(USE_OPENMP "Whether to use OpenMP" ON)
 option(BUILD_EXECUTABLE "Build a standalone executable" ON)
-option(BUILD_LIBRARY "Build the shared library" OFF)
+option(BUILD_LIBRARY "Build the shared library" ON)
 option(BUILD_PYTHON_DIST "Build Python distribution" OFF)
 option(INSTALL_PYTHON "Install Python wrapper as a package" OFF)
 

@@ -48,32 +48,28 @@ extern "C"
 #include "parallel.hpp"
 #include "utils.hpp"
 
-// Main program
-extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
-                        bool pgureOpt, double userLambda, double alpha,
+extern "C" int PGURESVT(double *X, double *Y, int *dims, int blockSize, int blockOverlap, int T,
+                        bool optPGURE, double userLambda, double alpha,
                         double mu, double sigma, int motionWindow, double tol,
-                        int MedianSize, double hotpixelthreshold,
+                        int MedianSize, double hotPixelThreshold,
                         int numthreads)
 {
+  pguresvt::print(std::cout,
+                  "PGURE-SVT Denoising\n",
+                  "Author: Tom Furnival\n",
+                  "Email:  tjof2@cam.ac.uk\n");
 
-  // Overall program timer
-  auto overallstart = std::chrono::high_resolution_clock::now();
-
-  // Print program header
-  std::cout << std::endl
-            << "PGURE-SVT Denoising" << std::endl
-            << "Author: Tom Furnival" << std::endl
-            << "Email:  tjof2@cam.ac.uk" << std::endl
-            << std::endl;
-
-  int NoiseMethod = 4;
+  int noiseMethod = 4;
   double lambda = (userLambda >= 0.) ? userLambda : 0.;
+  int randomSeed = 1;
+  bool expWeighting = true;
 
   int Nx = dims[0];
   int Ny = dims[1];
   int nImages = dims[2];
+  double OoNxNyT = 1.0 / (Nx * Ny * T);
 
-  // Copy the image sequence into the a cube
+  // Copy the image sequence into arma::cube
   // This is the dangerous bit - we want to avoid copying, so set
   // up the Armadillo data matrix to DIRECTLY read from auxiliary
   // memory, but be careful, this is also writable! Remember also
@@ -81,146 +77,118 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int Bs, int Bo, int T,
   arma::cube noisySeq(X, Nx, Ny, nImages, false, false);
   arma::cube cleanSeq(Y, Nx, Ny, nImages, false, false);
 
-  // Initialize the filtered sequence
   arma::cube filteredSeq(Nx, Ny, nImages, arma::fill::zeros);
 
   cleanSeq.zeros();
   filteredSeq.zeros();
 
-  // Parameters for median filter
   int memsize = 512 * 1024;  // L2 cache size
   int filtsize = MedianSize; // Median filter size in pixels
 
+  // PGURE-SVT timer
+  auto t1Start = std::chrono::high_resolution_clock::now();
+
   // Perform the initial median filtering
   auto &&mfunc = [&](int i) {
-    unsigned short *Buffer = new unsigned short[Nx * Ny];
-    unsigned short *FilteredBuffer = new unsigned short[Nx * Ny];
-    arma::Mat<unsigned short> curslice =
-        arma::conv_to<arma::Mat<unsigned short>>::from(
-            noisySeq.slice(i).eval());
-    inplace_trans(curslice);
-    Buffer = curslice.memptr();
-    ConstantTimeMedianFilter(Buffer, FilteredBuffer, Nx, Ny, Nx, Ny, filtsize,
-                             1, memsize);
-    arma::Mat<unsigned short> filslice(FilteredBuffer, Nx, Ny);
-    inplace_trans(filslice);
-    filteredSeq.slice(i) = arma::conv_to<arma::mat>::from(filslice);
+    uint16_t *Buffer = new uint16_t[Nx * Ny];
+    uint16_t *FilteredBuffer = new uint16_t[Nx * Ny];
+    arma::Mat<uint16_t> curSlice = arma::conv_to<arma::Mat<uint16_t>>::from(noisySeq.slice(i).eval());
+    inplace_trans(curSlice);
+    Buffer = curSlice.memptr();
+
+    ConstantTimeMedianFilter(Buffer, FilteredBuffer, Nx, Ny, Nx, Ny, filtsize, 1, memsize);
+
+    arma::Mat<uint16_t> filtSlice(FilteredBuffer, Nx, Ny);
+    inplace_trans(filtSlice);
+    filteredSeq.slice(i) = arma::conv_to<arma::mat>::from(filtSlice);
     delete[] Buffer;
     delete[] FilteredBuffer;
   };
-  parallel(mfunc, static_cast<unsigned long long>(nImages));
+  parallel(mfunc, static_cast<uint32_t>(nImages));
 
   // Initial outlier detection (for hot pixels)
   // using median absolute deviation
-  pguresvt::printFixed(3, "Applying hot-pixel detector with threshold: ", hotpixelthreshold, " * MAD");
-  HotPixelFilter(noisySeq, hotpixelthreshold);
-
-  // Print table headings
-  int ww = 10;
-  std::cout << std::endl;
-  std::cout << std::right << std::setw(5 * ww + 5)
-            << std::string(5 * ww + 5, '-') << std::endl;
-  std::cout << std::setw(5) << "Frame" << std::setw(ww) << "Gain"
-            << std::setw(ww) << "Offset" << std::setw(ww) << "Sigma"
-            << std::setw(ww) << "Lambda" << std::setw(ww) << "Time (s)"
-            << std::endl;
-  std::cout << std::setw(5 * ww + 5) << std::string(5 * ww + 5, '-')
-            << std::endl;
+  HotPixelFilter(noisySeq, hotPixelThreshold);
 
   // Loop over time windows
-  int framewindow = std::floor(T / 2);
+  uint32_t frameWindow = std::floor(T / 2);
 
-  auto &&func = [&, lambda_ = lambda](int timeiter) {
+  auto &&func = [&, lambda_ = lambda](uint32_t timeIter) {
+    auto lambda = lambda_;
+
     // Extract the subset of the image sequence
-    arma::cube u(Nx, Ny, T), ufilter(Nx, Ny, T), v(Nx, Ny, T);
-    if (timeiter < framewindow)
+    arma::cube u(Nx, Ny, T), uFilter(Nx, Ny, T), v(Nx, Ny, T);
+    if (timeIter < frameWindow)
     {
-      u = noisySeq.slices(0, 2 * framewindow);
-      ufilter = filteredSeq.slices(0, 2 * framewindow);
+      u = noisySeq.slices(0, 2 * frameWindow);
+      uFilter = filteredSeq.slices(0, 2 * frameWindow);
     }
-    else if (timeiter >= (nImages - framewindow))
+    else if (timeIter >= (nImages - frameWindow))
     {
-      u = noisySeq.slices(nImages - 2 * framewindow - 1,
-                          nImages - 1);
-      ufilter = filteredSeq.slices(nImages - 2 * framewindow - 1,
-                                   nImages - 1);
+      u = noisySeq.slices(nImages - 2 * frameWindow - 1, nImages - 1);
+      uFilter = filteredSeq.slices(nImages - 2 * frameWindow - 1, nImages - 1);
     }
     else
     {
-      u = noisySeq.slices(timeiter - framewindow, timeiter + framewindow);
-      ufilter = filteredSeq.slices(timeiter - framewindow,
-                                   timeiter + framewindow);
+      u = noisySeq.slices(timeIter - frameWindow, timeIter + frameWindow);
+      uFilter = filteredSeq.slices(timeIter - frameWindow, timeIter + frameWindow);
     }
 
     // Basic sequence normalization
     double inputMax = u.max();
     u /= inputMax;
-    ufilter /= ufilter.max();
+    uFilter /= uFilter.max();
 
     // Perform noise estimation
-    if (pgureOpt)
+    if (optPGURE)
     {
       NoiseEstimator *noise = new NoiseEstimator;
-      noise->Estimate(u, alpha, mu, sigma, 4, NoiseMethod, 0);
+      noise->Estimate(u, alpha, mu, sigma, 8, noiseMethod, 0);
       delete noise;
     }
 
     // Perform motion estimation
-    MotionEstimator *motion = new MotionEstimator;
-    motion->Estimate(ufilter, timeiter, framewindow, nImages, Bs, motionWindow);
+    MotionEstimator *motion = new MotionEstimator(uFilter, blockSize, timeIter, frameWindow, motionWindow, nImages);
+    motion->Estimate();
     arma::icube sequencePatches = motion->GetEstimate();
     delete motion;
 
     // Perform PGURE optimization
-    int randomSeed = -1;
-    bool expWeighting = true;
-    PGURE *optimizer = new PGURE(u, sequencePatches, alpha, sigma, mu, Bs, Bo, randomSeed, expWeighting);
-    // Determine optimum threshold value (max 1000 evaluations)
-    if (pgureOpt)
+    PGURE *optimizer = new PGURE(u, sequencePatches, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
+    if (optPGURE) // Determine optimum threshold value (max 1000 evaluations)
     {
-      auto lambda = lambda_;
-      lambda = (timeiter == 0) ? arma::accu(u) / (Nx * Ny * T) : lambda;
-      lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
+      lambda = (timeIter == 0) ? arma::accu(u) * OoNxNyT : lambda;
+      lambda = optimizer->Optimize(tol, lambda, u.max(), 1000);
       v = optimizer->Reconstruct(lambda);
     }
     else
     {
-      v = optimizer->Reconstruct(userLambda);
+      v = optimizer->Reconstruct(lambda);
     }
     delete optimizer;
 
-    // Rescale back to original range
-    v *= inputMax;
+    v *= inputMax; // Rescale back to original range
 
-    // Place frames back into sequence
-    if (timeiter < framewindow)
+    if (timeIter < frameWindow) // Place frames back into sequence
     {
-      cleanSeq.slice(timeiter) = v.slice(timeiter);
+      cleanSeq.slice(timeIter) = v.slice(timeIter);
     }
-    else if (timeiter >= (nImages - framewindow))
+    else if (timeIter >= (nImages - frameWindow))
     {
-      int endseqFrame = timeiter - (nImages - T);
-      cleanSeq.slice(timeiter) = v.slice(endseqFrame);
+      int endseqFrame = timeIter - (nImages - T);
+      cleanSeq.slice(timeIter) = v.slice(endseqFrame);
     }
     else
     {
-      cleanSeq.slice(timeiter) = v.slice(framewindow);
+      cleanSeq.slice(timeIter) = v.slice(frameWindow);
     }
   };
-  parallel(func, static_cast<unsigned long long>(nImages));
+  parallel(func, static_cast<uint32_t>(nImages));
 
-  // Finish the table off
-  std::cout << std::setw(5 * ww + 5) << std::string(5 * ww + 5, '-')
-            << std::endl
-            << std::endl;
-
-  // Overall program timer
-  auto overallend = std::chrono::high_resolution_clock::now();
-  auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-      overallend - overallstart);
-  std::cout << "Total time: " << std::setprecision(5) << (elapsed.count() / 1E6)
-            << " seconds" << std::endl
-            << std::endl;
+  // PGURE-SVT timer
+  auto t1End = std::chrono::high_resolution_clock::now();
+  auto t1Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t1End - t1Start);
+  pguresvt::printFixed(4, "PGURE-SVT:   ", std::setw(10), t1Elapsed.count() * 1E-6, " seconds");
 
   return 0;
 }

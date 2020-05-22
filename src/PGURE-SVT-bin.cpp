@@ -53,7 +53,6 @@ extern "C"
 #include "parallel.hpp"
 #include "utils.hpp"
 
-// Main program
 int main(int argc, char **argv)
 {
 
@@ -168,13 +167,13 @@ int main(int argc, char **argv)
   arma::cube inputSeq(tiffHeight, tiffWidth, 0);
   arma::cube filteredSeq(tiffHeight, tiffWidth, 0);
 
+  int memsize = 512 * 1024;  // L2 cache size
+  int filtsize = medianSize; // Median filter size in pixels
+
   if (MultiPageTiff) // Import the image sequence
   {
     uint32_t dircount = 0;
     uint32_t imgcount = 0;
-
-    int memsize = 512 * 1024;  // L2 cache size
-    int filtsize = medianSize; // Median filter size in pixels
 
     do
     {
@@ -191,18 +190,20 @@ int main(int argc, char **argv)
           libtiff::TIFFReadScanline(MultiPageTiff, &Buffer[tiffRow * tiffWidth], tiffRow, 0);
         }
 
-        arma::Mat<uint16_t> TiffSlice(Buffer, tiffHeight, tiffWidth);
-        inplace_trans(TiffSlice);
-        inputSeq.slice(imgcount) = arma::conv_to<arma::mat>::from(TiffSlice);
+        arma::Mat<uint16_t> curSlice(Buffer, tiffHeight, tiffWidth);
+        inplace_trans(curSlice);
+        inputSeq.slice(imgcount) = arma::conv_to<arma::mat>::from(curSlice);
 
-        // Apply median filter (constant-time) to the 8-bit image
+        // Apply median filter to the image
         ConstantTimeMedianFilter(Buffer, FilteredBuffer, tiffWidth, tiffHeight,
                                  tiffWidth, tiffWidth, filtsize, 1, memsize);
 
-        arma::Mat<uint16_t> FilteredTiffSlice(FilteredBuffer, tiffHeight, tiffWidth);
-        inplace_trans(FilteredTiffSlice);
-        filteredSeq.slice(imgcount) = arma::conv_to<arma::mat>::from(FilteredTiffSlice);
+        arma::Mat<uint16_t> filtSlice(FilteredBuffer, tiffHeight, tiffWidth);
+        inplace_trans(filtSlice);
+        filteredSeq.slice(imgcount) = arma::conv_to<arma::mat>::from(filtSlice);
         imgcount++;
+        delete[] Buffer;
+        delete[] FilteredBuffer;
       }
       dircount++;
     } while (libtiff::TIFFReadDirectory(MultiPageTiff));
@@ -241,6 +242,7 @@ int main(int argc, char **argv)
 
   auto &&func = [&, lambda_ = lambda](uint32_t timeIter) {
     auto lambda = lambda_;
+
     // Extract the subset of the image sequence
     arma::cube u(Nx, Ny, T), uFilter(Nx, Ny, T), v(Nx, Ny, T);
     if (timeIter < frameWindow)
