@@ -74,21 +74,20 @@ int main(int argc, char **argv)
   ParseParameters(paramFile, opts);
 
   if (opts.count("filename") == 0 ||
-      opts.count("start_image") == 0 ||
-      opts.count("end_image") == 0) // Check all required parameters are specified
+      opts.count("start_frame") == 0 ||
+      opts.count("end_frame") == 0) // Check all required parameters are specified
   {
-    pguresvt::print(std::cerr, "**WARNING** Required parameters not specified\n",
-                    "            You must specify filename, start and end frame");
+    pguresvt::print(std::cerr, "**ERROR**\n", "Required parameters not specified\n",
+                    "You must specify 'filename', 'start_frame' and 'end_frame'\n");
     return -1;
   }
 
   // Extract parameters
   std::string filename = opts.at("filename");
-  int lastindex = filename.find_last_of(".");
-  std::string filestem = filename.substr(0, lastindex);
+  std::string filestem = filename.substr(0, filename.find_last_of("."));
 
-  uint32_t startImage = std::stoi(opts.at("start_image"));
-  uint32_t endImage = std::stoi(opts.at("end_image"));
+  uint32_t startImage = std::stoi(opts.at("start_frame"));
+  uint32_t endImage = std::stoi(opts.at("end_frame"));
   uint32_t nImages = endImage - startImage + 1;
 
   // Move onto optional parameters
@@ -97,13 +96,13 @@ int main(int argc, char **argv)
   T = (blockSize * blockSize < T) ? (blockSize * blockSize) - 1 : T;
 
   // Noise parameters (initialized at -1 unless user-defined)
-  double alpha = (opts.count("alpha") == 1) ? std::stod(opts.at("alpha")) : -1.;
-  double mu = (opts.count("mu") == 1) ? std::stod(opts.at("mu")) : -1.;
-  double sigma = (opts.count("sigma") == 1) ? std::stod(opts.at("sigma")) : -1.;
+  double alpha = (opts.count("noise_alpha") == 1) ? std::stod(opts.at("noise_alpha")) : -1.;
+  double mu = (opts.count("noise_mu") == 1) ? std::stod(opts.at("noise_mu")) : -1.;
+  double sigma = (opts.count("noise_sigma") == 1) ? std::stod(opts.at("noise_sigma")) : -1.;
 
   // SVT threshold (initialized at -1 unless user-defined)
   bool optPGURE = (opts.count("optimize_pgure") == 1) ? pguresvt::strToBool(opts.at("optimize_pgure")) : true;
-  double lambda;
+  double lambda = 0.0;
   if (!optPGURE)
   {
     if (opts.count("lambda") == 1)
@@ -113,8 +112,8 @@ int main(int argc, char **argv)
     else
     {
       pguresvt::print(std::cerr,
-                      "**WARNING** PGURE optimization is turned OFF but ",
-                      "no lambda specified in parameter file");
+                      "**ERROR**\nPGURE optimization is turned OFF but ",
+                      "no lambda specified in parameter file\n");
       return -1;
     }
   }
@@ -142,7 +141,7 @@ int main(int argc, char **argv)
   std::string inFilename = filestem + ".tif";
   if (!std::ifstream(inFilename.c_str())) // Check file exists
   {
-    pguresvt::print(std::cerr, "**WARNING** File ", inFilename, " not found");
+    pguresvt::print(std::cerr, "**ERROR**\nFile ", inFilename, " not found\n");
     return -1;
   }
 
@@ -156,13 +155,13 @@ int main(int argc, char **argv)
 
   if (tiffWidth != tiffHeight) // Only work with square images
   {
-    pguresvt::print(std::cerr, "**WARNING** Frame dimensions are not square, got ", tiffWidth, "x", tiffHeight);
+    pguresvt::print(std::cerr, "**ERROR**\nFrame dimensions are not square, got ", tiffWidth, "x", tiffHeight, "\n");
     return -1;
   }
 
   if (tiffDepth != 8 && tiffDepth != 16) // Only work with 8-bit or 16-bit images
   {
-    pguresvt::print(std::cerr, "**WARNING** Images must be 8-bit or 16-bit, got ", tiffDepth, "-bit");
+    pguresvt::print(std::cerr, "**ERROR**\nImages must be 8-bit or 16-bit, got ", tiffDepth, "-bit depth \n");
     return -1;
   }
 
@@ -213,15 +212,14 @@ int main(int argc, char **argv)
   // Is number of frames compatible?
   if (nImages > inputSeq.n_slices)
   {
-    pguresvt::print(std::cerr, "**WARNING** Seq only has ",
-                    inputSeq.n_slices, " frames");
+    pguresvt::print(std::cerr, "**ERROR**\n Sequence only has ", inputSeq.n_slices, " frames, expected ", nImages, "\n");
     return -1;
   }
 
   // TIFF import timer
   auto t0End = std::chrono::high_resolution_clock::now();
   auto t0Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t0End - t0Start);
-  pguresvt::printFixed(5, "TIFF import took ", t0Elapsed.count() * 1E-6, " seconds");
+  pguresvt::printFixed(4, "TIFF import: ", std::setw(10), t0Elapsed.count() * 1E-6, " seconds");
 
   auto t1Start = std::chrono::high_resolution_clock::now();
 
@@ -314,7 +312,7 @@ int main(int argc, char **argv)
   // PGURE-SVT timer
   auto t1End = std::chrono::high_resolution_clock::now();
   auto t1Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t1End - t1Start);
-  pguresvt::printFixed(5, "PGURE-SVT took ", t1Elapsed.count() * 1E-6, " seconds");
+  pguresvt::printFixed(4, "PGURE-SVT:   ", std::setw(10), t1Elapsed.count() * 1E-6, " seconds");
 
   auto t2Start = std::chrono::high_resolution_clock::now();
 
@@ -335,7 +333,7 @@ int main(int argc, char **argv)
 
   if (!MultiPageTiffOut) // Try to write the file
   {
-    pguresvt::print(std::cerr, "**WARNING** File ", outFilename, " could not be written");
+    pguresvt::print(std::cerr, "**ERROR**\nFile ", outFilename, " could not be written\n");
     return -1;
   }
 
@@ -365,7 +363,7 @@ int main(int argc, char **argv)
   // Export TIFF timer
   auto t2End = std::chrono::high_resolution_clock::now();
   auto t2Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t2End - t2Start);
-  pguresvt::printFixed(5, "TIFF export took ", t2Elapsed.count() * 1E-6, " seconds\n");
+  pguresvt::printFixed(4, "TIFF export: ", std::setw(10), t2Elapsed.count() * 1E-6, " seconds\n");
 
   return 0;
 }

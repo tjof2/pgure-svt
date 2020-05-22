@@ -32,7 +32,7 @@ class MotionEstimator
 {
 public:
   MotionEstimator(const arma::cube &A,
-                  const int blockSize,
+                  const uint32_t blockSize,
                   const uint32_t timeIter,
                   const uint32_t timeWindow,
                   const uint32_t motionWindow,
@@ -60,6 +60,8 @@ public:
 
   void Estimate()
   {
+    int negInc;
+
     if (timeIter < timeWindow)
     {
       uint32_t loopEnd = T - timeIter - 1;
@@ -77,8 +79,8 @@ public:
 
       for (size_t i = 0; i < timeIter; i++) // Perform motion estimation backwards
       {
-        int inc = -1 * (i + 1);
-        ARPSMotionEstimation(inc, timeIter + inc + 1, timeIter + inc, timeIter + inc + 1);
+        negInc = -1 * (i + 1);
+        ARPSMotionEstimation(negInc, timeIter + negInc + 1, timeIter + negInc, timeIter + negInc + 1);
       }
     }
     else if (timeIter >= (nImages - timeWindow))
@@ -99,15 +101,15 @@ public:
 
       for (size_t i = 0; i < endFrame; i++) // Perform motion estimation backwards
       {
-        int inc = -1 * (i + 1);
+        negInc = -1 * (i + 1);
 
         if (2 * timeWindow == endFrame)
         {
-          ARPSMotionEstimation(inc, endFrame + inc + 1, endFrame + inc, endFrame + inc);
+          ARPSMotionEstimation(negInc, endFrame + negInc + 1, endFrame + negInc, endFrame + negInc);
         }
         else
         {
-          ARPSMotionEstimation(inc, endFrame + inc + 1, endFrame + inc, endFrame + inc + 1);
+          ARPSMotionEstimation(negInc, endFrame + negInc + 1, endFrame + negInc, endFrame + negInc + 1);
         }
       }
     }
@@ -126,8 +128,8 @@ public:
 
       for (size_t i = 0; i < timeWindow; i++) // Perform motion estimation backwards
       {
-        int inc = -1 * (i + 1);
-        ARPSMotionEstimation(inc, timeWindow + inc + 1, timeWindow + inc, timeWindow + inc + 1);
+        negInc = -1 * (i + 1);
+        ARPSMotionEstimation(negInc, timeWindow + negInc + 1, timeWindow + negInc, timeWindow + negInc + 1);
       }
     }
     return;
@@ -137,8 +139,7 @@ public:
 
 private:
   arma::cube A;
-  int blockSize;
-  uint32_t timeIter, timeWindow, motionWindow, nImages;
+  uint32_t blockSize, timeIter, timeWindow, motionWindow, nImages;
 
   arma::icube patches, motions;
   uint32_t Nx, Ny, T;
@@ -193,8 +194,8 @@ private:
 
       checkMat(motionWindow, motionWindow) = 1;
 
+      uint32_t maxIdx;
       int stepSize;
-      int maxIdx;
 
       if (j == 0)
       {
@@ -206,7 +207,7 @@ private:
         int yTmp = std::abs(motions(0, it, iARPS3));
         int xTmp = std::abs(motions(1, it, iARPS3));
         stepSize = (xTmp <= yTmp) ? yTmp : xTmp;
-        if ((xTmp == stepSize && yTmp == 0) || (xTmp == 0 && yTmp == stepSize))
+        if ((yTmp == 0 && xTmp == stepSize) || (xTmp == 0 && yTmp == stepSize))
         {
           maxIdx = 5;
         }
@@ -217,9 +218,10 @@ private:
           LDSP(5, 1) = motions(0, it, iARPS3);
         }
       }
+
       LDSP(0, 0) = 0;
-      LDSP(0, 1) = -stepSize;
-      LDSP(1, 0) = -stepSize;
+      LDSP(0, 1) = -1 * stepSize;
+      LDSP(1, 0) = -1 * stepSize;
       LDSP(1, 1) = 0;
       LDSP(2, 0) = 0;
       LDSP(2, 1) = 0;
@@ -228,24 +230,26 @@ private:
       LDSP(4, 0) = 0;
       LDSP(4, 1) = stepSize;
 
-      // Currently not used, but motion estimation can be predictive
-      // if this value is larger than 0!
+      // Currently not used, but motion estimation can be
+      // predictive if this value is larger than 0
       double pMotion = 0.0;
 
       // Do the LDSP
-      for (int k = 0; k < maxIdx; k++)
+      bool skipIt = false;
+
+      for (size_t k = 0; k < maxIdx; k++)
       {
         int refBlkVer = y + LDSP(k, 1);
         int refBlkHor = x + LDSP(k, 0);
-        if (refBlkHor < 0 || refBlkHor + blockSize - 1 >= Ny || refBlkVer < 0 || refBlkVer + blockSize - 1 >= Nx)
-        {
-          continue;
-        }
-        else if (k == 2 || stepSize == 0)
-        {
-          continue;
-        }
-        else
+
+        skipIt = ((k == 2) ||
+                  (stepSize == 0) ||
+                  (refBlkHor < 0) ||
+                  (refBlkVer < 0) ||
+                  (refBlkHor + blockSize - 1) >= Ny ||
+                  (refBlkVer + blockSize - 1) >= Nx);
+
+        if (!skipIt) // Only evaluate if none of the above is true
         {
           arma::cube powBlock = A(arma::span(refBlkVer, refBlkVer + blockSize - 1),
                                   arma::span(refBlkHor, refBlkHor + blockSize - 1),
@@ -302,29 +306,26 @@ private:
 
       do
       {
+        bool skipIt = false;
+
         for (int k = 0; k < 5; k++)
         {
           int refBlkVer = y + SDSP(k, 1);
           int refBlkHor = x + SDSP(k, 0);
 
-          if (refBlkHor < 0 || refBlkHor + blockSize - 1 >= Ny || refBlkVer < 0 || refBlkVer + blockSize - 1 >= Nx)
-          {
-            continue;
-          }
-          else if (k == 2)
-          {
-            continue;
-          }
-          else if (refBlkHor < (int)(j - motionWindow) || refBlkHor > (int)(j + motionWindow) ||
-                   refBlkVer < (int)(i - motionWindow) || refBlkVer > (int)(i + motionWindow))
-          {
-            continue;
-          }
-          else if (checkMat(y - i + SDSP(k, 1) + motionWindow, x - j + SDSP(k, 0) + motionWindow) == 1)
-          {
-            continue;
-          }
-          else
+          skipIt = ((k == 2) ||
+                    (refBlkHor < 0) ||
+                    (refBlkVer < 0) ||
+                    (refBlkHor + blockSize - 1) >= Ny ||
+                    (refBlkVer + blockSize - 1) >= Nx ||
+                    (refBlkHor < (int)(j - motionWindow)) ||
+                    (refBlkHor > (int)(j + motionWindow)) ||
+                    (refBlkVer < (int)(i - motionWindow)) ||
+                    (refBlkVer > (int)(i + motionWindow)) ||
+                    (checkMat(y - i + SDSP(k, 1) + motionWindow,
+                              x - j + SDSP(k, 0) + motionWindow) == 1));
+
+          if (!skipIt) // Only evaluate if none of the above is true
           {
             arma::cube powBlock = A(arma::span(refBlkVer, refBlkVer + blockSize - 1),
                                     arma::span(refBlkHor, refBlkHor + blockSize - 1),
@@ -368,6 +369,7 @@ private:
             checkMat(y - i + SDSP(k, 1) + motionWindow, x - j + SDSP(k, 0) + motionWindow) = 1;
           }
         }
+
         point = arma::find(costs == costs.min());
         cost = costs.min();
 

@@ -44,17 +44,24 @@ void ParseParameters(std::istream &cfgfile,
     {
       continue; // Ignore comment lines
     }
-    else if (!(iss >> eq) || eq != ":" || iss.get() != EOF)
+    else if (!(iss >> eq) || !(eq.compare(":")) || iss.get() != EOF)
     {
       while (iss >> temp)
       {
-        if (iss >> std::ws)
+        if (temp.find("#") != std::string::npos) // Support inline comments
         {
-          val += temp;
+          break;
         }
         else
         {
-          val += temp + " ";
+          if (iss >> std::ws)
+          {
+            val += temp;
+          }
+          else
+          {
+            val += temp + " ";
+          }
         }
       }
     }
