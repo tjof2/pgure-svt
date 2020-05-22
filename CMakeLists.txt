@@ -101,7 +101,7 @@ endif()
 
 find_program(PYTHON "python")
 
-if(BUILD_PYTHON_DIST AND PYTHON)
+if(BUILD_PYTHON AND PYTHON)
     set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
     set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py")

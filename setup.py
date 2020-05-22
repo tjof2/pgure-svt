@@ -16,13 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 from setuptools import find_packages, setup
-
-
-def read(fname):
-    """Utility function to read the README file."""
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
 setup(
@@ -32,7 +26,7 @@ setup(
     author_email="tjof2@cam.ac.uk",
     url="https://github.com/tjof2/pgure-svt",
     description="Singular value thresholding for denoising video microscopy data",
-    long_description=read("${CMAKE_SOURCE_DIR}/README.md"),
+    long_description=open("README.md").read(),
     license="GPLv3",
     classifiers=[
         "Development Status :: 4 - Beta",
