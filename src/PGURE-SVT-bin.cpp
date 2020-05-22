@@ -275,8 +275,8 @@ int main(int argc, char **argv)
     }
 
     // Perform motion estimation
-    MotionEstimator *motion = new MotionEstimator;
-    motion->Estimate(uFilter, timeIter, frameWindow, nImages, blockSize, motionWindow);
+    MotionEstimator *motion = new MotionEstimator(uFilter, blockSize, timeIter, frameWindow, motionWindow, nImages);
+    motion->Estimate();
     arma::icube sequencePatches = motion->GetEstimate();
     delete motion;
 
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
     if (optPGURE) // Determine optimum threshold value (max 1000 evaluations)
     {
       lambda = (timeIter == 0) ? arma::accu(u) * OoNxNyT : lambda;
-      lambda = optimizer->Optimize(tol, lambda, u.max(), 1E3);
+      lambda = optimizer->Optimize(tol, lambda, u.max(), 1000);
       v = optimizer->Reconstruct(lambda);
     }
     else
