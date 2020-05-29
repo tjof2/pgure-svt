@@ -78,9 +78,10 @@ if (OPENMP_FOUND AND USE_OPENMP)
 endif()
 
 if(BUILD_EXECUTABLE AND TIFF_FOUND)
-    add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT-bin.cpp)
-    target_link_libraries(PGURE-SVT ${SVT_LIBS})
-    install(TARGETS PGURE-SVT DESTINATION bin)
+    set(BINARY_NAME "PGURE-SVT")
+    add_executable(${BINARY_NAME} src/medfilter.c src/${BINARY_NAME}.cpp)
+    target_link_libraries(${BINARY_NAME} ${SVT_LIBS})
+    install(TARGETS ${BINARY_NAME} DESTINATION bin)
 endif()
 
 if(BUILD_PYTHON AND PYTHON)
