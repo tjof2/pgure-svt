@@ -53,7 +53,6 @@ extern "C"
 
 int main(int argc, char **argv)
 {
-
   pguresvt::print(std::cout,
                   "PGURE-SVT Denoising\n",
                   "Author: Tom Furnival\n",
@@ -93,7 +92,7 @@ int main(int argc, char **argv)
   uint32_t medianSize = (opts.count("median_filter") == 1) ? std::stoi(opts.at("median_filter")) : 5;
   uint32_t blockOverlap = (opts.count("patch_overlap") == 1) ? std::stoi(opts.at("patch_overlap")) : 1;
   uint32_t noiseMethod = (opts.count("noise_method") == 1) ? std::stoi(opts.at("noise_method")) : 4;
-  uint32_t numThreads = (opts.count("num_threads") == 1) ? std::stoi(opts.at("num_threads")) : 1;
+  uint32_t numThreads = (opts.count("num_threads") == 1) ? std::stoi(opts.at("num_threads")) : 0;
   uint32_t maxIter = (opts.count("max_iter") == 1) ? std::stoi(opts.at("max_iter")) : 1000;
 
   // Noise parameters (initialized at -1 unless user-defined)
@@ -223,6 +222,7 @@ int main(int argc, char **argv)
 
   auto t1Start = std::chrono::high_resolution_clock::now();
 
+  // Run the main PGURE-SVT function
   arma::cube cleanSeq(arma::size(inputSeq), arma::fill::zeros); // Set output sequence
 
   uint32_t result;
@@ -284,5 +284,5 @@ int main(int argc, char **argv)
   auto t2Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t2End - t2Start);
   pguresvt::printFixed(4, "TIFF export: ", std::setw(10), t2Elapsed.count() * 1E-6, " seconds\n");
 
-  return 0;
+  return result;
 }

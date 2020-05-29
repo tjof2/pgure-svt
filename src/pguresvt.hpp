@@ -55,7 +55,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
   uint32_t Ny = X.n_rows;
   uint32_t Nimgs = X.n_slices;
 
-  // pguresvt::printFixed(1, "T1=", typeid(T1).name(), ", T2=", typeid(T2).name());
+  // pguresvt::printFixed(1, "Input type=", typeid(T1).name(), ", Output type=", typeid(T2).name());
 
   // Check trajectory length against block size
   uint32_t Nt = (blockSize * blockSize < trajLength) ? (blockSize * blockSize) - 1 : trajLength;
