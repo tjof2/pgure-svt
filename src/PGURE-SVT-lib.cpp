@@ -148,13 +148,13 @@ extern "C" int PGURESVT(double *X, double *Y, int *dims, int blockSize, int bloc
     }
 
     // Perform motion estimation
-    MotionEstimator *motion = new MotionEstimator(uFilter, blockSize, timeIter, frameWindow, motionWindow, nImages);
+    MotionEstimator<double> *motion = new MotionEstimator<double>(uFilter, blockSize, timeIter, frameWindow, motionWindow, nImages);
     motion->Estimate();
     arma::icube sequencePatches = motion->GetEstimate();
     delete motion;
 
     // Perform PGURE optimization
-    PGURE *optimizer = new PGURE(u, sequencePatches, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
+    PGURE<double> *optimizer = new PGURE<double>(u, sequencePatches, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
     if (optPGURE) // Determine optimum threshold value (max 1000 evaluations)
     {
       lambda = (timeIter == 0) ? arma::accu(u) * OoNxNyT : lambda;

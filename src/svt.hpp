@@ -31,17 +31,18 @@
 
 #include "utils.hpp"
 
+template <typename T>
 class SVT
 {
 public:
   SVT(const arma::icube &patches,
       const uint32_t Nx,
       const uint32_t Ny,
-      const uint32_t T,
+      const uint32_t Nt,
       const uint32_t blockSize,
       const uint32_t blockOverlap,
       const bool expWeighting) : patches(patches),
-                                 Nx(Nx), Ny(Ny), T(T),
+                                 Nx(Nx), Ny(Ny), Nt(Nt),
                                  blockSize(blockSize),
                                  blockOverlap(blockOverlap),
                                  expWeighting(expWeighting)
@@ -52,11 +53,11 @@ public:
     nyMbsDbo = nyMbs / blockOverlap;
     vecSize = (1 + nxMbsDbo) * (1 + nyMbsDbo);
 
-    block.set_size(blockSize * blockSize, T);
-    Ublock.set_size(blockSize * blockSize, T);
-    Vblock.set_size(T, T);
-    Sblock.set_size(T);
-    Sthresh.set_size(T);
+    block.set_size(blockSize * blockSize, Nt);
+    Ublock.set_size(blockSize * blockSize, Nt);
+    Vblock.set_size(Nt, Nt);
+    Sblock.set_size(Nt);
+    Sthresh.set_size(Nt);
   };
 
   ~SVT()
@@ -68,7 +69,7 @@ public:
 
   // Perform SVD on each block in the image sequence,
   // subject to the block overlap restriction
-  void Decompose(const arma::cube &u)
+  void Decompose(const arma::Cube<T> &u)
   {
     // Fix block overlap parameter
     arma::uvec firstPatches(vecSize);
@@ -104,18 +105,14 @@ public:
     joinPatches(arma::span(vecSize + nyMbsDbo + 1, vecSize + nyMbsDbo + 1 + nxMbsDbo)) = patchesBottomEdge;
     actualPatches = arma::sort(joinPatches.elem(arma::find_unique(joinPatches)));
 
-    // Get new vector size
-    newVecSize = actualPatches.n_elem;
-
-    // Memory allocation
-    U.resize(newVecSize);
+    newVecSize = actualPatches.n_elem; // Get new vector size
+    U.resize(newVecSize);              // Memory allocation
     S.resize(newVecSize);
     V.resize(newVecSize);
 
     for (size_t it = 0; it < newVecSize; it++)
     {
-      // Extract block
-      for (size_t k = 0; k < T; k++)
+      for (size_t k = 0; k < Nt; k++) // Extract block
       {
         int newY = patches(0, actualPatches(it), k);
         int newX = patches(1, actualPatches(it), k);
@@ -135,13 +132,13 @@ public:
   };
 
   // Reconstruct block in the image sequence after thresholding
-  arma::cube Reconstruct(const double lambda)
+  arma::Cube<T> Reconstruct(const double lambda)
   {
-    arma::cube v = arma::zeros<arma::cube>(Nx, Ny, T);
-    arma::cube weights = arma::zeros<arma::cube>(Nx, Ny, T);
-    arma::mat weightsInc = arma::ones<arma::mat>(blockSize, blockSize);
-    arma::vec zvec = arma::zeros<arma::vec>(T);
-    arma::vec wvec = arma::zeros<arma::vec>(T);
+    arma::Cube<T> v = arma::zeros<arma::Cube<T>>(Nx, Ny, Nt);
+    arma::Cube<T> weights = arma::zeros<arma::Cube<T>>(Nx, Ny, Nt);
+    arma::Mat<T> weightsInc = arma::ones<arma::Mat<T>>(blockSize, blockSize);
+    arma::Col<T> zvec = arma::zeros<arma::Col<T>>(Nt);
+    arma::Col<T> wvec = arma::zeros<arma::Col<T>>(Nt);
 
     for (size_t it = 0; it < newVecSize; it++)
     {
@@ -162,7 +159,7 @@ public:
       // Reconstruct from SVD
       block = Ublock * diagmat(Sthresh) * Vblock.t();
 
-      for (size_t k = 0; k < T; k++)
+      for (size_t k = 0; k < Nt; k++)
       {
         int newY = patches(0, actualPatches(it), k);
         int newX = patches(1, actualPatches(it), k);
@@ -177,27 +174,26 @@ public:
       }
     }
 
-    // Apply weighting
-    v /= weights;
-    v.elem(find_nonfinite(v)).zeros();
+    v /= weights;                      // Apply weighting
+    v.elem(find_nonfinite(v)).zeros(); // Handle divide-by-zero
 
     return v;
   };
 
 private:
   arma::icube patches;
-  uint32_t Nx, Ny, T;
+  uint32_t Nx, Ny, Nt;
   uint32_t blockSize, blockOverlap;
   bool expWeighting;
 
   uint32_t vecSize, newVecSize, nxMbs, nyMbs, nxMbsDbo, nyMbsDbo;
 
   arma::uvec actualPatches;
-  arma::mat block, Ublock, Vblock;
-  arma::vec Sblock, Sthresh;
+  arma::Mat<T> block, Ublock, Vblock;
+  arma::Col<T> Sblock, Sthresh;
 
-  std::vector<arma::mat> U, V;
-  std::vector<arma::vec> S;
+  std::vector<arma::Mat<T>> U, V;
+  std::vector<arma::Col<T>> S;
 };
 
 #endif

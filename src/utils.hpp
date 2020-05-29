@@ -54,22 +54,14 @@ namespace pguresvt
         return (s.compare("1") == 0) || (s.compare("true") == 0);
     };
 
-    inline double median(const arma::mat &X)
-    {
-        return arma::median(arma::median(X));
-    }
-
-    inline double mean(const arma::mat &X)
-    {
-        return arma::mean(arma::mean(X));
-    }
-
-    inline void softThreshold(arma::vec &out, const arma::vec &v, const arma::vec &zeros, const double thresh)
+    template <typename T>
+    inline void softThreshold(arma::Col<T> &out, const arma::Col<T> &v, const arma::Col<T> &zeros, const double thresh)
     {
         out = arma::sign(v) % arma::max(arma::abs(v) - thresh, zeros);
     }
 
-    inline void softThreshold(arma::vec &out, const arma::vec &v, const arma::vec &zeros, const arma::vec &thresh)
+    template <typename T>
+    inline void softThreshold(arma::Col<T> &out, const arma::Col<T> &v, const arma::Col<T> &zeros, const arma::Col<T> &thresh)
     {
         out = arma::sign(v) % arma::max(arma::abs(v) - thresh, zeros);
     }

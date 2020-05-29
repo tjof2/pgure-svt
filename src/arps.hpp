@@ -28,10 +28,11 @@
 #include <vector>
 #include <armadillo>
 
+template <typename T>
 class MotionEstimator
 {
 public:
-  MotionEstimator(const arma::cube &A,
+  MotionEstimator(const arma::Cube<T> &A,
                   const uint32_t blockSize,
                   const uint32_t timeIter,
                   const uint32_t timeWindow,
@@ -45,7 +46,7 @@ public:
   {
     Nx = A.n_rows;
     Ny = A.n_cols;
-    T = A.n_slices;
+    Nt = A.n_slices;
 
     nxMbs = Nx - blockSize;
     nyMbs = Ny - blockSize;
@@ -64,7 +65,7 @@ public:
 
     if (timeIter < timeWindow)
     {
-      uint32_t loopEnd = T - timeIter - 1;
+      uint32_t loopEnd = Nt - timeIter - 1;
 
       for (size_t i = 0; i < vecSize; i++) // Populate reference frame coordinates
       {
@@ -85,7 +86,7 @@ public:
     }
     else if (timeIter >= (nImages - timeWindow))
     {
-      uint32_t endFrame = timeIter - (nImages - T);
+      uint32_t endFrame = timeIter - (nImages - Nt);
       uint32_t loopEnd = 2 * timeWindow - endFrame;
 
       for (size_t i = 0; i < vecSize; i++) // Populate reference frame coordinates
@@ -138,11 +139,11 @@ public:
   arma::icube GetEstimate() { return patches; }
 
 private:
-  arma::cube A;
+  arma::Cube<T> A;
   uint32_t blockSize, timeIter, timeWindow, motionWindow, nImages;
 
   arma::icube patches, motions;
-  uint32_t Nx, Ny, T;
+  uint32_t Nx, Ny, Nt;
   uint32_t nxMbs, nyMbs, vecSize;
   double OoBlockSizeSq;
 
@@ -181,13 +182,13 @@ private:
       int x = j;
       int y = i;
 
-      arma::cube refBlock = A(arma::span(i, i + blockSize - 1),
-                              arma::span(j, j + blockSize - 1),
-                              arma::span(iARPS1));
+      arma::Cube<T> refBlock = A(arma::span(i, i + blockSize - 1),
+                                 arma::span(j, j + blockSize - 1),
+                                 arma::span(iARPS1));
 
-      arma::cube newBlock = A(arma::span(i, i + blockSize - 1),
-                              arma::span(j, j + blockSize - 1),
-                              arma::span(iARPS2));
+      arma::Cube<T> newBlock = A(arma::span(i, i + blockSize - 1),
+                                 arma::span(j, j + blockSize - 1),
+                                 arma::span(iARPS2));
 
       norm = arma::norm(refBlock.slice(0) - newBlock.slice(0), "fro");
       costs(2) = norm * norm * OoBlockSizeSq;
@@ -251,9 +252,9 @@ private:
 
         if (!skipIt) // Only evaluate if none of the above is true
         {
-          arma::cube powBlock = A(arma::span(refBlkVer, refBlkVer + blockSize - 1),
-                                  arma::span(refBlkHor, refBlkHor + blockSize - 1),
-                                  arma::span(iARPS2));
+          arma::Cube<T> powBlock = A(arma::span(refBlkVer, refBlkVer + blockSize - 1),
+                                     arma::span(refBlkHor, refBlkHor + blockSize - 1),
+                                     arma::span(iARPS2));
           if (curFrame == 0)
           {
             norm = arma::norm(refBlock.slice(0) - powBlock.slice(0), "fro");
@@ -327,9 +328,9 @@ private:
 
           if (!skipIt) // Only evaluate if none of the above is true
           {
-            arma::cube powBlock = A(arma::span(refBlkVer, refBlkVer + blockSize - 1),
-                                    arma::span(refBlkHor, refBlkHor + blockSize - 1),
-                                    arma::span(iARPS2));
+            arma::Cube<T> powBlock = A(arma::span(refBlkVer, refBlkVer + blockSize - 1),
+                                       arma::span(refBlkHor, refBlkHor + blockSize - 1),
+                                       arma::span(iARPS2));
             if (curFrame == 0)
             {
               norm = arma::norm(refBlock.slice(0) - powBlock.slice(0), "fro");
