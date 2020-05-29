@@ -91,8 +91,6 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
       w = Z.slices(timeIter - frameWindow, timeIter + frameWindow);
     }
 
-    pguresvt::printFixed(1, "Sliced:", timeIter, ", Nt=", Nt, ", Nimgs=", Nimgs);
-
     double uMax = u.max(); // Basic sequence normalization
     u /= uMax;
 
@@ -103,15 +101,11 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
       delete noise;
     }
 
-    pguresvt::printFixed(1, "Noise:", timeIter, ", Nt=", Nt, ", Nimgs=", Nimgs);
-
     MotionEstimator<T2> *motion = new MotionEstimator<T2>(w, blockSize, timeIter, frameWindow, motionWindow, Nimgs);
 
     motion->Estimate(); // Perform motion estimation
     arma::icube p = motion->GetEstimate();
     delete motion;
-
-    pguresvt::printFixed(1, "Motion:", timeIter, ", Nt=", Nt, ", Nimgs=", Nimgs);
 
     PGURE<T2> *optimizer = new PGURE<T2>(u, p, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
 
@@ -121,13 +115,9 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
       lambda = optimizer->Optimize(tol, arma::accu(u) * OoNxNyNt, upperBound, maxIter);
     }
 
-    pguresvt::printFixed(1, "Optimized:", timeIter, ", Nt=", Nt, ", Nimgs=", Nimgs);
-
     v = optimizer->Reconstruct(lambda); // Reconstruct the sequence
     v *= uMax;                          // Rescale back to original range
     delete optimizer;
-
-    pguresvt::printFixed(1, "Reconstructed:", timeIter, ", Nt=", Nt, ", Nimgs=", Nimgs);
 
     if (timeIter < frameWindow) // Place frames back into sequence
     {
@@ -142,8 +132,6 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     {
       Y.slice(timeIter) = v.slice(frameWindow);
     }
-
-    pguresvt::printFixed(1, "Rebuilt:", timeIter, ", Nt=", Nt, ", Nimgs=", Nimgs);
   };
 
   parallel(func, static_cast<uint32_t>(Nimgs)); // Apply over the time windows
