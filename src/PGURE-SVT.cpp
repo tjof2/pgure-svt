@@ -91,8 +91,8 @@ int main(int argc, char **argv)
   uint32_t medianSize = (opts.count("median_filter") == 1) ? std::stoi(opts.at("median_filter")) : 5;
   uint32_t blockOverlap = (opts.count("patch_overlap") == 1) ? std::stoi(opts.at("patch_overlap")) : 1;
   uint32_t noiseMethod = (opts.count("noise_method") == 1) ? std::stoi(opts.at("noise_method")) : 4;
-  uint32_t numThreads = (opts.count("num_threads") == 1) ? std::stoi(opts.at("num_threads")) : 0;
   uint32_t maxIter = (opts.count("max_iter") == 1) ? std::stoi(opts.at("max_iter")) : 1000;
+  int nJobs = (opts.count("n_jobs") == 1) ? std::stoi(opts.at("n_jobs")) : -1;
 
   // Noise parameters (initialized at -1 unless user-defined)
   double alpha = (opts.count("noise_alpha") == 1) ? std::stod(opts.at("noise_alpha")) : -1.;
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  HotPixelFilter(inputSeq, hotPixelThreshold); // Initial outlier detection for hot pixels
+  HotPixelFilter(inputSeq, hotPixelThreshold, nJobs); // Initial outlier detection for hot pixels
 
   // TIFF import and filter timer
   auto t0End = std::chrono::high_resolution_clock::now();
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
   uint32_t result;
   result = PGURESVT(cleanSeq, inputSeq, filteredSeq,
                     trajLength, blockSize, blockOverlap, motionWindow,
-                    noiseMethod, numThreads, maxIter,
+                    noiseMethod, maxIter, nJobs,
                     optPGURE, expWeighting, lambda, alpha, mu, sigma,
                     tol, randomSeed);
 
