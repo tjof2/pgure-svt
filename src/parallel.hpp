@@ -30,10 +30,10 @@ template <typename Function, typename Integer_Type>
 void parallel(Function const &func,
               Integer_Type dim_first,
               Integer_Type dim_last,
-              uint32_t threshold = 1,
-              bool parallel_mode = true)
+              int n_jobs = -1,
+              uint32_t threshold = 1)
 {
-  if (!parallel_mode)
+  if (n_jobs == 0) // No parallelization
   {
     for (auto a = dim_first; a != dim_last; ++a)
     {
@@ -41,9 +41,9 @@ void parallel(Function const &func,
     }
     return;
   }
-  else
+  else // std::thread parallelization
   {
-    uint32_t const total_cores = std::thread::hardware_concurrency();
+    uint32_t const total_cores = (n_jobs > 0) ? n_jobs : std::thread::hardware_concurrency();
 
     if ((total_cores <= 1) || ((dim_last - dim_first) <= threshold)) // case of non-parallel or small jobs
     {
@@ -97,25 +97,4 @@ void parallel(Function const &func,
   }
 }
 
-template <typename Function, typename Integer_Type>
-void parallel(Function const &func, Integer_Type dim_last)
-{
-  parallel(func, Integer_Type{0}, dim_last);
-}
-
 #endif
-
-/*
-TODO: support OMP
-
-include <omp.h>
-
-// Set up OMP
-#if defined(_OPENMP)
-  omp_set_dynamic(0);
-  omp_set_num_threads(numthreads);
-#endif
-
-#pragma omp parallel for shared(v, weights) \
-            private(block, Ublock, Sblock, Vblock)
-*/

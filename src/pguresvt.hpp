@@ -40,8 +40,8 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
                   const uint32_t blockOverlap,
                   const uint32_t motionWindow,
                   const uint32_t noiseMethod,
-                  const uint32_t numThreads,
                   const uint32_t maxIter,
+                  const int nJobs,
                   const bool optPGURE,
                   const bool expWeighting,
                   const double lambdaEst,
@@ -134,7 +134,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     }
   };
 
-  parallel(func, static_cast<uint32_t>(Nimgs)); // Apply over the time windows
+  parallel(func, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs); // Apply over the time windows
 
   return 0;
 }

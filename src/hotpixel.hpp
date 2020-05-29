@@ -32,7 +32,7 @@
 #include "utils.hpp"
 
 template <typename T>
-void HotPixelFilter(arma::Cube<T> &sequence, const double threshold)
+void HotPixelFilter(arma::Cube<T> &sequence, const double threshold, const int n_jobs)
 {
   uint32_t Nx = sequence.n_rows;
   uint32_t Ny = sequence.n_cols;
@@ -73,7 +73,7 @@ void HotPixelFilter(arma::Cube<T> &sequence, const double threshold)
     }
   };
 
-  parallel(func, static_cast<uint32_t>(Nt)); // Apply over the images
+  parallel(func, static_cast<uint32_t>(0), static_cast<uint32_t>(Nt), n_jobs); // Apply over the images
 
   return;
 }

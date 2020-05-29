@@ -47,7 +47,6 @@ extern "C"
 
 #include "hotpixel.hpp"
 #include "params.hpp"
-#include "parallel.hpp"
 #include "utils.hpp"
 #include "pguresvt.hpp"
 
@@ -92,8 +91,8 @@ int main(int argc, char **argv)
   uint32_t medianSize = (opts.count("median_filter") == 1) ? std::stoi(opts.at("median_filter")) : 5;
   uint32_t blockOverlap = (opts.count("patch_overlap") == 1) ? std::stoi(opts.at("patch_overlap")) : 1;
   uint32_t noiseMethod = (opts.count("noise_method") == 1) ? std::stoi(opts.at("noise_method")) : 4;
-  uint32_t numThreads = (opts.count("num_threads") == 1) ? std::stoi(opts.at("num_threads")) : 0;
   uint32_t maxIter = (opts.count("max_iter") == 1) ? std::stoi(opts.at("max_iter")) : 1000;
+  int nJobs = (opts.count("n_jobs") == 1) ? std::stoi(opts.at("n_jobs")) : -1;
 
   // Noise parameters (initialized at -1 unless user-defined)
   double alpha = (opts.count("noise_alpha") == 1) ? std::stod(opts.at("noise_alpha")) : -1.;
@@ -103,6 +102,7 @@ int main(int argc, char **argv)
   double hotPixelThreshold = (opts.count("hot_pixel") == 1) ? std::stoi(opts.at("hot_pixel")) : 10;
   int randomSeed = (opts.count("random_seed") == 1) ? std::stoi(opts.at("random_seed")) : -1;
   bool expWeighting = (opts.count("exponential_weighting") == 1) ? pguresvt::strToBool(opts.at("exponential_weighting")) : true;
+  bool normalizeImg = (opts.count("normalize") == 1) ? pguresvt::strToBool(opts.at("normalize")) : false;
 
   // SVT threshold (initialized at -1 unless user-defined)
   bool optPGURE = (opts.count("optimize_pgure") == 1) ? pguresvt::strToBool(opts.at("optimize_pgure")) : true;
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  HotPixelFilter(inputSeq, hotPixelThreshold); // Initial outlier detection for hot pixels
+  HotPixelFilter(inputSeq, hotPixelThreshold, nJobs); // Initial outlier detection for hot pixels
 
   // TIFF import and filter timer
   auto t0End = std::chrono::high_resolution_clock::now();
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
   uint32_t result;
   result = PGURESVT(cleanSeq, inputSeq, filteredSeq,
                     trajLength, blockSize, blockOverlap, motionWindow,
-                    noiseMethod, numThreads, maxIter,
+                    noiseMethod, maxIter, nJobs,
                     optPGURE, expWeighting, lambda, alpha, mu, sigma,
                     tol, randomSeed);
 
@@ -241,7 +241,10 @@ int main(int argc, char **argv)
 
   arma::Cube<uint16_t> outTiff(tiffWidth, tiffHeight, nImages);
 
-  cleanSeq = 65535 * (cleanSeq - cleanSeq.min()) / (cleanSeq.max() - cleanSeq.min()); // Normalize to [0,65535] range
+  if (normalizeImg) // Normalize to [0,65535] range
+  {
+    cleanSeq = 65535 * (cleanSeq - cleanSeq.min()) / (cleanSeq.max() - cleanSeq.min());
+  }
   outTiff = arma::conv_to<arma::Cube<uint16_t>>::from(cleanSeq);
 
   std::string outFilename = filestem + "-CLEANED.tif";                           // Get the output filename
@@ -283,6 +286,7 @@ int main(int argc, char **argv)
   auto t2End = std::chrono::high_resolution_clock::now();
   auto t2Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t2End - t2Start);
   pguresvt::printFixed(4, "TIFF export: ", std::setw(10), t2Elapsed.count() * 1E-6, " seconds\n");
+  pguresvt::print(std::cerr, "Output file: ", outFilename, "\n");
 
   return result;
 }
