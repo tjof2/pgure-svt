@@ -3,7 +3,7 @@
 # out the line using the '#' symbol.
 
 ##### REQUIRED #####
-filename    : ./nanoparticle.tif  # TIFF file to be denoised
+filename    : ./example.tif  # TIFF file to be denoised. Output filename will be ./nanoparticle-CLEANED.tif
 start_frame : 1                   # Start frame
 end_frame   : 50                  # End frame
 
@@ -11,6 +11,7 @@ end_frame   : 50                  # End frame
 patch_size            : 16    # Patch size in pixels (default = 4)
 patch_overlap         : 2     # Patch overlap in pixels (default = 1)
 trajectory_length     : 15    # Trajectory of each patch in frames, must be odd (default = 15)
+normalize             : false # If true, normalize the output image to [0, 65535] range (default = false)
 
 # Setting a negative value will enable automatic estimation of that parameter
 noise_alpha           : 0.1   # Detector gain noise parameter (default = -1)
