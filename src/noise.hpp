@@ -32,8 +32,8 @@ class NoiseEstimator
 public:
   NoiseEstimator()
   {
-    // Set Laplacian kernel to 3x3
-    laplacian = 0.125 * arma::ones<arma::mat>(3, 3);
+    laplacian.fill(1.0);
+    laplacian *= 0.125;
     laplacian(1, 1) = -1;
     treeDelete.resize(2);
   };
@@ -41,8 +41,12 @@ public:
   ~NoiseEstimator(){};
 
   void Estimate(const arma::cube &input,
-                double &alphaIn, double &muIn, double &sigmaIn,
-                const uint32_t sizeIn, const uint32_t method, const uint32_t wtypeIn)
+                double &alphaIn,
+                double &muIn,
+                double &sigmaIn,
+                const uint32_t sizeIn,
+                const uint32_t method,
+                const uint32_t wtypeIn)
   {
     // Read from parameters
     alpha = alphaIn;
@@ -205,7 +209,7 @@ private:
                                1.00913, 1.00455, 1.00227, 1.00114};
 
   // Discrete Laplacian operator
-  arma::mat laplacian;
+  arma::mat33 laplacian;
 
   // Test to see if a node should be split
   bool SplitBlockQ(const arma::mat &A)

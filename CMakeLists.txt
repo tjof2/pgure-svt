@@ -7,21 +7,17 @@ include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
 enable_language(C)
 
-########################################
-
 project (PGURE-SVT)
-set (PGURE-SVT_VERSION_FULL "0.5.1")
-message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION_FULL}")
+set (PGURE-SVT_VERSION "0.5.1")
+message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION}")
 
-option(USE_OPENBLAS "Whether to use BLAS or OpenBLAS" ON)
-option(USE_OPENMP "Whether to use OpenMP" ON)
-option(BUILD_EXECUTABLE "Build a standalone executable" OFF)
-option(BUILD_LIBRARY "Build the shared library" ON)
-option(BUILD_PYTHON "Build Python distribution" ON)
+option(USE_OPENBLAS "Use OpenBLAS instead of BLAS if available" ON)
+option(USE_OPENMP "Use OpenMP if available" ON)
+option(BUILD_EXECUTABLE "Build a standalone executable" ON)
+option(BUILD_PYTHON "Build Python distribution" OFF)
 option(INSTALL_PYTHON "Install Python wrapper as a package" OFF)
 
-########################################
-
+find_program(PYTHON "python")
 find_package(OpenMP)
 include(FindArmadillo)
 include(FindTiff)
@@ -71,8 +67,6 @@ if(ARMADILLO_FOUND)
     message(STATUS "Armadillo config: ${ARMADILLO_INCLUDE_DIR}/armadillo_bits/config.hpp")
 endif()
 
-########################################
-
 # Enable OpenMP & std::thread
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -pthread -std=c++17")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DARMA_DONT_USE_WRAPPER ")
@@ -83,23 +77,12 @@ if (OPENMP_FOUND AND USE_OPENMP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-########################################
-
 if(BUILD_EXECUTABLE AND TIFF_FOUND)
-    add_executable(PGURE-SVT src/medfilter.c src/PGURE-SVT-bin.cpp)
-    target_link_libraries(PGURE-SVT ${SVT_LIBS})
-    install(TARGETS PGURE-SVT DESTINATION bin)
+    set(BINARY_NAME "PGURE-SVT")
+    add_executable(${BINARY_NAME} src/medfilter.c src/${BINARY_NAME}.cpp)
+    target_link_libraries(${BINARY_NAME} ${SVT_LIBS})
+    install(TARGETS ${BINARY_NAME} DESTINATION bin)
 endif()
-
-if(BUILD_LIBRARY)
-    add_library(pguresvt SHARED src/medfilter.c src/PGURE-SVT-lib.cpp)
-    target_link_libraries(pguresvt ${SVT_LIBS})
-    install(TARGETS pguresvt DESTINATION lib)
-endif()
-
-########################################
-
-find_program(PYTHON "python")
 
 if(BUILD_PYTHON AND PYTHON)
     set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
@@ -132,9 +115,9 @@ if(BUILD_PYTHON AND PYTHON)
     add_custom_target(python ALL DEPENDS ${OUTPUT})
 
     message(STATUS "Building Python distribution")
+    execute_process(COMMAND ${PYTHON} ${SETUP_PY} build_ext --inplace)
     execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)
 
-    # Install Python package
     if(INSTALL_PYTHON)
         install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
     endif()

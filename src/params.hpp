@@ -28,8 +28,7 @@
 #include <stdexcept>
 #include <string>
 
-void ParseParameters(std::istream &cfgfile,
-                     std::map<std::string, std::string> &options)
+void ParseParameters(std::istream &cfgfile, std::map<std::string, std::string> &options)
 {
   for (std::string line; std::getline(cfgfile, line);)
   {

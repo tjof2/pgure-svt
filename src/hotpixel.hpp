@@ -28,22 +28,23 @@
 #include <vector>
 #include <armadillo>
 
+#include "parallel.hpp"
 #include "utils.hpp"
 
-void HotPixelFilter(arma::cube &sequence, const double threshold)
+template <typename T>
+void HotPixelFilter(arma::Cube<T> &sequence, const double threshold)
 {
   uint32_t Nx = sequence.n_rows;
   uint32_t Ny = sequence.n_cols;
-  uint32_t T = sequence.n_slices;
-
-  arma::vec medianWindow(8, arma::fill::zeros);
+  uint32_t Nt = sequence.n_slices;
 
   double mad_scale = 1.0 / 0.6745;
 
-  for (size_t i = 0; i < T; i++)
-  {
-    double median = pguresvt::median(sequence.slice(i));
-    double mad = pguresvt::median(arma::abs(sequence.slice(i) - median)) * mad_scale;
+  auto &&func = [&](uint32_t i) {
+    arma::vec8 medianWindow(arma::fill::zeros);
+
+    double median = arma::median(arma::median(sequence.slice(i)));
+    double mad = arma::median(arma::median((arma::abs(sequence.slice(i) - median)))) * mad_scale;
     arma::uvec outliers = arma::find(arma::abs(sequence.slice(i) - median) > threshold * mad);
 
     for (size_t j = 0; j < outliers.n_elem; j++)
@@ -63,16 +64,17 @@ void HotPixelFilter(arma::cube &sequence, const double threshold)
         medianWindow(7) = sequence(sub(0) + 1, sub(1) + 1, i);
 
         medianWindow = arma::sort(medianWindow);
-        sequence(sub(0), sub(1), i) = 0.5 * (medianWindow(3) + medianWindow(4));
+        sequence(sub(0), sub(1), i) = static_cast<T>(0.5 * (medianWindow(3) + medianWindow(4)));
       }
-      else
+      else // Edge outliers are replaced by the median of the frame
       {
-        // Edge pixels are currently replaced by the median of the frame
-        // (as they are not usually very important)
-        sequence(sub(0), sub(1), i) = median;
+        sequence(sub(0), sub(1), i) = static_cast<T>(median);
       }
     }
-  }
+  };
+
+  parallel(func, static_cast<uint32_t>(Nt)); // Apply over the images
+
   return;
 }
 

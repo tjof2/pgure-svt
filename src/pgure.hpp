@@ -32,10 +32,11 @@
 #include "svt.hpp"
 #include "utils.hpp"
 
+template <typename T>
 class PGURE
 {
 public:
-  PGURE(const arma::cube &U,
+  PGURE(const arma::Cube<T> &U,
         const arma::icube patches,
         const double alpha,
         const double mu,
@@ -55,22 +56,16 @@ public:
   {
     Nx = U.n_rows;
     Ny = U.n_cols;
-    T = U.n_slices;
-    OoNxNyT = 1.0 / (Nx * Ny * T);
-
+    Nt = U.n_slices;
+    OoNxNyNt = 1.0 / (Nx * Ny * Nt);
     sigmasq = sigma * sigma;
 
-    Uhat.set_size(Nx, Ny, T);
-    U1.set_size(Nx, Ny, T);
-    U2p.set_size(Nx, Ny, T);
-    U2m.set_size(Nx, Ny, T);
+    Uhat.set_size(Nx, Ny, Nt);
+    U1.set_size(Nx, Ny, Nt);
+    U2p.set_size(Nx, Ny, Nt);
+    U2m.set_size(Nx, Ny, Nt);
 
-    // Specify perturbations
-    eps1 = U.max() * 1E-4;
-    eps2 = U.max() * 1E-2;
-
-    // Seed the engine
-    if (randomSeed < 0)
+    if (randomSeed < 0) // Seed the engine
     {
       std::uint_least32_t seed;
       pguresvt::sysrandom(&seed, sizeof(seed));
@@ -81,9 +76,11 @@ public:
       rand_engine.seed(randomSeed);
     }
 
-    // Generate random samples for stochastic evaluation
-    delta1.set_size(Nx, Ny, T);
-    delta2.set_size(Nx, Ny, T);
+    eps1 = U.max() * 1E-4; // Specify perturbations
+    eps2 = eps1 * 1E2;     // Heuristic: 100 * eps1
+
+    delta1.set_size(Nx, Ny, Nt); // Generate random samples for stochastic evaluation
+    delta2.set_size(Nx, Ny, Nt);
 
     GenerateRandomPerturbations();
 
@@ -92,10 +89,10 @@ public:
     U2m = U - (delta2 * eps2);
 
     // Initialize the block SVDs
-    svt0 = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
-    svt1 = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
-    svt2p = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
-    svt2m = new SVT(patches, Nx, Ny, T, blockSize, blockOverlap, expWeighting);
+    svt0 = new SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+    svt1 = new SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+    svt2p = new SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+    svt2m = new SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
 
     svt0->Decompose(U);
     svt1->Decompose(U1);
@@ -119,7 +116,7 @@ public:
     delta2.reset();
   }
 
-  arma::cube Reconstruct(const double user_lambda)
+  arma::Cube<T> Reconstruct(const double user_lambda)
   {
     return svt0->Reconstruct(user_lambda);
   }
@@ -132,10 +129,9 @@ public:
     U2m = svt2m->Reconstruct(x[0]);
 
     // Modified from [1] to include mean/offset
-    double pgURE = OoNxNyT * (arma::accu(arma::square(arma::abs(Uhat - U))) - (alpha + mu) * arma::accu(U) + (2 / eps1 * arma::accu(delta1 % (alpha * U - alpha * mu + sigmasq) % (U1 - Uhat))) - (2 * sigmasq * alpha / (eps2 * eps2) * arma::accu(delta2 % (U2p - 2 * Uhat + U2m))) + (2 * mu * arma::accu(Uhat)) + mu) - sigmasq;
+    double pgURE = OoNxNyNt * (arma::accu(arma::square(arma::abs(Uhat - U))) - (alpha + mu) * arma::accu(U) + (2 / eps1 * arma::accu(delta1 % (alpha * U - alpha * mu + sigmasq) % (U1 - Uhat))) - (2 * sigmasq * alpha / (eps2 * eps2) * arma::accu(delta2 % (U2p - 2 * Uhat + U2m))) + (2 * mu * arma::accu(Uhat)) + mu) - sigmasq;
 
-    // Set new lambda
-    lambda = x[0];
+    lambda = x[0]; // Set new lambda
 
     return pgURE;
   }
@@ -143,34 +139,32 @@ public:
   double Optimize(const double tol, const double start, const double bound, const int eval);
 
 private:
-  arma::cube U;
+  arma::Cube<T> U;
   arma::icube patches;
   double alpha, mu, sigma, sigmasq;
-  uint32_t Nx, Ny, T, blockSize, blockOverlap;
+  uint32_t Nx, Ny, Nt, blockSize, blockOverlap;
   int randomSeed;
   bool expWeighting;
 
-  double OoNxNyT;
+  double OoNxNyNt;
   double eps1, eps2;
   double lambda;
 
-  SVT *svt0, *svt1, *svt2p, *svt2m;
+  SVT<T> *svt0, *svt1, *svt2p, *svt2m;
 
-  arma::cube Uhat, U1, U2p, U2m;
+  arma::Cube<T> Uhat, U1, U2p, U2m;
   arma::icube delta1;
-  arma::cube delta2;
+  arma::Cube<T> delta2;
 
   std::mt19937 rand_engine;
 
-  // Reshape to n^2 x T Casorati matrix
-  arma::mat CubeFlatten(arma::cube u)
+  arma::Mat<T> CubeFlatten(arma::Cube<T> u) // Reshape to Casorati matrix
   {
     u.reshape(u.n_rows * u.n_cols, u.n_slices, 1);
     return u.slice(0);
   }
 
-  // Perturbations used in empirical calculation of d'f(y) and d''f(y)
-  void GenerateRandomPerturbations()
+  void GenerateRandomPerturbations() // Perturbations used in empirical calculation of d'f(y) and d''f(y)
   {
     auto bernoulliFunc = [&](std::bernoulli_distribution &dist, auto value1, auto value2) {
       return (dist(rand_engine)) ? value1 : value2;
@@ -186,22 +180,21 @@ private:
     std::bernoulli_distribution binary_dist2(vP);
 
     delta1.imbue([&]() { return bernoulliFunc(binary_dist1, -1, 1); });
-    delta2.imbue([&]() { return bernoulliFunc(binary_dist2, -1 * vQvP, vPvQ); });
+    delta2.imbue([&]() { return static_cast<T>(bernoulliFunc(binary_dist2, -1 * vQvP, vPvQ)); });
 
     return;
   }
 };
 
-// Wrapper for the PGURE optimization function
-double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad, void *data)
+template <typename T>
+double obj_wrapper(const std::vector<double> &x, std::vector<double> &grad, void *data) // Wrapper for optimization function
 {
-  PGURE *obj = static_cast<PGURE *>(data);
+  PGURE<T> *obj = static_cast<PGURE<T> *>(data);
   return obj->CalculatePGURE(x, grad, data);
 }
 
-// Optimization function using NLopt and
-// BOBYQA gradient-free algorithm
-double PGURE::Optimize(const double tol, const double start, const double bound, const int eval)
+template <typename T>
+double PGURE<T>::Optimize(const double tol, const double start, const double bound, const int eval) // Optimization function using BOBYQA gradient-free algorithm
 {
   double minf;
   double startingStep = 0.5 * start;
@@ -210,7 +203,7 @@ double PGURE::Optimize(const double tol, const double start, const double bound,
   x[0] = start;
 
   nlopt::opt opt(nlopt::LN_BOBYQA, 1);
-  opt.set_min_objective(obj_wrapper, this);
+  opt.set_min_objective(obj_wrapper<T>, this);
   opt.set_maxeval(eval);
   opt.set_lower_bounds(0.);
   opt.set_upper_bounds(bound);

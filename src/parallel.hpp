@@ -31,43 +31,50 @@ void parallel(Function const &func,
               Integer_Type dim_first,
               Integer_Type dim_last,
               uint32_t threshold = 1,
-              uint32_t parallel_mode = 1)
+              bool parallel_mode = true)
 {
-  if (parallel_mode == 0)
+  if (!parallel_mode)
   {
     for (auto a = dim_first; a != dim_last; ++a)
+    {
       func(a);
+    }
     return;
   }
   else
   {
     uint32_t const total_cores = std::thread::hardware_concurrency();
 
-    // case of non-parallel or small jobs
-    if ((total_cores <= 1) || ((dim_last - dim_first) <= threshold))
+    if ((total_cores <= 1) || ((dim_last - dim_first) <= threshold)) // case of non-parallel or small jobs
     {
       for (auto a = dim_first; a != dim_last; ++a)
+      {
         func(a);
+      }
       return;
     }
 
-    // case of small job numbers
     std::vector<std::thread> threads;
-    if (dim_last - dim_first <= total_cores)
+    if (dim_last - dim_first <= total_cores) // case of small job numbers
     {
       for (auto index = dim_first; index != dim_last; ++index)
         threads.emplace_back(std::thread{[&func, index]() { func(index); }});
       for (auto &th : threads)
+      {
         th.join();
+      }
       return;
     }
 
-    // case of more jobs than CPU cores
-    auto const &job_slice = [&func](Integer_Type a, Integer_Type b) {
+    auto const &job_slice = [&func](Integer_Type a, Integer_Type b) { // case of more jobs than CPU cores
       if (a >= b)
+      {
         return;
+      }
       while (a != b)
+      {
         func(a++);
+      }
     };
 
     threads.reserve(total_cores - 1);
@@ -83,9 +90,10 @@ void parallel(Function const &func,
     }
 
     job_slice(tasks_per_thread * (total_cores - 1), dim_last);
-
     for (auto &th : threads)
+    {
       th.join();
+    }
   }
 }
 

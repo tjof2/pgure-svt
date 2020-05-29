@@ -16,16 +16,18 @@ trajectory_length     : 15    # Trajectory of each patch in frames, must be odd 
 noise_alpha           : 0.1   # Detector gain noise parameter (default = -1)
 noise_mu              : 0.1   # Detector offset noise parameter (default = -1)
 noise_sigma           : 0.1   # Gaussian noise parameter (default = -1)
+#noise_method         : 4     # Approach for calculating noise. Use 4 for STEM images (default = 4)
 
 optimize_pgure        : false # Optimize lambda using PGURE approach (default = true)
 lambda                : 0.15  # Singular value threshold to use if not optimizing (ignored if optimize_pgure = true)
 #tolerance            : 1E-7  # Relative tolerance of PGURE optimization (default = 1E-7)
+#max_iter             : 1000  # Maximum iterations for PGURE optimization (default = 1000)
 
 motion_estimation     : true  # Use ARPS motion estimation to reduce blurring (default = true)
 #motion_neighbourhood : 7     # Size of ARPS motion estimation neighbourhood in pixels (default = 7)
 #median_filter        : 5     # Size of median filter for ARPS in pixels (default = 5)
 
-#hot_pixel            : 10    # Hot pixel threshold detection (default = 10)
+#hot_pixel            : 10    # Hot pixel threshold detection based on multiples of median absolute deviation (default = 10)
 exponential_weighting : true  # Use exponential singular value weighting (default = true)
 random_seed           : 1     # Random seed (default = -1, i.e. no seed)
-#num_threads          : 4     # OpenMP num_threads (default = 4)
+#num_threads          : 0     # Number of threads/CPUs to parallelize over (default = 0)

@@ -21,7 +21,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="pguresvt",
-    version="${PGURE-SVT_VERSION_FULL}",
+    version="${PGURE-SVT_VERSION}",
     author="Tom Furnival",
     author_email="tjof2@cam.ac.uk",
     url="https://github.com/tjof2/pgure-svt",
