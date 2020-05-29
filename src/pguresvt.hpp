@@ -35,7 +35,7 @@ template <typename T1, typename T2>
 uint32_t PGURESVT(arma::Cube<T2> &Y,
                   const arma::Cube<T1> &X,
                   const arma::Cube<T2> &Z,
-                  uint32_t trajLength,
+                  const uint32_t trajLength,
                   const uint32_t blockSize,
                   const uint32_t blockOverlap,
                   const uint32_t motionWindow,
@@ -53,13 +53,13 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
 {
   uint32_t Nx = X.n_cols;
   uint32_t Ny = X.n_rows;
-  uint32_t Nt = X.n_slices;
-  uint32_t frameWindow = std::floor(Nt / 2);
+  uint32_t Nimgs = X.n_slices;
 
   // pguresvt::printFixed(1, "T1=", typeid(T1).name(), ", T2=", typeid(T2).name());
 
   // Check trajectory length against block size
-  trajLength = (blockSize * blockSize < trajLength) ? (blockSize * blockSize) - 1 : trajLength;
+  uint32_t Nt = (blockSize * blockSize < trajLength) ? (blockSize * blockSize) - 1 : trajLength;
+  uint32_t frameWindow = std::floor(Nt / 2);
 
   double OoNxNyNt = 1.0 / (Nx * Ny * Nt);
 
@@ -80,10 +80,10 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
       u = X.slices(0, 2 * frameWindow);
       w = Z.slices(0, 2 * frameWindow);
     }
-    else if (timeIter >= (Nt - frameWindow))
+    else if (timeIter >= (Nimgs - frameWindow))
     {
-      u = X.slices(Nt - 2 * frameWindow - 1, Nt - 1);
-      w = Z.slices(Nt - 2 * frameWindow - 1, Nt - 1);
+      u = X.slices(Nimgs - 2 * frameWindow - 1, Nimgs - 1);
+      w = Z.slices(Nimgs - 2 * frameWindow - 1, Nimgs - 1);
     }
     else
     {
@@ -123,9 +123,9 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     {
       Y.slice(timeIter) = v.slice(timeIter);
     }
-    else if (timeIter >= (Nt - frameWindow))
+    else if (timeIter >= (Nimgs - frameWindow))
     {
-      int endseqFrame = timeIter - (Nt - Nt);
+      int endseqFrame = timeIter - (Nimgs - Nt);
       Y.slice(timeIter) = v.slice(endseqFrame);
     }
     else
@@ -134,7 +134,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     }
   };
 
-  parallel(func, static_cast<uint32_t>(Nt)); // Apply over the time windows
+  parallel(func, static_cast<uint32_t>(Nimgs)); // Apply over the time windows
 
   return 0;
 }

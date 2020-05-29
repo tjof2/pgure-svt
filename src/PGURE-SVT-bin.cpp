@@ -214,19 +214,16 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  // TIFF import timer
+  HotPixelFilter(inputSeq, hotPixelThreshold); // Initial outlier detection for hot pixels
+
+  // TIFF import and filter timer
   auto t0End = std::chrono::high_resolution_clock::now();
   auto t0Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t0End - t0Start);
   pguresvt::printFixed(4, "TIFF import: ", std::setw(10), t0Elapsed.count() * 1E-6, " seconds");
 
   auto t1Start = std::chrono::high_resolution_clock::now();
 
-  // Set output sequence
-  arma::cube cleanSeq(arma::size(inputSeq), arma::fill::zeros);
-
-  // Initial outlier detection (for hot pixels)
-  // using median absolute deviation
-  HotPixelFilter(inputSeq, hotPixelThreshold);
+  arma::cube cleanSeq(arma::size(inputSeq), arma::fill::zeros); // Set output sequence
 
   uint32_t result;
   result = PGURESVT(cleanSeq, inputSeq, filteredSeq,
