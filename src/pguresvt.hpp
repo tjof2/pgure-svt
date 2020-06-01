@@ -94,18 +94,18 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
 
     if (optPGURE) // Perform noise estimation
     {
-      NoiseEstimator *noise = new NoiseEstimator;
-      noise->Estimate(u, alpha, mu, sigma, 8, noiseMethod, 0);
+      pguresvt::NoiseEstimator *noise = new pguresvt::NoiseEstimator(8, noiseMethod, 0);
+      noise->Estimate(u, alpha, mu, sigma);
       delete noise;
     }
 
-    MotionEstimator<T2> *motion = new MotionEstimator<T2>(w, blockSize, timeIter, frameWindow, motionWindow, Nimgs);
+    pguresvt::MotionEstimator<T2> *motion = new pguresvt::MotionEstimator<T2>(w, blockSize, timeIter, frameWindow, motionWindow, Nimgs);
 
     motion->Estimate(); // Perform motion estimation
     arma::icube p = motion->GetEstimate();
     delete motion;
 
-    PGURE<T2> *optimizer = new PGURE<T2>(u, p, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
+    pguresvt::PGURE<T2> *optimizer = new pguresvt::PGURE<T2>(u, p, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
 
     if (optPGURE) // Determine optimum threshold value
     {
