@@ -89,10 +89,10 @@ public:
     U2m = U - (delta2 * eps2);
 
     // Initialize the block SVDs
-    svt0 = new SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
-    svt1 = new SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
-    svt2p = new SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
-    svt2m = new SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+    svt0 = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+    svt1 = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+    svt2p = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+    svt2m = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
 
     svt0->Decompose(U);
     svt1->Decompose(U1);
@@ -150,7 +150,7 @@ private:
   double eps1, eps2;
   double lambda;
 
-  SVT<T> *svt0, *svt1, *svt2p, *svt2m;
+  pguresvt::SVT<T> *svt0, *svt1, *svt2p, *svt2m;
 
   arma::Cube<T> Uhat, U1, U2p, U2m;
   arma::icube delta1;
@@ -215,7 +215,7 @@ double PGURE<T>::Optimize(const double tol, const double start, const double bou
 
   if (status == 5)
   {
-    pguresvt::print(std::cerr, "WARNING: optimization terminated after max_eval (", eval, ") was reached.\n",
+    pguresvt::Print(std::cerr, "WARNING: optimization terminated after max_eval (", eval, ") was reached.\n",
                     "Consider increasing the max_eval or increasing the convergence tolerance (tol=", tol, ").");
   }
   return lambda;

@@ -25,10 +25,8 @@
 #include <armadillo>
 
 #include "arps.hpp"
-#include "params.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
-#include "parallel.hpp"
 #include "utils.hpp"
 
 template <typename T1, typename T2>
@@ -55,7 +53,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
   uint32_t Ny = X.n_rows;
   uint32_t Nimgs = X.n_slices;
 
-  // pguresvt::printFixed(1, "Input type=", typeid(T1).name(), ", Output type=", typeid(T2).name());
+  // pguresvt::PrintFixed(1, "Input type=", typeid(T1).name(), ", Output type=", typeid(T2).name());
 
   // Check trajectory length against block size
   uint32_t Nt = (blockSize * blockSize < trajLength) ? (blockSize * blockSize) - 1 : trajLength;
@@ -134,7 +132,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     }
   };
 
-  parallel(func, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs); // Apply over the time windows
+  pguresvt::parallel(func, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs); // Apply over the time windows
 
   return 0;
 }
