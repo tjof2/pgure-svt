@@ -189,23 +189,17 @@ namespace pguresvt
                                  1.15670, 1.07543, 1.03702, 1.01834,
                                  1.00913, 1.00455, 1.00227, 1.00114};
 
-    // Discrete Laplacian operator
-    arma::mat33 laplacian;
+    arma::mat33 laplacian; // Discrete Laplacian operator
 
-    // Test to see if a node should be split
-    bool SplitBlockQ(const arma::mat &A)
+    bool SplitBlockQ(const arma::mat &A) // Test to see if a node should be split
     {
-
-      // Check if it can be split first by comparing
-      // to minimum allowed size of block
       uint32_t N = A.n_cols;
-      if (N <= size)
+      if (N <= size) // First by compare to minimum allowed size of block
       {
         return false;
       }
 
-      // Calculate pseudo-residuals for estimating
-      // variance due to noise
+      // Calculate pseudo-residuals for estimating variance due to noise
       uint32_t l = 5;
       arma::mat resids(N, N);
       for (size_t x = 0; x < N; x++)
@@ -216,19 +210,20 @@ namespace pguresvt
           int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
           int yp = ((y + 1) == N) ? 1 : (y + 1);
           int ym = ((y - 1) < 0) ? (N - 2) : (y - 1);
-          resids(y, x) =
-              l * A(y, x) - (A(yp, x) + A(ym, x) + A(y, xm) + A(y, xp));
+          resids(y, x) = l * A(y, x) - (A(yp, x) + A(ym, x) + A(y, xm) + A(y, xp));
         }
       }
       resids /= std::sqrt(l * l + l);
 
       // Perform F-test based on data variance vs. noise variance
       uint32_t R = N * N;
+      double OoR = 1.0 / R;
+      double OoRm1 = 1.0 / (R - 1);
       arma::vec value;
-      double accuZ = arma::accu(A) / R;
-      double Sz = arma::accu(arma::square(A - accuZ)) / (R - 1);
-      double accuR = arma::accu(resids) / R;
-      double Se = arma::accu(arma::square(resids - accuR)) / (R - 1);
+      double accuZ = arma::accu(A) * OoR;
+      double Sz = arma::accu(arma::square(A - accuZ)) * OoRm1;
+      double accuR = arma::accu(resids) * OoR;
+      double Se = arma::accu(arma::square(resids - accuR)) * OoRm1;
       double stat = (Sz > Se) ? Sz / Se : Se / Sz;
 
       // Look-up value for F-test (2.5% default)
@@ -386,8 +381,7 @@ namespace pguresvt
         r = y - f;
         e = arma::mean(arma::abs(r));
 
-        if ((std::abs(a0 - params(0)) < tol && std::abs(b0 - params[1]) < tol) ||
-            e < tol)
+        if ((std::abs(a0 - params(0)) < tol && std::abs(b0 - params[1]) < tol) || e < tol)
         {
           break;
         }
@@ -414,9 +408,8 @@ namespace pguresvt
     arma::mat ConvolveFIR(const arma::mat &in)
     {
       uint32_t N = in.n_cols;
-      arma::mat out(N, N);
-      out.zeros();
-      arma::mat neigh(3, 3);
+      arma::mat out(N, N, arma::fill::zeros);
+      arma::mat33 neighbours;
       for (size_t x = 0; x < N; x++)
       {
         for (size_t y = 0; y < N; y++)
@@ -425,11 +418,11 @@ namespace pguresvt
           int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
           int yp = ((y + 1) == N) ? 1 : (y + 1);
           int ym = ((y - 1) < 0) ? (N - 2) : (y - 1);
-          neigh << in(xm, ym) << in(x, ym) << in(xp, ym) << arma::endr
-                << in(xm, y) << in(x, y) << in(xp, y) << arma::endr << in(xm, yp)
-                << in(x, yp) << in(xp, yp) << arma::endr;
+          neighbours << in(xm, ym) << in(x, ym) << in(xp, ym) << arma::endr
+                     << in(xm, y) << in(x, y) << in(xp, y) << arma::endr
+                     << in(xm, yp) << in(x, yp) << in(xp, yp) << arma::endr;
 
-          out(y, x) = arma::accu(neigh % (-1 * laplacian));
+          out(y, x) = arma::accu(neighbours % (-1 * laplacian));
         }
       }
       return out;
@@ -451,9 +444,10 @@ namespace pguresvt
       s /= 2; // If test returns TRUE, split
       uint32_t n = treeDelete[0].n_cols - 1;
 
-      arma::umat newTreeAdd(3, 4);
-      newTreeAdd << i << i + s << i << i + s << arma::endr << j << j << j + s
-                 << j + s << arma::endr << s << s << s << s << arma::endr;
+      arma::umat::fixed<3, 4> newTreeAdd;
+      newTreeAdd << i << i + s << i << i + s << arma::endr
+                 << j << j << j + s << j + s << arma::endr
+                 << s << s << s << s << arma::endr;
       arma::umat newTree = arma::join_horiz(treeDelete[0], newTreeAdd);
 
       arma::umat newDeleteAdd(1, 1);

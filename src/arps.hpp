@@ -149,15 +149,15 @@ namespace pguresvt
     uint32_t nxMbs, nyMbs, vecSize;
     double OoBlockSizeSq;
 
-    // Adaptive Rood Pattern Search (ARPS) method
     void ARPSMotionEstimation(const int curFrame, const int iARPS1, const int iARPS2, const int iARPS3)
     {
       double norm = 0;
       double costsScale = 1E8;
-      arma::vec costs = arma::ones<arma::vec>(6) * costsScale;
       arma::umat checkMat = arma::zeros<arma::umat>(2 * motionWindow + 1, 2 * motionWindow + 1);
-      arma::imat LDSP = arma::zeros<arma::imat>(6, 2);
-      arma::imat SDSP = arma::zeros<arma::imat>(5, 2);
+
+      arma::vec::fixed<6> costs;
+      arma::imat::fixed<6, 2> LDSP;
+      arma::imat::fixed<5, 2> SDSP;
 
       for (size_t it = 0; it < vecSize; it++)
       {
@@ -237,10 +237,9 @@ namespace pguresvt
         // predictive if this value is larger than 0
         double pMotion = 0.0;
 
-        // Do the LDSP
         bool skipIt = false;
 
-        for (size_t k = 0; k < maxIdx; k++)
+        for (size_t k = 0; k < maxIdx; k++) // Do the LDSP
         {
           int refBlkVer = y + LDSP(k, 1);
           int refBlkHor = x + LDSP(k, 0);
@@ -304,10 +303,9 @@ namespace pguresvt
         costs.fill(costsScale);
         costs(2) = cost;
 
-        // Do the SDSP
         bool doneFlag = false;
 
-        do
+        do // Do the SDSP
         {
           bool skipIt = false;
 
