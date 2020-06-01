@@ -46,33 +46,32 @@ extern "C"
 }
 
 #include "hotpixel.hpp"
-#include "params.hpp"
 #include "utils.hpp"
 #include "pguresvt.hpp"
 
 int main(int argc, char **argv)
 {
-  pguresvt::print(std::cout,
+  pguresvt::Print(std::cout,
                   "PGURE-SVT Denoising\n",
                   "Author: Tom Furnival\n",
                   "Email:  tjof2@cam.ac.uk\n");
 
   if (argc != 2) // Print usage if parameter file not present as argument
   {
-    pguresvt::print(std::cout, "  Usage: ./PGURE-SVT paramfile");
+    pguresvt::Print(std::cout, "  Usage: ./PGURE-SVT paramfile");
     return -1;
   }
 
   std::map<std::string, std::string> opts;
   std::ifstream paramFile(argv[1], std::ios::in);
 
-  ParseParameters(paramFile, opts);
+  pguresvt::ParseParameters(paramFile, opts);
 
   if (opts.count("filename") == 0 ||
       opts.count("start_frame") == 0 ||
       opts.count("end_frame") == 0) // Check all required parameters are specified
   {
-    pguresvt::print(std::cerr, "**ERROR**\n", "Required parameters not specified\n",
+    pguresvt::Print(std::cerr, "**ERROR**\n", "Required parameters not specified\n",
                     "You must specify 'filename', 'start_frame' and 'end_frame'\n");
     return -1;
   }
@@ -101,11 +100,11 @@ int main(int argc, char **argv)
 
   double hotPixelThreshold = (opts.count("hot_pixel") == 1) ? std::stoi(opts.at("hot_pixel")) : 10;
   int randomSeed = (opts.count("random_seed") == 1) ? std::stoi(opts.at("random_seed")) : -1;
-  bool expWeighting = (opts.count("exponential_weighting") == 1) ? pguresvt::strToBool(opts.at("exponential_weighting")) : true;
-  bool normalizeImg = (opts.count("normalize") == 1) ? pguresvt::strToBool(opts.at("normalize")) : false;
+  bool expWeighting = (opts.count("exponential_weighting") == 1) ? pguresvt::StrToBool(opts.at("exponential_weighting")) : true;
+  bool normalizeImg = (opts.count("normalize") == 1) ? pguresvt::StrToBool(opts.at("normalize")) : false;
 
   // SVT threshold (initialized at -1 unless user-defined)
-  bool optPGURE = (opts.count("optimize_pgure") == 1) ? pguresvt::strToBool(opts.at("optimize_pgure")) : true;
+  bool optPGURE = (opts.count("optimize_pgure") == 1) ? pguresvt::StrToBool(opts.at("optimize_pgure")) : true;
   double lambda = 0.0;
   if (!optPGURE)
   {
@@ -115,7 +114,7 @@ int main(int argc, char **argv)
     }
     else
     {
-      pguresvt::print(std::cerr,
+      pguresvt::Print(std::cerr,
                       "**ERROR**\nPGURE optimization is turned OFF but ",
                       "no lambda specified in parameter file\n");
       return -1;
@@ -136,7 +135,7 @@ int main(int argc, char **argv)
   std::string inFilename = filestem + ".tif";
   if (!std::ifstream(inFilename.c_str())) // Check file exists
   {
-    pguresvt::print(std::cerr, "**ERROR**\nFile ", inFilename, " not found\n");
+    pguresvt::Print(std::cerr, "**ERROR**\nFile ", inFilename, " not found\n");
     return -1;
   }
 
@@ -150,13 +149,13 @@ int main(int argc, char **argv)
 
   if (tiffWidth != tiffHeight) // Only work with square images
   {
-    pguresvt::print(std::cerr, "**ERROR**\nFrame dimensions are not square, got ", tiffWidth, "x", tiffHeight, "\n");
+    pguresvt::Print(std::cerr, "**ERROR**\nFrame dimensions are not square, got ", tiffWidth, "x", tiffHeight, "\n");
     return -1;
   }
 
   if (tiffDepth != 8 && tiffDepth != 16) // Only work with 8-bit or 16-bit images
   {
-    pguresvt::print(std::cerr, "**ERROR**\nImages must be 8-bit or 16-bit, got ", tiffDepth, "-bit depth \n");
+    pguresvt::Print(std::cerr, "**ERROR**\nImages must be 8-bit or 16-bit, got ", tiffDepth, "-bit depth \n");
     return -1;
   }
 
@@ -209,16 +208,16 @@ int main(int argc, char **argv)
   // Is number of frames compatible?
   if (nImages > inputSeq.n_slices)
   {
-    pguresvt::print(std::cerr, "**ERROR**\n Sequence only has ", inputSeq.n_slices, " frames, expected ", nImages, "\n");
+    pguresvt::Print(std::cerr, "**ERROR**\n Sequence only has ", inputSeq.n_slices, " frames, expected ", nImages, "\n");
     return -1;
   }
 
-  HotPixelFilter(inputSeq, hotPixelThreshold, nJobs); // Initial outlier detection for hot pixels
+  pguresvt::HotPixelFilter(inputSeq, hotPixelThreshold, nJobs); // Initial outlier detection for hot pixels
 
   // TIFF import and filter timer
   auto t0End = std::chrono::high_resolution_clock::now();
   auto t0Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t0End - t0Start);
-  pguresvt::printFixed(4, "TIFF import: ", std::setw(10), t0Elapsed.count() * 1E-6, " seconds");
+  pguresvt::PrintFixed(4, "TIFF import: ", std::setw(10), t0Elapsed.count() * 1E-6, " seconds");
 
   auto t1Start = std::chrono::high_resolution_clock::now();
 
@@ -235,7 +234,7 @@ int main(int argc, char **argv)
   // PGURE-SVT timer
   auto t1End = std::chrono::high_resolution_clock::now();
   auto t1Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t1End - t1Start);
-  pguresvt::printFixed(4, "PGURE-SVT:   ", std::setw(10), t1Elapsed.count() * 1E-6, " seconds");
+  pguresvt::PrintFixed(4, "PGURE-SVT:   ", std::setw(10), t1Elapsed.count() * 1E-6, " seconds");
 
   auto t2Start = std::chrono::high_resolution_clock::now();
 
@@ -255,7 +254,7 @@ int main(int argc, char **argv)
 
   if (!MultiPageTiffOut) // Try to write the file
   {
-    pguresvt::print(std::cerr, "**ERROR**\nFile ", outFilename, " could not be written\n");
+    pguresvt::Print(std::cerr, "**ERROR**\nFile ", outFilename, " could not be written\n");
     return -1;
   }
 
@@ -285,8 +284,8 @@ int main(int argc, char **argv)
   // Export TIFF timer
   auto t2End = std::chrono::high_resolution_clock::now();
   auto t2Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t2End - t2Start);
-  pguresvt::printFixed(4, "TIFF export: ", std::setw(10), t2Elapsed.count() * 1E-6, " seconds\n");
-  pguresvt::print(std::cerr, "Output file: ", outFilename, "\n");
+  pguresvt::PrintFixed(4, "TIFF export: ", std::setw(10), t2Elapsed.count() * 1E-6, " seconds\n");
+  pguresvt::Print(std::cerr, "Output file: ", outFilename, "\n");
 
   return result;
 }

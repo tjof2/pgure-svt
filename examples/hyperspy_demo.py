@@ -26,9 +26,9 @@ s = hs.load("./example.tif")
 s = s.inav[:15]
 s.plot(navigator="slider")
 
-# Denoise the HyperSpy signal directly.
+# Denoise the HyperSpy signal directly
 svt = hspysvt.HSPYSVT(patchsize=4, length=15, optimize=True, tol=1e-6)
-s_denoised = svt.denoise(movie)
+s_denoised = svt.denoise(s)
 
 # Plot denoised data
 s_denoised.plot(navigator="slider")
