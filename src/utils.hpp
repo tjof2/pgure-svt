@@ -126,14 +126,16 @@ namespace pguresvt
 
     template <typename Function, typename Integer_Type>
     void parallel(Function const &func,
-                  Integer_Type dim_first,
-                  Integer_Type dim_last,
-                  int n_jobs = -1,
+                  Integer_Type dimFirst,
+                  Integer_Type dimLast,
+                  int nJobs = -1,
                   uint32_t threshold = 1)
     {
-        if (n_jobs == 0) // No parallelization
+        uint32_t const totalCores = (nJobs > 0) ? nJobs : std::thread::hardware_concurrency();
+
+        if ((nJobs == 0) || (totalCores <= 1) || ((dimLast - dimFirst) <= threshold)) // No parallelization or small jobs
         {
-            for (auto a = dim_first; a != dim_last; ++a)
+            for (auto a = dimFirst; a != dimLast; ++a)
             {
                 func(a);
             }
@@ -141,21 +143,10 @@ namespace pguresvt
         }
         else // std::thread parallelization
         {
-            uint32_t const total_cores = (n_jobs > 0) ? n_jobs : std::thread::hardware_concurrency();
-
-            if ((total_cores <= 1) || ((dim_last - dim_first) <= threshold)) // case of non-parallel or small jobs
-            {
-                for (auto a = dim_first; a != dim_last; ++a)
-                {
-                    func(a);
-                }
-                return;
-            }
-
             std::vector<std::thread> threads;
-            if (dim_last - dim_first <= total_cores) // case of small job numbers
+            if (dimLast - dimFirst <= totalCores) // case of small job numbers
             {
-                for (auto index = dim_first; index != dim_last; ++index)
+                for (auto index = dimFirst; index != dimLast; ++index)
                     threads.emplace_back(std::thread{[&func, index]() { func(index); }});
                 for (auto &th : threads)
                 {
@@ -164,7 +155,7 @@ namespace pguresvt
                 return;
             }
 
-            auto const &job_slice = [&func](Integer_Type a, Integer_Type b) { // case of more jobs than CPU cores
+            auto const &jobSlice = [&func](Integer_Type a, Integer_Type b) { // case of more jobs than CPU cores
                 if (a >= b)
                 {
                     return;
@@ -175,25 +166,25 @@ namespace pguresvt
                 }
             };
 
-            threads.reserve(total_cores - 1);
-            uint64_t tasks_per_thread = (dim_last - dim_first + total_cores - 1) / total_cores;
+            threads.reserve(totalCores - 1);
+            uint64_t tasksPerThread = (dimLast - dimFirst + totalCores - 1) / totalCores;
 
-            for (auto index = 0UL; index != total_cores - 1; ++index)
+            for (auto index = 0UL; index != totalCores - 1; ++index)
             {
-                Integer_Type first = tasks_per_thread * index + dim_first;
-                first = std::min(first, dim_last);
-                Integer_Type last = first + tasks_per_thread;
-                last = std::min(last, dim_last);
-                threads.emplace_back(std::thread{job_slice, first, last});
+                Integer_Type first = tasksPerThread * index + dimFirst;
+                first = std::min(first, dimLast);
+                Integer_Type last = first + tasksPerThread;
+                last = std::min(last, dimLast);
+                threads.emplace_back(std::thread{jobSlice, first, last});
             }
 
-            job_slice(tasks_per_thread * (total_cores - 1), dim_last);
+            jobSlice(tasksPerThread * (totalCores - 1), dimLast);
             for (auto &th : threads)
             {
                 th.join();
             }
         }
-    }
+    };
 
 } // namespace pguresvt
 
