@@ -1,24 +1,4 @@
-# -*- coding: utf-8 -*-
-# PGURE-SVT Denoising
-#
-#   Author: Tom Furnival
-#   Email:  tjof2@cam.ac.uk
-#
-#   Copyright (C) 2015-2020 Tom Furnival
-#
-#   This program uses Singular Value Thresholding (SVT) [1], combined
-#   with an unbiased risk estimator (PGURE) to denoise a video sequence
-#   of microscopy images [2]. Noise parameters for a mixed Poisson-Gaussian
-#   noise model are automatically estimated during the denoising.
-#
-#   References:
-#   [1] "Unbiased Risk Estimates for Singular Value Thresholding and
-#       Spectral Estimators", (2013), Candes, EJ et al.
-#       http://dx.doi.org/10.1109/TSP.2013.2270464
-#
-#   [2]	"An Unbiased Risk Estimator for Image Denoising in the Presence
-#       of Mixed Poisson-Gaussian Noise", (2014), Le Montagner, Y et al.
-#       http://dx.doi.org/10.1109/TIP.2014.2300821
+# Copyright 2015-2020 Tom Furnival
 #
 # This file is part of PGURE-SVT.
 #

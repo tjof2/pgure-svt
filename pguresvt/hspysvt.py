@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2015-2020 Tom Furnival
 #
 # This file is part of PGURE-SVT.

@@ -1,5 +1,3 @@
-# Travis file
-
 language: generic
 
 before_install:
