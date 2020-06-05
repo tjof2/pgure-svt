@@ -13,20 +13,6 @@ If you use this code in a publication, please cite our work:
 
 > T. Furnival, R. K. Leary and P. A. Midgley, "Denoising time-resolved microscopy sequences with singular value thresholding", *Ultramicroscopy*, vol. 178, pp. 112– 124, 2017. DOI:[10.1016/j.ultramic.2016.05.005](http://dx.doi.org/10.1016/j.ultramic.2016.05.005)
 
-```
-@article{PGURESVT2017,
-    title   = {Denoising time-resolved microscopy sequences with
-               singular value thresholding.},
-    author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
-    journal = {Ultramicroscopy},
-    doi     = {10.1016/j.ultramic.2016.05.005},
-    url     = {https://doi.org/10.1016/j.ultramic.2016.05.005}
-    year    = {2017}
-    volume  = {178},
-    pages   = {112--124},
-}
-```
-
 ## Installation
 
 #### Building from source (Linux/OSX)
