@@ -178,4 +178,35 @@ namespace pguresvt
 
 } // namespace pguresvt
 
+template <typename T>
+void SetMemState(T &t, int state)
+{
+    const_cast<arma::uword &>(t.mem_state) = state;
+}
+
+template <typename T>
+size_t GetMemState(T &t)
+{
+    if ((t.mem) && (t.n_elem <= arma::arma_config::mat_prealloc))
+    {
+        return 0;
+    }
+    return static_cast<size_t>(t.mem_state);
+}
+
+template <typename T>
+inline typename T::elem_type *GetMemory(T &m)
+{
+    if ((m.mem) && (m.n_elem <= arma::arma_config::mat_prealloc))
+    {
+        typename T::elem_type *mem = arma::memory::acquire<typename T::elem_type>(m.n_elem);
+        arma::arrayops::copy(mem, m.memptr(), m.n_elem);
+        return mem;
+    }
+    else
+    {
+        return m.memptr();
+    }
+}
+
 #endif
