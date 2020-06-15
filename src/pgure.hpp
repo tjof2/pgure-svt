@@ -29,6 +29,7 @@
 #include <armadillo>
 #include <nlopt.hpp>
 
+#include "pcg/pcg_random.hpp"
 #include "svt.hpp"
 #include "utils.hpp"
 
@@ -45,7 +46,7 @@ namespace pguresvt
           const double sigma,
           const uint32_t blockSize,
           const uint32_t blockOverlap,
-          const int randomSeed,
+          const int64_t randomSeed,
           const bool expWeighting) : U(U),
                                      patches(patches),
                                      alpha(alpha),
@@ -67,15 +68,13 @@ namespace pguresvt
       U2p.set_size(Nx, Ny, Nt);
       U2m.set_size(Nx, Ny, Nt);
 
-      if (randomSeed < 0) // Seed the engine
+      if (randomSeed < 0) // Seed with external entropy from std::random_device
       {
-        std::uint_least32_t seed;
-        pguresvt::sysrandom(&seed, sizeof(seed));
-        rand_engine.seed(seed);
+        RNG.seed(pcg_extras::seed_seq_from<std::random_device>());
       }
       else
       {
-        rand_engine.seed(randomSeed);
+        RNG.seed(randomSeed);
       }
 
       eps1 = U.max() * 1E-4; // Specify perturbations
@@ -145,7 +144,7 @@ namespace pguresvt
     arma::icube patches;
     double alpha, mu, sigma, sigmasq;
     uint32_t Nx, Ny, Nt, blockSize, blockOverlap;
-    int randomSeed;
+    int64_t randomSeed;
     bool expWeighting;
 
     double OoNxNyNt;
@@ -158,7 +157,7 @@ namespace pguresvt
     arma::icube delta1;
     arma::Cube<T> delta2;
 
-    std::mt19937 rand_engine;
+    pcg64 RNG;
 
     arma::Mat<T> CubeFlatten(arma::Cube<T> u) // Reshape to Casorati matrix
     {
@@ -169,7 +168,7 @@ namespace pguresvt
     void GenerateRandomPerturbations() // Perturbations used in empirical calculation of d'f(y) and d''f(y)
     {
       auto bernoulliFunc = [&](std::bernoulli_distribution &dist, auto value1, auto value2) {
-        return (dist(rand_engine)) ? value1 : value2;
+        return (dist(RNG)) ? value1 : value2;
       };
 
       double kappa = 1.;

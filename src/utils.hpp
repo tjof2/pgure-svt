@@ -114,16 +114,6 @@ namespace pguresvt
         out = arma::sign(v) % arma::max(arma::abs(v) - thresh, zeros);
     }
 
-    size_t sysrandom(void *dst, size_t dstlen)
-    {
-        // See StackOverflow - https://stackoverflow.com/a/45069417
-        char *buffer = reinterpret_cast<char *>(dst);
-        std::ifstream stream("/dev/urandom", std::ios_base::binary | std::ios_base::in);
-        stream.read(buffer, dstlen);
-
-        return dstlen;
-    }
-
     template <typename Function, typename Integer_Type>
     void parallel(Function const &func,
                   Integer_Type dimFirst,
