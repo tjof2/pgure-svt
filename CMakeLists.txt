@@ -8,8 +8,6 @@ include(CheckLibraryExists)
 enable_language(C)
 
 project (PGURE-SVT)
-set (PGURE-SVT_VERSION "0.5.1")
-message(STATUS "Configuring PGURE-SVT ${PGURE-SVT_VERSION}")
 
 option(USE_OPENBLAS "Use OpenBLAS instead of BLAS if available" ON)
 option(USE_OPENMP "Use OpenMP if available" ON)

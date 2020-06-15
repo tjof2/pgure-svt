@@ -15,7 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
 
-
-from .pguresvt import SVT
-
-__all__ = ["SVT"]
+author = "Tom Furnival"
+copyright = "Copyright 2015-2020, Tom Furnival"
+credits = [
+    "Tom Furnival",
+    "Ben Martineau",
+    "Rowan K. Leary",
+    "Feng Wang",
+    "Trond Henninen",
+]
+description = "Singular value thresholding for denoising video microscopy data"
+license = "GPLv3"
+version = "0.5.1"
+maintainer = "Tom Furnival"
+email = "tjof2@cam.ac.uk"
+status = "Development"
+url = "https://github.com/tjof2/pgure-svt"

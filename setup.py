@@ -17,26 +17,27 @@
 
 from setuptools import find_packages, setup
 
+exec(open("pguresvt/release_info.py").read())
 
 setup(
     name="pguresvt",
-    version="${PGURE-SVT_VERSION}",
-    author="Tom Furnival",
-    author_email="tjof2@cam.ac.uk",
-    url="https://github.com/tjof2/pgure-svt",
-    description="Singular value thresholding for denoising video microscopy data",
+    version=version,
+    description=description,
+    author=author,
+    author_email=email,
+    license=license,
+    url=url,
     long_description=open("README.md").read(),
-    license="GPLv3",
     classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: BSD License",
-        "Natural Language :: English",
-        "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Mathematics",
         "Topic :: Scientific/Engineering :: Physics",
