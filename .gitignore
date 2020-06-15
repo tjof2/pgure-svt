@@ -142,6 +142,7 @@ ctrwfractal/_ctrwfractal.cpp
 
 # Programs
 PGURE-SVT
+pguresvt/_pguresvt.cpp
 
 # Output TIFF files
 *CLEANED.tif
