@@ -94,7 +94,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
 
     if (optPGURE) // Perform noise estimation
     {
-      pguresvt::NoiseEstimator *noise = new pguresvt::NoiseEstimator(8, noiseMethod, 0);
+      pguresvt::NoiseEstimator *noise = new pguresvt::NoiseEstimator(noiseMethod);
       noise->Estimate(u, alpha, mu, sigma);
       delete noise;
     }

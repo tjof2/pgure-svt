@@ -32,11 +32,11 @@ namespace pguresvt
   class NoiseEstimator
   {
   public:
-    NoiseEstimator(const uint32_t size,
-                   const uint32_t noiseMethod,
-                   const uint32_t weightType) : size(size),
-                                                noiseMethod(noiseMethod),
-                                                weightType(weightType)
+    NoiseEstimator(const uint32_t noiseMethod,
+                   const uint32_t size = 8,
+                   const uint32_t weightType = 0) : noiseMethod(noiseMethod),
+                                                    size(size),
+                                                    weightType(weightType)
     {
       // weightType: 0 - "Huber", 1 - "BiSquare"
       laplacian.fill(1.0);
@@ -165,7 +165,7 @@ namespace pguresvt
     };
 
   private:
-    uint32_t size, noiseMethod, weightType;
+    uint32_t noiseMethod, size, weightType;
     uint32_t Nx, Ny, T;
 
     std::vector<arma::umat> treeDelete;
