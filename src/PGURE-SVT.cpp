@@ -214,9 +214,8 @@ int main(int argc, char **argv)
   uint32_t result;
   result = PGURESVT(cleanSeq, inputSeq, filteredSeq,
                     trajLength, blockSize, blockOverlap, motionWindow,
-                    noiseMethod, maxIter, nJobs,
-                    optPGURE, expWeighting, lambda, alpha, mu, sigma,
-                    tol, randomSeed);
+                    noiseMethod, maxIter, nJobs, randomSeed,
+                    optPGURE, expWeighting, lambda, alpha, mu, sigma, tol);
 
   // PGURE-SVT timer
   auto t1End = std::chrono::high_resolution_clock::now();

@@ -39,15 +39,15 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
                   const uint32_t motionWindow,
                   const uint32_t noiseMethod,
                   const uint32_t maxIter,
-                  const int nJobs,
+                  const int64_t nJobs,
+                  const int64_t randomSeed,
                   const bool optPGURE,
                   const bool expWeighting,
                   const double lambdaEst,
                   const double alphaEst,
                   const double muEst,
                   const double sigmaEst,
-                  const double tol,
-                  const int randomSeed)
+                  const double tol)
 {
   uint32_t Nx = X.n_cols;
   uint32_t Ny = X.n_rows;

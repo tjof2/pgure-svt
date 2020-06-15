@@ -119,3 +119,59 @@ cdef np.ndarray[np.double_t, ndim=3] numpy_from_cube_d(Cube[double] &m) except +
     return arr
 
 
+cdef extern from "../src/pguresvt.hpp":
+    cdef uint32_t c_pgure "CTRWwrapper"[T] (Cube[double] &, Cube[T] &, Cube[double] &,
+                                            uint32_t, uint32_t, uint32_t,
+                                            uint32_t, uint32_t, uint32_t,
+                                            int64_t, bool, bool,
+                                            double, double, double, double, double,
+                                            int64_t)
+
+def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
+                np.ndarray[np.double, ndim=3] filtered_images,
+                uint32_t trajLength,
+                uint32_t blockSize,
+                uint32_t blockOverlap,
+                uint32_t motionWindow,
+                uint32_t noiseMethod,
+                uint32_t maxIter,
+                int64_t nJobs,
+                int64_t randomSeed,
+                bool optPGURE,
+                bool expWeighting,
+                double lambdaEst,
+                double alphaEst,
+                double muEst,
+                double sigmaEst,
+                double tol):
+
+    cdef uint32_t result
+
+    cdef np.ndarray(np.double_t, ndim=3) output_images
+    cdef Cube[double] _output_images
+    _output_images = Cube[double]()
+
+    result = c_pgure[uint16_t](
+        _output_images,
+        numpy_to_cube_u16(input_images),
+        numpy_to_cube_d(input_images),
+        trajLength,
+        blockSize,
+        blockOverlap,
+        motionWindow,
+        noiseMethod,
+        maxIter,
+        nJobs,
+        randomSeed,
+        optPGURE,
+        expWeighting,
+        lambdaEst,
+        alphaEst,
+        muEst,
+        sigmaEst,
+        tol,
+    )
+
+    output_images = numpy_from_cube_d(_output_images)
+
+    return output_images, result

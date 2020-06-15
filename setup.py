@@ -15,7 +15,30 @@
 # You should have received a copy of the GNU General Public License
 # along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy as np
+from Cython.Build import cythonize
 from setuptools import find_packages, setup
+from setuptools.extension import Extension
+
+extensions = [
+    Extension(
+        "pguresvt._pguresvt",
+        sources=["pguresvt/_pguresvt.pyx"],
+        include_dirs=["pguresvt/", "src/", np.get_include()],
+        libraries=["openblas", "lapack", "armadillo"],
+        language="c++",
+        extra_compile_args=[
+            "-O3",
+            "-fPIC",
+            "-Wall",
+            "-Wextra",
+            "-pthread",
+            "-std=c++11",
+            "-march=native",
+            "-D NPY_NO_DEPRECATED_API",
+        ],
+    ),
+]
 
 exec(open("pguresvt/release_info.py").read())
 
@@ -43,8 +66,9 @@ setup(
         "Topic :: Scientific/Engineering :: Physics",
     ],
     packages=find_packages(),
-    package_data={"": ["LICENSE", "README.md"]},
+    package_data={"": ["LICENSE", "README.md"], "pguresvt", ["*.py"]},
     python_requires=">=3.6",
     install_requires=["numpy"],
     setup_requires=["wheel", "auditwheel"],
+    ext_modules=cythonize(extensions),
 )
