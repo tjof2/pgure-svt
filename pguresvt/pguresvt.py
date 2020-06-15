@@ -71,7 +71,7 @@ class SVT:
         lambdaEst=0.15,
         alphaEst=-1.0,
         muEst=-1.0,
-        sigmaEs=-1.0,
+        sigmaEst=-1.0,
         tol=1e-7,
     ):
         self.trajLength = trajLength
@@ -129,7 +129,7 @@ class SVT:
 
         res = pguresvt_16(
             input_images=X.astype(np.uint16),
-            filtered_images=X,
+            filtered_images=X.astype(np.float64),
             trajLength=self.trajLength,
             blockSize=self.blockSize,
             blockOverlap=self.blockOverlap,

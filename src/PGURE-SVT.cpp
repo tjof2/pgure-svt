@@ -210,7 +210,7 @@ int main(int argc, char **argv)
   auto t1Start = std::chrono::high_resolution_clock::now();
 
   // Run the main PGURE-SVT function
-  arma::cube cleanSeq(arma::size(inputSeq), arma::fill::zeros); // Set output sequence
+  arma::cube cleanSeq;
 
   uint32_t result;
   result = PGURESVT(cleanSeq, inputSeq, filteredSeq,

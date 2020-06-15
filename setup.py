@@ -25,7 +25,7 @@ extensions = [
         "pguresvt._pguresvt",
         sources=["pguresvt/_pguresvt.pyx"],
         include_dirs=["pguresvt/", "src/", np.get_include()],
-        libraries=["openblas", "lapack", "armadillo"],
+        libraries=["openblas", "lapack", "armadillo", "nlopt"],
         language="c++",
         extra_compile_args=[
             "-O3",
