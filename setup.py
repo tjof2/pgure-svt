@@ -33,7 +33,7 @@ extensions = [
             "-Wall",
             "-Wextra",
             "-pthread",
-            "-std=c++11",
+            "-std=c++17",
             "-march=native",
             "-D NPY_NO_DEPRECATED_API",
         ],

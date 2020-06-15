@@ -76,17 +76,17 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
 
     if (timeIter < frameWindow)
     {
-      u = X.slices(0, 2 * frameWindow);
+      u = arma::conv_to<arma::Cube<T2>>::from(X.slices(0, 2 * frameWindow));
       w = Z.slices(0, 2 * frameWindow);
     }
     else if (timeIter >= (Nimgs - frameWindow))
     {
-      u = X.slices(Nimgs - 2 * frameWindow - 1, Nimgs - 1);
+      u = arma::conv_to<arma::Cube<T2>>::from(X.slices(Nimgs - 2 * frameWindow - 1, Nimgs - 1));
       w = Z.slices(Nimgs - 2 * frameWindow - 1, Nimgs - 1);
     }
     else
     {
-      u = X.slices(timeIter - frameWindow, timeIter + frameWindow);
+      u = arma::conv_to<arma::Cube<T2>>::from(X.slices(timeIter - frameWindow, timeIter + frameWindow));
       w = Z.slices(timeIter - frameWindow, timeIter + frameWindow);
     }
 
