@@ -19,21 +19,8 @@
 
 ***************************************************************************/
 
-#include <chrono>
-#include <ctime>
 #include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <map>
-#include <random>
-#include <sstream>
-#include <cstdarg>
-#include <stdexcept>
-#include <cstdlib>
-#include <cstdint>
 #include <string>
-#include <vector>
-#include <armadillo>
 
 namespace libtiff
 {
