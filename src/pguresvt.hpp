@@ -43,6 +43,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
                   const int64_t randomSeed,
                   const bool optPGURE,
                   const bool expWeighting,
+                  const bool motionEstimation,
                   const double lambdaEst,
                   const double alphaEst,
                   const double muEst,
@@ -99,11 +100,15 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
       delete noise;
     }
 
-    pguresvt::MotionEstimator<T2> *motion = new pguresvt::MotionEstimator<T2>(w, blockSize, timeIter, frameWindow, motionWindow, Nimgs);
+    arma::icube p = arma::icube(arma::size(u), arma::fill::zeros);
 
-    motion->Estimate(); // Perform motion estimation
-    arma::icube p = motion->GetEstimate();
-    delete motion;
+    if (motionEstimation) // Perform motion estimation
+    {
+      pguresvt::MotionEstimator<T2> *motion = new pguresvt::MotionEstimator<T2>(w, blockSize, timeIter, frameWindow, motionWindow, Nimgs);
+      motion->Estimate();
+      p = motion->GetEstimate();
+      delete motion;
+    }
 
     pguresvt::PGURE<T2> *optimizer = new pguresvt::PGURE<T2>(u, p, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
 

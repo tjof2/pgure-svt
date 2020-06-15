@@ -22,7 +22,7 @@ import numpy as np
 cimport numpy as np
 cimport cython
 from libcpp cimport bool
-from libc.stdint cimport uint16_t, uint32_t, uint64_t
+from libc.stdint cimport uint16_t, uint32_t, uint64_t, int64_t
 
 np.import_array()
 
@@ -61,31 +61,31 @@ cdef extern from "../src/utils.hpp":
     double* GetMemory(Cube[double]& m)
 
 
-cdef Cube[uint16_t] numpy_to_mat_u16(np.ndarray[uint16_t, ndim=3] X):
+cdef Cube[uint16_t] numpy_to_cube_u16(np.ndarray[uint16_t, ndim=3] X):
     if not X.flags.f_contiguous:
         X = X.copy(order="F")
     return Cube[uint16_t](<uint16_t*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
 
-cdef Cube[uint32_t] numpy_to_mat_u32(np.ndarray[uint32_t, ndim=3] X):
+cdef Cube[uint32_t] numpy_to_cube_u32(np.ndarray[uint32_t, ndim=3] X):
     if not X.flags.f_contiguous:
         X = X.copy(order="F")
     return Cube[uint32_t](<uint32_t*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
 
-cdef Cube[uint64_t] numpy_to_mat_u64(np.ndarray[uint64_t, ndim=3] X):
+cdef Cube[uint64_t] numpy_to_cube_u64(np.ndarray[uint64_t, ndim=3] X):
     if not X.flags.f_contiguous:
         X = X.copy(order="F")
     return Cube[uint64_t](<uint64_t*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
 
-cdef Cube[float] numpy_to_mat_f(np.ndarray[float, ndim=3] X):
+cdef Cube[float] numpy_to_cube_f(np.ndarray[float, ndim=3] X):
     if not X.flags.f_contiguous:
         X = X.copy(order="F")
     return Cube[float](<float*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
 
-cdef Cube[double] numpy_to_mat_d(np.ndarray[double, ndim=3] X):
+cdef Cube[double] numpy_to_cube_d(np.ndarray[double, ndim=3] X):
     if not X.flags.f_contiguous:
         X = X.copy(order="F")
     return Cube[double](<double*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
@@ -99,7 +99,7 @@ cdef np.ndarray[np.float_t, ndim=3] numpy_from_cube_f(Cube[float] &m) except +:
     cdef np.ndarray[np.float_t, ndim=3] arr = np.PyArray_SimpleNewFromData(3, &dims[0], np.NPY_FLOAT, GetMemory(m))
 
     if GetMemState[Cube[float]](m) == 0:
-        SetMemStateCube[Cube[float]](m, 1)
+        SetMemState[Cube[float]](m, 1)
         PyArray_ENABLEFLAGS(arr, np.NPY_OWNDATA)
 
     return arr
@@ -113,7 +113,7 @@ cdef np.ndarray[np.double_t, ndim=3] numpy_from_cube_d(Cube[double] &m) except +
     cdef np.ndarray[np.double_t, ndim=3] arr = np.PyArray_SimpleNewFromData(3, &dims[0], np.NPY_DOUBLE, GetMemory(m))
 
     if GetMemState[Cube[double]](m) == 0:
-        SetMemStateCube[Cube[double]](m, 1)
+        SetMemState[Cube[double]](m, 1)
         PyArray_ENABLEFLAGS(arr, np.NPY_OWNDATA)
 
     return arr
@@ -123,12 +123,12 @@ cdef extern from "../src/pguresvt.hpp":
     cdef uint32_t c_pgure "CTRWwrapper"[T] (Cube[double] &, Cube[T] &, Cube[double] &,
                                             uint32_t, uint32_t, uint32_t,
                                             uint32_t, uint32_t, uint32_t,
-                                            int64_t, bool, bool,
-                                            double, double, double, double, double,
-                                            int64_t)
+                                            int64_t, int64_t, bool, bool, bool,
+                                            double, double, double, double, double)
+
 
 def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
-                np.ndarray[np.double, ndim=3] filtered_images,
+                np.ndarray[np.double_t, ndim=3] filtered_images,
                 uint32_t trajLength,
                 uint32_t blockSize,
                 uint32_t blockOverlap,
@@ -139,6 +139,7 @@ def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
                 int64_t randomSeed,
                 bool optPGURE,
                 bool expWeighting,
+                bool motionEstimation,
                 double lambdaEst,
                 double alphaEst,
                 double muEst,
@@ -147,14 +148,14 @@ def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
 
     cdef uint32_t result
 
-    cdef np.ndarray(np.double_t, ndim=3) output_images
-    cdef Cube[double] _output_images
-    _output_images = Cube[double]()
+    cdef np.ndarray[np.double_t, ndim=3] X
+    cdef Cube[double] _X
+    _X = Cube[double]()
 
     result = c_pgure[uint16_t](
-        _output_images,
+        _X,
         numpy_to_cube_u16(input_images),
-        numpy_to_cube_d(input_images),
+        numpy_to_cube_d(filtered_images),
         trajLength,
         blockSize,
         blockOverlap,
@@ -165,6 +166,7 @@ def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
         randomSeed,
         optPGURE,
         expWeighting,
+        motionEstimation,
         lambdaEst,
         alphaEst,
         muEst,
@@ -172,6 +174,6 @@ def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
         tol,
     )
 
-    output_images = numpy_from_cube_d(_output_images)
+    output_images = numpy_from_cube_d(_X)
 
     return output_images, result

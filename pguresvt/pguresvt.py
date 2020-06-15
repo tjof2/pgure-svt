@@ -67,6 +67,7 @@ class SVT:
         randomSeed=-1,
         optPGURE=True,
         expWeighting=True,
+        motionEstimation=True,
         lambdaEst=0.15,
         alphaEst=-1.0,
         muEst=-1.0,
@@ -83,6 +84,7 @@ class SVT:
         self.randomSeed = randomSeed
         self.optPGURE = optPGURE
         self.expWeighting = expWeighting
+        self.motionEstimation = motionEstimation
         self.lambdaEst = lambdaEst
         self.alphaEst = alphaEst
         self.muEst = muEst
@@ -101,47 +103,29 @@ class SVT:
 
         Returns
         -------
-        self : object
-            Returns the instance itself
-
-        """
-
-        self._denoise(X)
-        return self
-
-    def _denoise(self, X):
-        """Denoise the data X
-
-        Parameters
-        ----------
-        X : array [nx, ny, time]
-            The image sequence to be denoised
-
-        Returns
-        -------
         Y : array [nx, ny, time]
             Returns the denoised sequence
 
         """
-        if self.overlap > self.patchsize:
-            raise ValueError("Patch overlap should not be greater than patch size")
-        if self.arpssize % 2 == 0:
-            raise ValueError("ARPS motion estimation window size should be odd")
-        if self.threshold < 0.0 or self.threshold > 1.0:
-            raise ValueError("Threshold should be in range [0,1]")
-        if self.median % 2 == 0:
-            raise ValueError("Median filter size should be odd")
+        # if self.overlap > self.patchsize:
+        #     raise ValueError("Patch overlap should not be greater than patch size")
+        # if self.arpssize % 2 == 0:
+        #     raise ValueError("ARPS motion estimation window size should be odd")
+        # if self.threshold < 0.0 or self.threshold > 1.0:
+        #     raise ValueError("Threshold should be in range [0,1]")
+        # if self.median % 2 == 0:
+        #     raise ValueError("Median filter size should be odd")
 
-        if self.estimation:
-            if X.shape[0] != X.shape[1]:
-                raise ValueError(
-                    f"Quadtree noise estimation requires square images, got {X.shape}"
-                )
+        # if self.estimation:
+        #     if X.shape[0] != X.shape[1]:
+        #         raise ValueError(
+        #             f"Quadtree noise estimation requires square images, got {X.shape}"
+        #         )
 
-            if not self._is_power_of_two(dims[0]):
-                raise ValueError(
-                    "Quadtree noise estimation requires image dimensions 2^N"
-                )
+        #     if not self._is_power_of_two(dims[0]):
+        #         raise ValueError(
+        #             "Quadtree noise estimation requires image dimensions 2^N"
+        #         )
 
         res = pguresvt_16(
             input_images=X.astype(np.uint16),
@@ -156,6 +140,7 @@ class SVT:
             randomSeed=self.randomSeed,
             optPGURE=self.optPGURE,
             expWeighting=self.expWeighting,
+            motionEstimation=self.motionEstimation,
             lambdaEst=self.lambdaEst,
             alphaEst=self.alphaEst,
             muEst=self.muEst,

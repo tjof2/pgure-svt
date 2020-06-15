@@ -89,6 +89,7 @@ int main(int argc, char **argv)
   int randomSeed = (opts.count("random_seed") == 1) ? std::stoi(opts.at("random_seed")) : -1;
   bool expWeighting = (opts.count("exponential_weighting") == 1) ? pguresvt::StrToBool(opts.at("exponential_weighting")) : true;
   bool normalizeImg = (opts.count("normalize") == 1) ? pguresvt::StrToBool(opts.at("normalize")) : false;
+  bool motionEstimation = (opts.count("motion_estimation") == 1) ? pguresvt::StrToBool(opts.at("motion_estimation")) : true;
 
   // SVT threshold (initialized at -1 unless user-defined)
   bool optPGURE = (opts.count("optimize_pgure") == 1) ? pguresvt::StrToBool(opts.at("optimize_pgure")) : true;
@@ -215,7 +216,8 @@ int main(int argc, char **argv)
   result = PGURESVT(cleanSeq, inputSeq, filteredSeq,
                     trajLength, blockSize, blockOverlap, motionWindow,
                     noiseMethod, maxIter, nJobs, randomSeed,
-                    optPGURE, expWeighting, lambda, alpha, mu, sigma, tol);
+                    optPGURE, expWeighting, motionEstimation,
+                    lambda, alpha, mu, sigma, tol);
 
   // PGURE-SVT timer
   auto t1End = std::chrono::high_resolution_clock::now();

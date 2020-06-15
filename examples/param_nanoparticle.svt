@@ -4,8 +4,8 @@
 
 ##### REQUIRED #####
 filename    : ./example.tif  # TIFF file to be denoised. Output filename will be ./nanoparticle-CLEANED.tif
-start_frame : 1                   # Start frame
-end_frame   : 50                  # End frame
+start_frame : 1              # Start frame
+end_frame   : 50             # End frame
 
 ##### OPTIONAL #####
 patch_size            : 16    # Patch size in pixels (default = 4)

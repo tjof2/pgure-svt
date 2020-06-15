@@ -66,7 +66,7 @@ setup(
         "Topic :: Scientific/Engineering :: Physics",
     ],
     packages=find_packages(),
-    package_data={"": ["LICENSE", "README.md"], "pguresvt", ["*.py"]},
+    package_data={"": ["LICENSE", "README.md"], "pguresvt": ["*.py"]},
     python_requires=">=3.6",
     install_requires=["numpy"],
     setup_requires=["wheel", "auditwheel"],
