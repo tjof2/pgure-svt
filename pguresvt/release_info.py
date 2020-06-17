@@ -26,7 +26,7 @@ credits = [
 ]
 description = "Singular value thresholding for denoising video microscopy data"
 license = "GPLv3"
-version = "0.5.1"
+version = "0.6.0"
 maintainer = "Tom Furnival"
 email = "tjof2@cam.ac.uk"
 status = "Development"
