@@ -207,9 +207,11 @@ namespace pguresvt
         for (size_t y = 0; y < N; y++)
         {
           int xp = ((x + 1) == N) ? 1 : (x + 1);
-          int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
           int yp = ((y + 1) == N) ? 1 : (y + 1);
-          int ym = ((y - 1) < 0) ? (N - 2) : (y - 1);
+          // int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
+          // int ym = ((y - 1) < 0) ? (N - 2) : (y - 1);
+          int xm = (x == 0) ? (N - 2) : (x - 1);
+          int ym = (y == 0) ? (N - 2) : (y - 1);
           resids(y, x) = l * A(y, x) - (A(yp, x) + A(ym, x) + A(y, xm) + A(y, xp));
         }
       }
@@ -415,9 +417,12 @@ namespace pguresvt
         for (size_t y = 0; y < N; y++)
         {
           int xp = ((x + 1) == N) ? 1 : (x + 1);
-          int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
           int yp = ((y + 1) == N) ? 1 : (y + 1);
-          int ym = ((y - 1) < 0) ? (N - 2) : (y - 1);
+          // int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
+          // int ym = ((y - 1) < 0) ? (N - 2) : (y - 1);
+          int xm = (x == 0) ? (N - 2) : (x - 1);
+          int ym = (y == 0) ? (N - 2) : (y - 1);
+
           neighbours << in(xm, ym) << in(x, ym) << in(xp, ym) << arma::endr
                      << in(xm, y) << in(x, y) << in(xp, y) << arma::endr
                      << in(xm, yp) << in(x, yp) << in(xp, yp) << arma::endr;
