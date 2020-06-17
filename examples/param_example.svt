@@ -31,4 +31,4 @@ motion_estimation     : true  # Use ARPS motion estimation to reduce blurring (d
 #hot_pixel            : 10    # Hot pixel threshold detection based on multiples of median absolute deviation (default = 10)
 exponential_weighting : true  # Use exponential singular value weighting (default = true)
 random_seed           : 1     # Random seed (default = -1, i.e. no seed)
-#n_jobs               : -1     # Number of threads to use for parallelization (default = -1, will decide based on hardware, 0 = no parallelization)
+#n_jobs               : -1    # Number of threads to use for parallelization (default = -1, will decide based on hardware, 0 = no parallelization)

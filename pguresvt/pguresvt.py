@@ -61,6 +61,7 @@ class SVT:
         blockSize=4,
         blockOverlap=2,
         motionWindow=7,
+        medianSize=5,
         noiseMethod=4,
         maxIter=1000,
         nJobs=-1,
@@ -78,6 +79,7 @@ class SVT:
         self.blockSize = blockSize
         self.blockOverlap = blockOverlap
         self.motionWindow = motionWindow
+        self.medianSize = medianSize
         self.noiseMethod = noiseMethod
         self.maxIter = maxIter
         self.nJobs = nJobs
@@ -128,12 +130,12 @@ class SVT:
         #         )
 
         res = pguresvt_16(
-            input_images=X.astype(np.uint16),
-            filtered_images=X.astype(np.float64),
+            input_images=np.asfortranarray(X, dtype=np.uint16),
             trajLength=self.trajLength,
             blockSize=self.blockSize,
             blockOverlap=self.blockOverlap,
             motionWindow=self.motionWindow,
+            medianSize=self.medianSize,
             noiseMethod=self.noiseMethod,
             maxIter=self.maxIter,
             nJobs=self.nJobs,

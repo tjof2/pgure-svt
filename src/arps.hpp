@@ -148,11 +148,11 @@ namespace pguresvt
     uint32_t Nx, Ny, Nt;
     uint32_t nxMbs, nyMbs, vecSize;
     double OoBlockSizeSq;
+    const double costsScale = 1E8;
 
     void ARPSMotionEstimation(const int curFrame, const int iARPS1, const int iARPS2, const int iARPS3)
     {
       double norm = 0;
-      double costsScale = 1E8;
       arma::umat checkMat = arma::zeros<arma::umat>(2 * motionWindow + 1, 2 * motionWindow + 1);
 
       arma::vec::fixed<6> costs;

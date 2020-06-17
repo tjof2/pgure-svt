@@ -23,6 +23,7 @@
 #define UTILS_HPP
 
 #include <algorithm>
+#include <chrono>
 #include <cctype>
 #include <cstdlib>
 #include <cstdint>
@@ -52,6 +53,12 @@ namespace pguresvt
     void PrintFixed(const uint32_t precision, Arg &&arg, Args &&... args)
     {
         Print(std::cout, std::fixed, std::setprecision(precision), arg, args...);
+    }
+
+    double ElapsedSeconds(std::chrono::high_resolution_clock::time_point t0,
+                          std::chrono::high_resolution_clock::time_point t1)
+    {
+        return static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1E-6);
     }
 
     bool StrToBool(std::string &s)

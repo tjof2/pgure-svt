@@ -27,17 +27,14 @@ namespace libtiff
 #include "tiffio.h"
 }
 
-extern "C"
-{
-#include "medfilter.h"
-}
-
 #include "hotpixel.hpp"
 #include "utils.hpp"
 #include "pguresvt.hpp"
 
 int main(int argc, char **argv)
 {
+  std::chrono::high_resolution_clock::time_point t0, t1;
+
   pguresvt::Print(std::cout,
                   "PGURE-SVT Denoising\n",
                   "Author: Tom Furnival\n",
@@ -85,7 +82,7 @@ int main(int argc, char **argv)
   double mu = (opts.count("noise_mu") == 1) ? std::stod(opts.at("noise_mu")) : -1.;
   double sigma = (opts.count("noise_sigma") == 1) ? std::stod(opts.at("noise_sigma")) : -1.;
 
-  double hotPixelThreshold = (opts.count("hot_pixel") == 1) ? std::stoi(opts.at("hot_pixel")) : 10;
+  double hotPixelThreshold = (opts.count("hot_pixel") == 1) ? std::stoi(opts.at("hot_pixel")) : -1.0;
   int randomSeed = (opts.count("random_seed") == 1) ? std::stoi(opts.at("random_seed")) : -1;
   bool expWeighting = (opts.count("exponential_weighting") == 1) ? pguresvt::StrToBool(opts.at("exponential_weighting")) : true;
   bool normalizeImg = (opts.count("normalize") == 1) ? pguresvt::StrToBool(opts.at("normalize")) : false;
@@ -117,8 +114,7 @@ int main(int argc, char **argv)
     osTol >> tol;
   }
 
-  // Overall program timer now we've loaded the parameters
-  auto t0Start = std::chrono::high_resolution_clock::now();
+  t0 = std::chrono::high_resolution_clock::now(); // Time TIFF import
 
   std::string inFilename = filestem + ".tif";
   if (!std::ifstream(inFilename.c_str())) // Check file exists
@@ -127,7 +123,6 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  // Load TIFF stack
   uint32_t tiffWidth, tiffHeight;
   uint16_t tiffDepth;
   libtiff::TIFF *MultiPageTiff = libtiff::TIFFOpen(inFilename.c_str(), "r");
@@ -147,11 +142,7 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  arma::cube inputSeq(tiffHeight, tiffWidth, 0);
-  arma::cube filteredSeq(tiffHeight, tiffWidth, 0);
-
-  int memsize = 512 * 1024;  // L2 cache size
-  int filtsize = medianSize; // Median filter size in pixels
+  arma::Cube<uint16_t> inputSeq(tiffHeight, tiffWidth, 0);
 
   if (MultiPageTiff) // Import the image sequence
   {
@@ -160,13 +151,11 @@ int main(int argc, char **argv)
 
     do
     {
-      if (dircount >= (startImage - 1) && dircount <= (endImage - 1))
+      if ((dircount >= (startImage - 1)) && (dircount < endImage))
       {
         inputSeq.resize(tiffHeight, tiffWidth, imgcount + 1);
-        filteredSeq.resize(tiffHeight, tiffWidth, imgcount + 1);
 
         uint16_t *Buffer = new uint16_t[tiffWidth * tiffHeight];
-        uint16_t *FilteredBuffer = new uint16_t[tiffWidth * tiffHeight];
 
         for (size_t tiffRow = 0; tiffRow < tiffHeight; tiffRow++)
         {
@@ -175,56 +164,51 @@ int main(int argc, char **argv)
 
         arma::Mat<uint16_t> curSlice(Buffer, tiffHeight, tiffWidth);
         inplace_trans(curSlice);
-        inputSeq.slice(imgcount) = arma::conv_to<arma::mat>::from(curSlice);
+        inputSeq.slice(imgcount) = curSlice;
 
-        // Apply median filter to the image
-        ConstantTimeMedianFilter(Buffer, FilteredBuffer, tiffWidth, tiffHeight,
-                                 tiffWidth, tiffWidth, filtsize, 1, memsize);
-
-        arma::Mat<uint16_t> filtSlice(FilteredBuffer, tiffHeight, tiffWidth);
-        inplace_trans(filtSlice);
-        filteredSeq.slice(imgcount) = arma::conv_to<arma::mat>::from(filtSlice);
         imgcount++;
         delete[] Buffer;
-        delete[] FilteredBuffer;
       }
       dircount++;
+
     } while (libtiff::TIFFReadDirectory(MultiPageTiff));
     libtiff::TIFFClose(MultiPageTiff);
   }
 
-  // Is number of frames compatible?
-  if (nImages > inputSeq.n_slices)
+  if (nImages > inputSeq.n_slices) // Is number of frames compatible?
   {
     pguresvt::Print(std::cerr, "**ERROR**\n Sequence only has ", inputSeq.n_slices, " frames, expected ", nImages, "\n");
     return -1;
   }
 
-  pguresvt::HotPixelFilter(inputSeq, hotPixelThreshold, nJobs); // Initial outlier detection for hot pixels
+  t1 = std::chrono::high_resolution_clock::now();
+  pguresvt::PrintFixed(4, "TIFF import:    ", std::setw(10), pguresvt::ElapsedSeconds(t0, t1), " seconds");
 
-  // TIFF import and filter timer
-  auto t0End = std::chrono::high_resolution_clock::now();
-  auto t0Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t0End - t0Start);
-  pguresvt::PrintFixed(4, "TIFF import: ", std::setw(10), t0Elapsed.count() * 1E-6, " seconds");
+  if (hotPixelThreshold >= 0.0) // Initial outlier detection for hot pixels
+  {
+    t0 = std::chrono::high_resolution_clock::now();
 
-  auto t1Start = std::chrono::high_resolution_clock::now();
+    pguresvt::HotPixelFilter(inputSeq, hotPixelThreshold, nJobs);
 
-  // Run the main PGURE-SVT function
+    t1 = std::chrono::high_resolution_clock::now();
+    pguresvt::PrintFixed(4, "Outlier filter: ", std::setw(10), pguresvt::ElapsedSeconds(t0, t1), " seconds");
+  }
+
+  t0 = std::chrono::high_resolution_clock::now(); // PGURE-SVT timer
+
   arma::cube cleanSeq;
-
   uint32_t result;
-  result = PGURESVT(cleanSeq, inputSeq, filteredSeq,
+
+  result = PGURESVT(cleanSeq, inputSeq,
                     trajLength, blockSize, blockOverlap, motionWindow,
-                    noiseMethod, maxIter, nJobs, randomSeed,
+                    medianSize, noiseMethod, maxIter, nJobs, randomSeed,
                     optPGURE, expWeighting, motionEstimation,
                     lambda, alpha, mu, sigma, tol);
 
-  // PGURE-SVT timer
-  auto t1End = std::chrono::high_resolution_clock::now();
-  auto t1Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t1End - t1Start);
-  pguresvt::PrintFixed(4, "PGURE-SVT:   ", std::setw(10), t1Elapsed.count() * 1E-6, " seconds");
+  t1 = std::chrono::high_resolution_clock::now();
+  pguresvt::PrintFixed(4, "PGURE-SVT:      ", std::setw(10), pguresvt::ElapsedSeconds(t0, t1), " seconds");
 
-  auto t2Start = std::chrono::high_resolution_clock::now();
+  t0 = std::chrono::high_resolution_clock::now();
 
   arma::Cube<uint16_t> outTiff(tiffWidth, tiffHeight, nImages);
 
@@ -269,11 +253,9 @@ int main(int argc, char **argv)
   }
   libtiff::TIFFClose(MultiPageTiffOut);
 
-  // Export TIFF timer
-  auto t2End = std::chrono::high_resolution_clock::now();
-  auto t2Elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t2End - t2Start);
-  pguresvt::PrintFixed(4, "TIFF export: ", std::setw(10), t2Elapsed.count() * 1E-6, " seconds\n");
-  pguresvt::Print(std::cerr, "Output file: ", outFilename, "\n");
+  t1 = std::chrono::high_resolution_clock::now();
+  pguresvt::PrintFixed(4, "TIFF export:    ", std::setw(10), pguresvt::ElapsedSeconds(t0, t1), " seconds\n");
+  pguresvt::Print(std::cerr, "Output file:    ", outFilename, "\n");
 
   return result;
 }

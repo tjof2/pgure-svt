@@ -24,6 +24,11 @@
 #include <cstdint>
 #include <armadillo>
 
+extern "C"
+{
+#include "medfilter.h"
+}
+
 #include "arps.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
@@ -32,11 +37,11 @@
 template <typename T1, typename T2>
 uint32_t PGURESVT(arma::Cube<T2> &Y,
                   const arma::Cube<T1> &X,
-                  const arma::Cube<T2> &Z,
                   const uint32_t trajLength,
                   const uint32_t blockSize,
                   const uint32_t blockOverlap,
                   const uint32_t motionWindow,
+                  const uint32_t medianSize,
                   const uint32_t noiseMethod,
                   const uint32_t maxIter,
                   const int64_t nJobs,
@@ -54,11 +59,11 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
   uint32_t Ny = X.n_rows;
   uint32_t Nimgs = X.n_slices;
 
-  Y.set_size(arma::size(X)); // Set output sequence
+  Y.set_size(arma::size(X)); // Set output sequence size
   Y.zeros();
 
-  // pguresvt::PrintFixed(1, "Input type=", typeid(T1).name(), ", Output type=", typeid(T2).name());
-  // pguresvt::PrintFixed(1, "Dimensions=", Nx, ", ", Ny, ", ", Nimgs);
+  //pguresvt::PrintFixed(1, "Input type=", typeid(T1).name(), ", Output type=", typeid(T2).name());
+  //pguresvt::PrintFixed(1, "Dimensions=", arma::size(X));
 
   // Check trajectory length against block size
   uint32_t Nt = (blockSize * blockSize < trajLength) ? (blockSize * blockSize) - 1 : trajLength;
@@ -66,36 +71,53 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
 
   double OoNxNyNt = 1.0 / (Nx * Ny * Nt);
 
-  double lambda = (lambdaEst >= 0.) ? lambdaEst : -1.;
-  double alpha = (alphaEst >= 0.) ? alphaEst : -1.;
-  double mu = (muEst >= 0.) ? muEst : -1.;
-  double sigma = (sigmaEst >= 0.) ? sigmaEst : -1.;
+  double lambda0 = (lambdaEst >= 0.) ? lambdaEst : -1.;
+  double alpha0 = (alphaEst >= 0.) ? alphaEst : -1.;
+  double mu0 = (muEst >= 0.) ? muEst : -1.;
+  double sigma0 = (sigmaEst >= 0.) ? sigmaEst : -1.;
 
-  auto &&func = [&, lambda_ = lambda](uint32_t timeIter) {
+  arma::Cube<T1> Z(Nx, Ny, Nimgs); // Median-filtered sequence
+  int memSize = 512 * 1024;        // L2 cache size
+
+  auto &&medianFunc = [&](uint32_t i) {
+    uint16_t *zBuffer = new uint16_t[Nx * Ny];
+    arma::Mat<uint16_t> zSlice(zBuffer, Nx, Ny);
+
+    ConstantTimeMedianFilter(X.slice(i).memptr(), zBuffer, Nx, Ny, Nx, Nx, medianSize, 1, memSize);
+    Z.slice(i) = zSlice;
+  };
+  pguresvt::parallel(medianFunc, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs); // Apply over the images
+
+  auto &&pgureFunc = [&, lambda_ = lambda0, alpha_ = alpha0, mu_ = mu0, sigma_ = sigma0](uint32_t timeIter) {
     auto lambda = lambda_;
+    auto alpha = alpha_;
+    auto mu = mu_;
+    auto sigma = sigma_;
 
-    arma::Cube<T2> u(Nx, Ny, Nt); // Extract the subset of the image sequence
-    arma::Cube<T2> v(Nx, Ny, Nt);
-    arma::Cube<T2> w(Nx, Ny, Nt);
+    arma::Cube<T2> u = arma::Cube<T2>(Nx, Ny, Nt, arma::fill::zeros);
+    arma::Cube<T2> v = arma::Cube<T2>(Nx, Ny, Nt, arma::fill::zeros);
+    arma::Cube<T2> w = arma::Cube<T2>(Nx, Ny, Nt, arma::fill::zeros);
+    arma::icube p = arma::icube(Nx, Ny, Nt, arma::fill::zeros);
 
-    if (timeIter < frameWindow)
+    if (timeIter < frameWindow) // Extract the subset of the image sequence
     {
       u = arma::conv_to<arma::Cube<T2>>::from(X.slices(0, 2 * frameWindow));
-      w = Z.slices(0, 2 * frameWindow);
+      w = arma::conv_to<arma::Cube<T2>>::from(Z.slices(0, 2 * frameWindow));
     }
     else if (timeIter >= (Nimgs - frameWindow))
     {
       u = arma::conv_to<arma::Cube<T2>>::from(X.slices(Nimgs - 2 * frameWindow - 1, Nimgs - 1));
-      w = Z.slices(Nimgs - 2 * frameWindow - 1, Nimgs - 1);
+      w = arma::conv_to<arma::Cube<T2>>::from(Z.slices(Nimgs - 2 * frameWindow - 1, Nimgs - 1));
     }
     else
     {
       u = arma::conv_to<arma::Cube<T2>>::from(X.slices(timeIter - frameWindow, timeIter + frameWindow));
-      w = Z.slices(timeIter - frameWindow, timeIter + frameWindow);
+      w = arma::conv_to<arma::Cube<T2>>::from(Z.slices(timeIter - frameWindow, timeIter + frameWindow));
     }
 
     double uMax = u.max(); // Basic sequence normalization
     u /= uMax;
+    w /= uMax;
 
     if (optPGURE) // Perform noise estimation
     {
@@ -103,8 +125,6 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
       noise->Estimate(u, alpha, mu, sigma);
       delete noise;
     }
-
-    arma::icube p = arma::icube(arma::size(u), arma::fill::zeros);
 
     if (motionEstimation) // Perform motion estimation
     {
@@ -141,7 +161,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     }
   };
 
-  pguresvt::parallel(func, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs); // Apply over the time windows
+  pguresvt::parallel(pgureFunc, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs); // Apply over the time windows
 
   return 0;
 }

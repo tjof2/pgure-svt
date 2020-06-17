@@ -32,6 +32,7 @@ extensions = [
             "-fPIC",
             "-Wall",
             "-Wextra",
+            "-Wno-unused-parameter",
             "-pthread",
             "-std=c++17",
             "-march=native",
