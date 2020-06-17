@@ -111,9 +111,11 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
       w = arma::conv_to<arma::Cube<T2>>::from(Z.slices(timeIter - frameWindow, timeIter + frameWindow));
     }
 
-    double uMax = u.max(); // Basic sequence normalization
+    double uMax = u.max(); // Sequence normalization
+    double wMax = w.max(); // ARPS relies on reasonably well-scaled data
+
     u /= uMax;
-    w /= uMax;
+    w /= wMax;
 
     if (optPGURE) // Perform noise estimation
     {
