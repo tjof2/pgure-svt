@@ -13,7 +13,6 @@ option(USE_OPENBLAS "Use OpenBLAS instead of BLAS if available" ON)
 option(USE_OPENMP "Use OpenMP if available" ON)
 option(BUILD_EXECUTABLE "Build a standalone executable" ON)
 option(BUILD_PYTHON "Build Python distribution" OFF)
-option(INSTALL_PYTHON "Install Python wrapper as a package" OFF)
 
 find_program(PYTHON "python")
 find_package(OpenMP)
@@ -115,9 +114,5 @@ if(BUILD_PYTHON AND PYTHON)
     message(STATUS "Building Python distribution")
     execute_process(COMMAND ${PYTHON} ${SETUP_PY} build_ext --inplace)
     execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)
-
-    if(INSTALL_PYTHON)
-        install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
-    endif()
 
 endif()

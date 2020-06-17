@@ -1,24 +1,45 @@
-language: generic
+language: python
+
+env:
+  global:
+    - PIP_TEST_REQS="coverage pytest pytest-cov coveralls"
+    - PYTEST_ARGS="--pyargs pguresvt"
 
 before_install:
   - if [${TRAVIS_OS_NAME} == "linux"]; then sudo apt-get update -qq; fi
-  - ./install-dependencies.sh
+  - sh ./install-dependencies.sh # Required because libarmadillo-dev on Travis is out-of-date
+  - pip install --upgrade cython # Maybe not required if setup_requires in setup.py works?
 
 matrix:
   include:
-    - os: linux
+    - name: "Linux, 3.7, pip, gcc"
+      env: COMPILER_NAME=gcc CXX=g++-7 CC=gcc-7 PYTEST_ARGS="--pyargs pguresvt --cov=pguresvt"
+      python: 3.7
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-7', 'libblas-dev', 'liblapack-dev', 'libopenblas-dev', 'libtiff5-dev']
+    - name: "Linux, 3.8, pip, gcc"
       env: COMPILER_NAME=gcc CXX=g++-7 CC=gcc-7
+      python: 3.8
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-7', 'libblas-dev', 'liblapack-dev', 'libopenblas-dev', 'libtiff5-dev']
 
 script:
   - mkdir build
   - cd build
   - cmake -DCMAKE_CXX_COMPILER=$CXXOMP -DCMAKE_C_COMPILER=$CCOMP -DBUILD_EXECUTABLE=ON ..
   - make
-  - sudo make install
+  - cd ../
+  - which python
+  - pip install --upgrade -e .
+#  - pip install --upgrade $PIP_TEST_REQS
+#   - pytest $PYTEST_ARGS
 
-notifications:
-  email: false
+# after_success:
+#   - if [[ $PYTEST_ARGS == *"--cov=pguresvt"* ]]; then
+#       coveralls;
+#     fi
+
