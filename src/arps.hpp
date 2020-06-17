@@ -149,7 +149,7 @@ namespace pguresvt
     uint32_t nxMbs, nyMbs, vecSize;
     double OoBlockSizeSq;
 
-    const double costsScale = 1E8;
+    const double costsScale = 1E9;
     const uint32_t maxSDSP = 1E6;
 
     inline double CostFunction(const arma::Cube<T> &A, const arma::cube &B)
