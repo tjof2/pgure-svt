@@ -1,3 +1,32 @@
+/***************************************************************************
+
+  Copyright (C) 2015-2020 Tom Furnival
+
+  This file is part of  PGURE-SVT.
+
+  PGURE-SVT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  PGURE-SVT is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with PGURE-SVT. If not, see <http://www.gnu.org/licenses/>.
+
+***************************************************************************/
+
+#ifndef MEDFILTER_HPP
+#define MEDFILTER_HPP
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* medianFilter.c - Constant-time median filtering of 16-bit images
  *  (for inclusion in the Bioconductor Package EBImage)
  *
@@ -60,9 +89,9 @@
 /* Type declarations */
 #ifdef _MSC_VER
 #include <basetsd.h>
-typedef UINT8 uint8_t;
-typedef UINT16 uint16_t;
-typedef UINT32 uint32_t;
+  typedef UINT8 uint8_t;
+  typedef UINT16 uint16_t;
+  typedef UINT32 uint32_t;
 #pragma warning(disable : 4799)
 #else
 #include <stdint.h>
@@ -105,7 +134,7 @@ typedef UINT32 uint32_t;
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #endif
 
-/**
+  /**
  * This structure represents a two-tier histogram. The first tier (known as the
  * "coarse" level) is 8 bit wide and the second tier (known as the "fine" level)
  * is 16 bit wide. Pixels inserted in the fine level also get inserted into the
@@ -115,14 +144,14 @@ typedef UINT32 uint32_t;
  * instructions. Each bucket is 16 bit wide, which means that extra care must be
  * taken to prevent overflow.
  */
-typedef struct align(16)
-{
-  uint16_t coarse[SQRT_BUCKET_SIZE];
-  uint16_t fine[SQRT_BUCKET_SIZE][SQRT_BUCKET_SIZE];
-}
-Histogram;
+  typedef struct align(16)
+  {
+    uint16_t coarse[SQRT_BUCKET_SIZE];
+    uint16_t fine[SQRT_BUCKET_SIZE][SQRT_BUCKET_SIZE];
+  }
+  Histogram;
 
-/**
+  /**
  * HOP is short for Histogram OPeration. This macro makes an operation \a op on
  * histogram \a h for pixel value \a x. It takes care of handling both levels.
  */
@@ -138,19 +167,19 @@ Histogram;
   h_fine[SQRT_BUCKET_SIZE * (n * (SQRT_BUCKET_SIZE * c + (x >> MSB)) + j) + \
          (x & 0xFF)] op;
 
-/**
+  /**
  * Adds histograms \a x and \a y and stores the result in \a y. Makes use of
  * SSE2, MMX or Altivec, if available.
  */
 
 #if defined(__SSE2__)
-static inline void histogram_add(const uint16_t x[SQRT_BUCKET_SIZE],
-                                 uint16_t y[SQRT_BUCKET_SIZE])
-{
-  int i;
-  for (i = 0; i < SQRT_BUCKET_SIZE; i += 8)
-    *(__m128i *)&y[i] = _mm_add_epi16(*(__m128i *)&y[i], *(__m128i *)&x[i]);
-}
+  static inline void histogram_add(const uint16_t x[SQRT_BUCKET_SIZE],
+                                   uint16_t y[SQRT_BUCKET_SIZE])
+  {
+    int i;
+    for (i = 0; i < SQRT_BUCKET_SIZE; i += 8)
+      *(__m128i *)&y[i] = _mm_add_epi16(*(__m128i *)&y[i], *(__m128i *)&x[i]);
+  }
 #elif defined(__MMX__)
 static inline void histogram_add(const uint16_t x[SQRT_BUCKET_SIZE],
                                  uint16_t y[SQRT_BUCKET_SIZE])
@@ -185,13 +214,13 @@ static inline void histogram_add(const uint16_t x[SQRT_BUCKET_SIZE],
  * of SSE2, MMX or Altivec, if available.
  */
 #if defined(__SSE2__)
-static inline void histogram_sub(const uint16_t x[SQRT_BUCKET_SIZE],
-                                 uint16_t y[SQRT_BUCKET_SIZE])
-{
-  int i;
-  for (i = 0; i < SQRT_BUCKET_SIZE; i += 8)
-    *(__m128i *)&y[i] = _mm_sub_epi16(*(__m128i *)&y[i], *(__m128i *)&x[i]);
-}
+  static inline void histogram_sub(const uint16_t x[SQRT_BUCKET_SIZE],
+                                   uint16_t y[SQRT_BUCKET_SIZE])
+  {
+    int i;
+    for (i = 0; i < SQRT_BUCKET_SIZE; i += 8)
+      *(__m128i *)&y[i] = _mm_sub_epi16(*(__m128i *)&y[i], *(__m128i *)&x[i]);
+  }
 #elif defined(__MMX__)
 static inline void histogram_sub(const uint16_t x[SQRT_BUCKET_SIZE],
                                  uint16_t y[SQRT_BUCKET_SIZE])
@@ -220,45 +249,45 @@ static inline void histogram_sub(const uint16_t x[SQRT_BUCKET_SIZE],
   }
 }
 #endif
-static inline void histogram_muladd(const uint16_t a,
-                                    const uint16_t x[SQRT_BUCKET_SIZE],
-                                    uint16_t y[SQRT_BUCKET_SIZE])
-{
-  int i;
-  for (i = 0; i < SQRT_BUCKET_SIZE; ++i)
+  static inline void histogram_muladd(const uint16_t a,
+                                      const uint16_t x[SQRT_BUCKET_SIZE],
+                                      uint16_t y[SQRT_BUCKET_SIZE])
   {
-    y[i] += a * x[i];
+    int i;
+    for (i = 0; i < SQRT_BUCKET_SIZE; ++i)
+    {
+      y[i] += a * x[i];
+    }
   }
-}
 
-static void ctmf_helper(const uint16_t *const src, uint16_t *const dst,
-                        const int width, const int height, const int src_step,
-                        const int dst_step, const int r, const int cn,
-                        const int pad_left, const int pad_right)
-{
-  const int m = height, n = width;
-  int i, j, k, c;
-  const unsigned short int *p, *q;
+  static void ctmf_helper(const uint16_t *const src, uint16_t *const dst,
+                          const int width, const int height, const int src_step,
+                          const int dst_step, const int r, const int cn,
+                          const int pad_left, const int pad_right)
+  {
+    const int m = height, n = width;
+    int i, j, k, c;
+    const unsigned short int *p, *q;
 
-  Histogram H[4];
-  uint16_t *h_coarse, *h_fine, luc[4][SQRT_BUCKET_SIZE];
-  assert(src);
-  assert(dst);
-  assert(r >= 0);
-  assert(width >= 2 * r + 1);
-  assert(height >= 2 * r + 1);
-  assert(src_step != 0);
-  assert(dst_step != 0);
+    Histogram H[4];
+    uint16_t *h_coarse, *h_fine, luc[4][SQRT_BUCKET_SIZE];
+    assert(src);
+    assert(dst);
+    assert(r >= 0);
+    assert(width >= 2 * r + 1);
+    assert(height >= 2 * r + 1);
+    assert(src_step != 0);
+    assert(dst_step != 0);
 
 /* SSE2 and MMX need aligned memory, provided by _mm_malloc(). */
 #if defined(__SSE2__) || defined(__MMX__)
-  h_coarse = (uint16_t *)_mm_malloc(
-      1 * SQRT_BUCKET_SIZE * n * cn * sizeof(uint16_t), 16);
-  h_fine = (uint16_t *)_mm_malloc(
-      SQRT_BUCKET_SIZE * SQRT_BUCKET_SIZE * n * cn * sizeof(uint16_t), 16);
-  memset(h_coarse, 0, 1 * SQRT_BUCKET_SIZE * n * cn * sizeof(uint16_t));
-  memset(h_fine, 0,
-         SQRT_BUCKET_SIZE * SQRT_BUCKET_SIZE * n * cn * sizeof(uint16_t));
+    h_coarse = (uint16_t *)_mm_malloc(
+        1 * SQRT_BUCKET_SIZE * n * cn * sizeof(uint16_t), 16);
+    h_fine = (uint16_t *)_mm_malloc(
+        SQRT_BUCKET_SIZE * SQRT_BUCKET_SIZE * n * cn * sizeof(uint16_t), 16);
+    memset(h_coarse, 0, 1 * SQRT_BUCKET_SIZE * n * cn * sizeof(uint16_t));
+    memset(h_fine, 0,
+           SQRT_BUCKET_SIZE * SQRT_BUCKET_SIZE * n * cn * sizeof(uint16_t));
 #else
   h_coarse =
       (uint16_t *)calloc(1 * SQRT_BUCKET_SIZE * n * cn, sizeof(uint16_t));
@@ -266,165 +295,165 @@ static void ctmf_helper(const uint16_t *const src, uint16_t *const dst,
                               sizeof(uint16_t));
 #endif
 
-  /* First row initialization */
-  for (j = 0; j < n; ++j)
-  {
-    for (c = 0; c < cn; ++c)
-    {
-      COP(c, j, src[cn * j + c], += r + 1);
-    }
-  }
-  for (i = 0; i < r; ++i)
-  {
+    /* First row initialization */
     for (j = 0; j < n; ++j)
     {
       for (c = 0; c < cn; ++c)
       {
-        COP(c, j, src[src_step * i + cn * j + c], ++);
+        COP(c, j, src[cn * j + c], += r + 1);
       }
     }
-  }
-
-  for (i = 0; i < m; ++i)
-  {
-
-    /* Update column histograms for entire row. */
-    p = src + src_step * MAX(0, i - r - 1);
-    q = p + cn * n;
-    for (j = 0; p != q; ++j)
+    for (i = 0; i < r; ++i)
     {
-      for (c = 0; c < cn; ++c, ++p)
+      for (j = 0; j < n; ++j)
       {
-        COP(c, j, *p, --);
+        for (c = 0; c < cn; ++c)
+        {
+          COP(c, j, src[src_step * i + cn * j + c], ++);
+        }
       }
     }
 
-    p = src + src_step * MIN(m - 1, i + r);
-    q = p + cn * n;
-    for (j = 0; p != q; ++j)
+    for (i = 0; i < m; ++i)
     {
-      for (c = 0; c < cn; ++c, ++p)
+
+      /* Update column histograms for entire row. */
+      p = src + src_step * MAX(0, i - r - 1);
+      q = p + cn * n;
+      for (j = 0; p != q; ++j)
       {
-        COP(c, j, *p, ++);
+        for (c = 0; c < cn; ++c, ++p)
+        {
+          COP(c, j, *p, --);
+        }
       }
-    }
 
-    /* First column initialization */
-    memset(H, 0, cn * sizeof(H[0]));
-    memset(luc, 0, cn * sizeof(luc[0]));
-    if (pad_left)
-    {
+      p = src + src_step * MIN(m - 1, i + r);
+      q = p + cn * n;
+      for (j = 0; p != q; ++j)
+      {
+        for (c = 0; c < cn; ++c, ++p)
+        {
+          COP(c, j, *p, ++);
+        }
+      }
+
+      /* First column initialization */
+      memset(H, 0, cn * sizeof(H[0]));
+      memset(luc, 0, cn * sizeof(luc[0]));
+      if (pad_left)
+      {
+        for (c = 0; c < cn; ++c)
+        {
+          histogram_muladd(r, &h_coarse[SQRT_BUCKET_SIZE * n * c], H[c].coarse);
+        }
+      }
+      for (j = 0; j < (pad_left ? r : 2 * r); ++j)
+      {
+        for (c = 0; c < cn; ++c)
+        {
+          histogram_add(&h_coarse[SQRT_BUCKET_SIZE * (n * c + j)], H[c].coarse);
+        }
+      }
       for (c = 0; c < cn; ++c)
       {
-        histogram_muladd(r, &h_coarse[SQRT_BUCKET_SIZE * n * c], H[c].coarse);
-      }
-    }
-    for (j = 0; j < (pad_left ? r : 2 * r); ++j)
-    {
-      for (c = 0; c < cn; ++c)
-      {
-        histogram_add(&h_coarse[SQRT_BUCKET_SIZE * (n * c + j)], H[c].coarse);
-      }
-    }
-    for (c = 0; c < cn; ++c)
-    {
-      for (k = 0; k < SQRT_BUCKET_SIZE; ++k)
-      {
-        histogram_muladd(
-            2 * r + 1,
-            &h_fine[SQRT_BUCKET_SIZE * n * (SQRT_BUCKET_SIZE * c + k)],
-            &H[c].fine[k][0]);
-      }
-    }
-
-    for (j = pad_left ? 0 : r; j < (pad_right ? n : n - r); ++j)
-    {
-      for (c = 0; c < cn; ++c)
-      {
-        const uint16_t t = 2 * r * r + 2 * r;
-        uint16_t sum = 0, *segment;
-        int b;
-
-        histogram_add(&h_coarse[SQRT_BUCKET_SIZE * (n * c + MIN(j + r, n - 1))],
-                      H[c].coarse);
-
-        /* Find median at coarse level */
         for (k = 0; k < SQRT_BUCKET_SIZE; ++k)
         {
-          sum += H[c].coarse[k];
-          if (sum > t)
-          {
-            sum -= H[c].coarse[k];
-            break;
-          }
+          histogram_muladd(
+              2 * r + 1,
+              &h_fine[SQRT_BUCKET_SIZE * n * (SQRT_BUCKET_SIZE * c + k)],
+              &H[c].fine[k][0]);
         }
-        assert(k < (uint16_t)SQRT_BUCKET_SIZE);
+      }
 
-        /* Update corresponding histogram segment */
-        if (luc[c][k] <= j - r)
+      for (j = pad_left ? 0 : r; j < (pad_right ? n : n - r); ++j)
+      {
+        for (c = 0; c < cn; ++c)
         {
-          memset(&H[c].fine[k], 0, SQRT_BUCKET_SIZE * sizeof(uint16_t));
-          for (luc[c][k] = j - r; luc[c][k] < MIN(j + r + 1, n); ++luc[c][k])
-          {
-            histogram_add(&h_fine[SQRT_BUCKET_SIZE *
-                                  (n * (SQRT_BUCKET_SIZE * c + k) + luc[c][k])],
-                          H[c].fine[k]);
-          }
-          if (luc[c][k] < j + r + 1)
-          {
-            histogram_muladd(
-                j + r + 1 - n,
-                &h_fine[SQRT_BUCKET_SIZE *
-                        (n * (SQRT_BUCKET_SIZE * c + k) + (n - 1))],
-                &H[c].fine[k][0]);
-            luc[c][k] = j + r + 1;
-          }
-        }
-        else
-        {
-          for (; luc[c][k] < j + r + 1; ++luc[c][k])
-          {
-            histogram_sub(
-                &h_fine[SQRT_BUCKET_SIZE * (n * (SQRT_BUCKET_SIZE * c + k) +
-                                            MAX(luc[c][k] - 2 * r - 1, 0))],
-                H[c].fine[k]);
-            histogram_add(
-                &h_fine[SQRT_BUCKET_SIZE * (n * (SQRT_BUCKET_SIZE * c + k) +
-                                            MIN(luc[c][k], n - 1))],
-                H[c].fine[k]);
-          }
-        }
+          const uint16_t t = 2 * r * r + 2 * r;
+          uint16_t sum = 0, *segment;
+          int b;
 
-        histogram_sub(&h_coarse[SQRT_BUCKET_SIZE * (n * c + MAX(j - r, 0))],
-                      H[c].coarse);
+          histogram_add(&h_coarse[SQRT_BUCKET_SIZE * (n * c + MIN(j + r, n - 1))],
+                        H[c].coarse);
 
-        /* Find median in segment */
-        segment = H[c].fine[k];
-        for (b = 0; b < SQRT_BUCKET_SIZE; ++b)
-        {
-          sum += segment[b];
-          if (sum > t)
+          /* Find median at coarse level */
+          for (k = 0; k < SQRT_BUCKET_SIZE; ++k)
           {
-            dst[dst_step * i + cn * j + c] = SQRT_BUCKET_SIZE * k + b;
-            break;
+            sum += H[c].coarse[k];
+            if (sum > t)
+            {
+              sum -= H[c].coarse[k];
+              break;
+            }
           }
+          assert(k < (uint16_t)SQRT_BUCKET_SIZE);
+
+          /* Update corresponding histogram segment */
+          if (luc[c][k] <= j - r)
+          {
+            memset(&H[c].fine[k], 0, SQRT_BUCKET_SIZE * sizeof(uint16_t));
+            for (luc[c][k] = j - r; luc[c][k] < MIN(j + r + 1, n); ++luc[c][k])
+            {
+              histogram_add(&h_fine[SQRT_BUCKET_SIZE *
+                                    (n * (SQRT_BUCKET_SIZE * c + k) + luc[c][k])],
+                            H[c].fine[k]);
+            }
+            if (luc[c][k] < j + r + 1)
+            {
+              histogram_muladd(
+                  j + r + 1 - n,
+                  &h_fine[SQRT_BUCKET_SIZE *
+                          (n * (SQRT_BUCKET_SIZE * c + k) + (n - 1))],
+                  &H[c].fine[k][0]);
+              luc[c][k] = j + r + 1;
+            }
+          }
+          else
+          {
+            for (; luc[c][k] < j + r + 1; ++luc[c][k])
+            {
+              histogram_sub(
+                  &h_fine[SQRT_BUCKET_SIZE * (n * (SQRT_BUCKET_SIZE * c + k) +
+                                              MAX(luc[c][k] - 2 * r - 1, 0))],
+                  H[c].fine[k]);
+              histogram_add(
+                  &h_fine[SQRT_BUCKET_SIZE * (n * (SQRT_BUCKET_SIZE * c + k) +
+                                              MIN(luc[c][k], n - 1))],
+                  H[c].fine[k]);
+            }
+          }
+
+          histogram_sub(&h_coarse[SQRT_BUCKET_SIZE * (n * c + MAX(j - r, 0))],
+                        H[c].coarse);
+
+          /* Find median in segment */
+          segment = H[c].fine[k];
+          for (b = 0; b < SQRT_BUCKET_SIZE; ++b)
+          {
+            sum += segment[b];
+            if (sum > t)
+            {
+              dst[dst_step * i + cn * j + c] = SQRT_BUCKET_SIZE * k + b;
+              break;
+            }
+          }
+          assert(b < (uint16_t)SQRT_BUCKET_SIZE);
         }
-        assert(b < (uint16_t)SQRT_BUCKET_SIZE);
       }
     }
-  }
 
 #if defined(__SSE2__) || defined(__MMX__)
-  _mm_empty();
-  _mm_free(h_coarse);
-  _mm_free(h_fine);
+    _mm_empty();
+    _mm_free(h_coarse);
+    _mm_free(h_fine);
 #else
   free(h_coarse);
   free(h_fine);
 #endif
-}
+  }
 
-/**
+  /**
  * \brief Constant-time median filtering
  *
  * This function does a median filtering of an 16-bit image. The source image is
@@ -462,13 +491,13 @@ static void ctmf_helper(const uint16_t *const src, uint16_t *const dst,
  *                      memsize=512*1024 initially.
  */
 
-void ConstantTimeMedianFilter(const unsigned short *const src,
-                              unsigned short *const dst, const int width,
-                              const int height, const int src_step,
-                              const int dst_step, const int r, const int cn,
-                              const long unsigned int memsize)
-{
-  /*
+  void ConstantTimeMedianFilter(const unsigned short *const src,
+                                unsigned short *const dst, const int width,
+                                const int height, const int src_step,
+                                const int dst_step, const int r, const int cn,
+                                const long unsigned int memsize)
+  {
+    /*
    * Processing the image in vertical stripes is an optimization made
    * necessary by the limited size of the CPU cache. Each histogram is 544
    * bytes big and therefore I can fit a limited number of them in the cache.
@@ -497,30 +526,36 @@ void ConstantTimeMedianFilter(const unsigned short *const src,
    * A flag is passed to ctmf_helper() so that it treats these cases as if the
    * image was zero-padded.
    */
-  int stripes = (int)ceil((double)(width - 2 * r) /
-                          (memsize / sizeof(Histogram) - 2 * r));
-  int stripe_size =
-      (int)ceil((double)(width + stripes * 2 * r - 2 * r) / stripes);
+    int stripes = (int)ceil((double)(width - 2 * r) /
+                            (memsize / sizeof(Histogram) - 2 * r));
+    int stripe_size =
+        (int)ceil((double)(width + stripes * 2 * r - 2 * r) / stripes);
 
-  int i;
+    int i;
 
-  for (i = 0; i < width; i += stripe_size - 2 * r)
-  {
-    int stripe = stripe_size;
-    /* Make sure that the filter kernel fits into one stripe. */
-
-    if (i + stripe_size - 2 * r >= width ||
-        width - (i + stripe_size - 2 * r) < 2 * r + 1)
+    for (i = 0; i < width; i += stripe_size - 2 * r)
     {
-      stripe = width - i;
-    }
+      int stripe = stripe_size;
+      /* Make sure that the filter kernel fits into one stripe. */
 
-    ctmf_helper(src + cn * i, dst + cn * i, stripe, height, src_step, dst_step,
-                r, cn, i == 0, stripe == width - i);
+      if (i + stripe_size - 2 * r >= width ||
+          width - (i + stripe_size - 2 * r) < 2 * r + 1)
+      {
+        stripe = width - i;
+      }
 
-    if (stripe == width - i)
-    {
-      break;
+      ctmf_helper(src + cn * i, dst + cn * i, stripe, height, src_step, dst_step,
+                  r, cn, i == 0, stripe == width - i);
+
+      if (stripe == width - i)
+      {
+        break;
+      }
     }
   }
-}
+
+#ifdef __cplusplus
+};
+#endif
+
+#endif

@@ -24,12 +24,8 @@
 #include <cstdint>
 #include <armadillo>
 
-extern "C"
-{
-#include "medfilter.h"
-}
-
 #include "arps.hpp"
+#include "medfilter.hpp"
 #include "noise.hpp"
 #include "pgure.hpp"
 #include "utils.hpp"

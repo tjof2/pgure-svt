@@ -120,7 +120,7 @@ cdef np.ndarray[np.double_t, ndim=3] numpy_from_cube_d(Cube[double] &m) except +
 
 
 cdef extern from "../src/pguresvt.hpp":
-    cdef uint32_t c_pgure "PGURESVT"[T1, T2] (Cube[T2] &, Cube[T1] &, Cube[T2] &,
+    cdef uint32_t c_pgure "PGURESVT"[T1, T2] (Cube[T2] &, Cube[T1] &,
                                               uint32_t, uint32_t, uint32_t, uint32_t,
                                               uint32_t, uint32_t, uint32_t,
                                               int64_t, int64_t, bool, bool, bool,
@@ -128,7 +128,6 @@ cdef extern from "../src/pguresvt.hpp":
 
 
 def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
-                np.ndarray[np.double_t, ndim=3] filtered_images,
                 uint32_t trajLength,
                 uint32_t blockSize,
                 uint32_t blockOverlap,
@@ -153,12 +152,9 @@ def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
     cdef Cube[double] _X
     _X = Cube[double]()
 
-    print(input_images.sum())
-
     result = c_pgure[uint16_t, double](
         _X,
         numpy_to_cube_u16(input_images),
-        numpy_to_cube_d(filtered_images),
         trajLength,
         blockSize,
         blockOverlap,

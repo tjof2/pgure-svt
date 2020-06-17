@@ -77,7 +77,7 @@ endif()
 
 if(BUILD_EXECUTABLE AND TIFF_FOUND)
     set(BINARY_NAME "PGURE-SVT")
-    add_executable(${BINARY_NAME} src/medfilter.c src/${BINARY_NAME}.cpp)
+    add_executable(${BINARY_NAME} src/${BINARY_NAME}.cpp)
     target_link_libraries(${BINARY_NAME} ${SVT_LIBS})
     install(TARGETS ${BINARY_NAME} DESTINATION bin)
 endif()
