@@ -19,13 +19,13 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-7', 'libblas-dev', 'liblapack-dev', 'libopenblas-dev', 'libtiff5-dev']
-    - name: "Linux, 3.8, pip, gcc"
-      env: COMPILER_NAME=gcc CXX=g++-7 CC=gcc-7
-      python: 3.8
-      addons:
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-7', 'libblas-dev', 'liblapack-dev', 'libopenblas-dev', 'libtiff5-dev']
+    # - name: "Linux, 3.8, pip, gcc"
+    #   env: COMPILER_NAME=gcc CXX=g++-7 CC=gcc-7
+    #   python: 3.8
+    #   addons:
+    #     apt:
+    #       sources: ['ubuntu-toolchain-r-test']
+    #       packages: ['g++-7', 'libblas-dev', 'liblapack-dev', 'libopenblas-dev', 'libtiff5-dev']
 
 script:
   - mkdir build
