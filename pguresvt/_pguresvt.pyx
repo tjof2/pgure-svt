@@ -62,32 +62,22 @@ cdef extern from "../src/utils.hpp":
 
 
 cdef Cube[uint16_t] numpy_to_cube_u16(np.ndarray[uint16_t, ndim=3] X):
-    if not X.flags.f_contiguous:
-        X = X.copy(order="F")
     return Cube[uint16_t](<uint16_t*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
 
 cdef Cube[uint32_t] numpy_to_cube_u32(np.ndarray[uint32_t, ndim=3] X):
-    if not X.flags.f_contiguous:
-        X = X.copy(order="F")
     return Cube[uint32_t](<uint32_t*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
 
 cdef Cube[uint64_t] numpy_to_cube_u64(np.ndarray[uint64_t, ndim=3] X):
-    if not X.flags.f_contiguous:
-        X = X.copy(order="F")
     return Cube[uint64_t](<uint64_t*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
 
 cdef Cube[float] numpy_to_cube_f(np.ndarray[float, ndim=3] X):
-    if not X.flags.f_contiguous:
-        X = X.copy(order="F")
     return Cube[float](<float*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
 
 cdef Cube[double] numpy_to_cube_d(np.ndarray[double, ndim=3] X):
-    if not X.flags.f_contiguous:
-        X = X.copy(order="F")
     return Cube[double](<double*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
 
@@ -128,23 +118,23 @@ cdef extern from "../src/pguresvt.hpp":
 
 
 def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
-                uint32_t trajLength,
-                uint32_t blockSize,
-                uint32_t blockOverlap,
-                uint32_t motionWindow,
-                uint32_t medianSize,
-                uint32_t noiseMethod,
-                uint32_t maxIter,
-                int64_t nJobs,
-                int64_t randomSeed,
-                bool optPGURE,
-                bool expWeighting,
-                bool motionEstimation,
-                double lambdaEst,
-                double alphaEst,
-                double muEst,
-                double sigmaEst,
-                double tol):
+                uint32_t trajectory_length = 15,
+                uint32_t patch_size = 4,
+                uint32_t patch_overlap = 1,
+                uint32_t arps_window = 7,
+                uint32_t median_filter = 5,
+                uint32_t noise_method = 4,
+                uint32_t max_iter = 1000,
+                int64_t n_jobs = -1,
+                int64_t random_seed = -1,
+                bool optimize_pgure = True,
+                bool exponential_weighting = True,
+                bool motion_estimation = True,
+                double lambda1 = 0.0,
+                double noise_alpha = -1.0,
+                double noise_mu = -1.0,
+                double noise_sigma = -1.0,
+                double tol = 1e-7):
 
     cdef uint32_t result
 
@@ -155,22 +145,22 @@ def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
     result = c_pgure[uint16_t, double](
         _X,
         numpy_to_cube_u16(input_images),
-        trajLength,
-        blockSize,
-        blockOverlap,
-        motionWindow,
-        medianSize,
-        noiseMethod,
-        maxIter,
-        nJobs,
-        randomSeed,
-        optPGURE,
-        expWeighting,
-        motionEstimation,
-        lambdaEst,
-        alphaEst,
-        muEst,
-        sigmaEst,
+        trajectory_length,
+        patch_size,
+        patch_overlap,
+        arps_window,
+        median_filter,
+        noise_method,
+        max_iter,
+        n_jobs,
+        random_seed,
+        optimize_pgure,
+        exponential_weighting,
+        motion_estimation,
+        lambda1,
+        noise_alpha,
+        noise_mu,
+        noise_sigma,
         tol,
     )
 

@@ -57,43 +57,52 @@ class SVT:
 
     def __init__(
         self,
-        trajLength=15,
-        blockSize=4,
-        blockOverlap=2,
-        motionWindow=7,
-        medianSize=5,
-        noiseMethod=4,
-        maxIter=1000,
-        nJobs=-1,
-        randomSeed=-1,
-        optPGURE=True,
-        expWeighting=True,
-        motionEstimation=True,
-        lambdaEst=0.15,
-        alphaEst=-1.0,
-        muEst=-1.0,
-        sigmaEst=-1.0,
+        trajectory_length=15,
+        patch_size=4,
+        patch_overlap=2,
+        arps_window=7,
+        median_filter=5,
+        noise_method=4,
+        max_iter=1000,
+        n_jobs=-1,
+        random_seed=-1,
+        optimize_pgure=True,
+        exponential_weighting=True,
+        motion_estimation=True,
+        lambda1=0.0,
+        noise_alpha=-1.0,
+        noise_mu=-1.0,
+        noise_sigma=-1.0,
         tol=1e-7,
     ):
-        self.trajLength = trajLength
-        self.blockSize = blockSize
-        self.blockOverlap = blockOverlap
-        self.motionWindow = motionWindow
-        self.medianSize = medianSize
-        self.noiseMethod = noiseMethod
-        self.maxIter = maxIter
-        self.nJobs = nJobs
-        self.randomSeed = randomSeed
-        self.optPGURE = optPGURE
-        self.expWeighting = expWeighting
-        self.motionEstimation = motionEstimation
-        self.lambdaEst = lambdaEst
-        self.alphaEst = alphaEst
-        self.muEst = muEst
-        self.sigmaEst = sigmaEst
+        self.trajectory_length = trajectory_length
+        self.patch_size = patch_size
+        self.patch_overlap = patch_overlap
+        self.arps_window = arps_window
+        self.median_filter = median_filter
+        self.noise_method = noise_method
+        self.max_iter = max_iter
+        self.n_jobs = n_jobs
+        self.random_seed = random_seed
+        self.optimize_pgure = optimize_pgure
+        self.exponential_weighting = exponential_weighting
+        self.motion_estimation = motion_estimation
+        self.lambda1 = lambda1
+        self.noise_alpha = noise_alpha
+        self.noise_mu = noise_mu
+        self.noise_sigma = noise_sigma
         self.tol = tol
 
         self.Y_ = None
+
+    def _is_power_of_two(self, n):
+        n = n / 2
+        if n == 2:
+            return True
+        elif n > 2:
+            return self._is_power_of_two(n)
+        else:
+            return False
 
     def denoise(self, X):
         """Denoise the data X
@@ -129,100 +138,30 @@ class SVT:
         #             "Quadtree noise estimation requires image dimensions 2^N"
         #         )
 
+        if not X.flags.f_contiguous:
+            X = np.asfortranarray(X, dtype=np.uint16)
+
         res = pguresvt_16(
-            input_images=np.asfortranarray(X, dtype=np.uint16),
-            trajLength=self.trajLength,
-            blockSize=self.blockSize,
-            blockOverlap=self.blockOverlap,
-            motionWindow=self.motionWindow,
-            medianSize=self.medianSize,
-            noiseMethod=self.noiseMethod,
-            maxIter=self.maxIter,
-            nJobs=self.nJobs,
-            randomSeed=self.randomSeed,
-            optPGURE=self.optPGURE,
-            expWeighting=self.expWeighting,
-            motionEstimation=self.motionEstimation,
-            lambdaEst=self.lambdaEst,
-            alphaEst=self.alphaEst,
-            muEst=self.muEst,
-            sigmaEst=self.sigmaEst,
+            input_images=X,
+            trajectory_length=self.trajectory_length,
+            patch_size=self.patch_size,
+            patch_overlap=self.patch_overlap,
+            arps_window=self.arps_window,
+            median_filter=self.median_filter,
+            noise_method=self.noise_method,
+            max_iter=self.max_iter,
+            n_jobs=self.n_jobs,
+            random_seed=self.random_seed,
+            optimize_pgure=self.optimize_pgure,
+            exponential_weighting=self.exponential_weighting,
+            motion_estimation=self.motion_estimation,
+            lambda1=self.lambda1,
+            noise_alpha=self.noise_alpha,
+            noise_mu=self.noise_mu,
+            noise_sigma=self.noise_sigma,
             tol=self.tol,
         )
         self.Y_ = res[0]
 
         return self
 
-    def _is_power_of_two(self, n):
-        n = n / 2
-        if n == 2:
-            return True
-        elif n > 2:
-            return self._is_power_of_two(n)
-        else:
-            return False
-
-
-def _addnoise(x, alpha, mu, sigma):
-    """Add Poisson-Gaussian noise to the data x
-
-    Parameters
-    ----------
-    x : float
-        The original data
-
-    alpha : float
-        Level of noise gain
-
-    mu : float
-        Level of noise offset
-
-    sigma : float
-        Level of Gaussian noise
-
-    Returns
-    -------
-    y : float
-        The corrupted data
-
-    """
-    y = alpha * np.random.poisson(x / alpha) + mu + sigma * np.random.randn()
-    return y
-
-
-def PoissonGaussianNoiseGenerator(X, alpha=0.1, mu=0.1, sigma=0.1):
-    """Add Poisson-Gaussian noise to the data X
-
-    Parameters
-    ----------
-    X : array
-        The data to be corrupted
-
-    alpha : float
-        Level of noise gain
-
-    mu : float
-        Level of noise offset
-
-    sigma : float
-        Level of Gaussian noise
-
-    Returns
-    -------
-    Y : array
-        The corrupted data
-
-    """
-    if alpha < 0.0 or alpha > 1.0:
-        raise ValueError("alpha should be in range [0,1]")
-
-    addnoise = np.vectorize(_addnoise, otypes=[np.float])
-
-    Xmax = np.amax(X)
-    X = X / Xmax
-
-    Y = addnoise(X, alpha, mu, sigma)
-    Y = Y + np.abs(np.amin(Y))
-    Y = Xmax * Y / np.amax(Y)
-
-    return Y
