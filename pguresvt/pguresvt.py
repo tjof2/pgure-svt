@@ -164,4 +164,3 @@ class SVT:
         self.Y_ = res[0]
 
         return self
-

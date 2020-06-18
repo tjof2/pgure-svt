@@ -82,6 +82,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     ConstantTimeMedianFilter(X.slice(i).memptr(), zBuffer, Nx, Ny, Nx, Nx, medianSize, 1, memSize);
     Z.slice(i) = zSlice;
   };
+
   pguresvt::parallel(medianFunc, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs); // Apply over the images
 
   auto &&pgureFunc = [&, lambda_ = lambda0, alpha_ = alpha0, mu_ = mu0, sigma_ = sigma0](uint32_t timeIter) {
@@ -117,20 +118,16 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     u /= uMax;
     w /= wMax;
 
-    if (optPGURE) // Perform noise estimation
+    if (optPGURE) // Only estimate noise if optimizing PGURE threshold
     {
       pguresvt::NoiseEstimator *noise = new pguresvt::NoiseEstimator(noiseMethod);
       noise->Estimate(u, alpha, mu, sigma);
       delete noise;
     }
 
-    if (motionEstimation) // Perform motion estimation
-    {
-      pguresvt::MotionEstimator<T2> *motion = new pguresvt::MotionEstimator<T2>(w, blockSize, timeIter, frameWindow, motionWindow, Nimgs);
-      motion->Estimate();
-      p = motion->GetEstimate();
-      delete motion;
-    }
+    pguresvt::MotionEstimator<T2> *motion = new pguresvt::MotionEstimator<T2>(w, blockSize, timeIter, frameWindow, motionWindow, Nimgs);
+    p = motion->Estimate(motionEstimation);
+    delete motion;
 
     pguresvt::PGURE<T2> *optimizer = new pguresvt::PGURE<T2>(u, p, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
 
