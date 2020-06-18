@@ -35,11 +35,11 @@ script:
   - cd ../
   - which python
   - pip install --upgrade -e .
-#  - pip install --upgrade $PIP_TEST_REQS
-#   - pytest $PYTEST_ARGS
+  - pip install --upgrade $PIP_TEST_REQS
+  - pytest $PYTEST_ARGS
 
-# after_success:
-#   - if [[ $PYTEST_ARGS == *"--cov=pguresvt"* ]]; then
-#       coveralls;
-#     fi
+after_success:
+  - if [[ $PYTEST_ARGS == *"--cov=pguresvt"* ]]; then
+      coveralls;
+    fi
 
