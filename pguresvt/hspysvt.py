@@ -15,24 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with PGURE-SVT.  If not, see <http://www.gnu.org/licenses/>.
 
-try:
-    from hyperspy import signals
-except ImportError:
-    raise ImportError("Requires HyperSpy to be installed")
 
+from hyperspy.signals import BaseSignal
 
-try:
-    from pguresvt.pguresvt import SVT
-except ImportError:
-    raise ImportError(
-        "It looks like you may be working in the original "
-        "PGURE-SVT directory. Try again in a different "
-        "directory."
-    )
+from .pguresvt import SVT
 
 
 class HSPYSVT(SVT):
-    """HyperSpy implementation of SVT.
+    """HyperSpy wrapper for SVT.
 
     Allows arbitrary HyperSpy signals to be passed for SVT denoising.
 
@@ -40,48 +30,55 @@ class HSPYSVT(SVT):
 
     def __init__(self, *args, **kwargs):
         super(HSPYSVT, self).__init__(*args, **kwargs)
-        self.signal_type = None
+        self._signal_type = None
+        self._X = None
 
-    def prepare_to_denoise(self, signal):
-        """
+    def _prepare_to_denoise(self, signal):
+        """Convert the signal to correctly-aligned array.
+
         Represents `signal` as a spectrum (three dimensions; relevant axis last)
         then returns the data, properly aligned.
 
         Parameters
         ----------
-        signal : hyperspy.signals.Signal
-            The HyperSpy signal to denoise; can be of arbitrary type/shape.
+        signal : hyperspy.signals.BaseSignal
+            The HyperSpy signal to denoise. Can be of arbitrary type/shape.
 
         Returns
         -------
-        signal_data : numpy.ndarray
+        None
 
         """
-        if signal.axes_manager.signal_dimension == 1:
-            signal_data = signal._data_aligned_with_axes
-            self.signal_type = "spectrum"
-        elif signal.axes_manager.signal_dimension == 2:
+        sig_dim = signal.axes_manager.signal_dimension
+
+        if sig_dim == 1:
+            self._X = signal._data_aligned_with_axes
+            self._signal_type = "spectrum"
+
+        elif sig_dim == 2:
             signal.unfold_navigation_space()
             signal_3d = signal.as_signal1D(spectral_axis=0)
-            signal_data = signal_3d._data_aligned_with_axes
+            self._X = signal_3d._data_aligned_with_axes
             signal.fold()
-            self.signal_type = "image"
+            self._signal_type = "image"
+
         else:
             raise NotImplementedError(
-                "`signal` should be of `Image` or `Spectrum` type."
+                f"Expected 1D or 2D signal - got dimension {sig_dim}"
             )
-        return signal_data
 
-    def denoised_data_to_signal(self):
-        signal = signals.BaseSignal(self.Y)
-        if self.signal_type == "spectrum":
+    def _denoised_data_to_signal(self):
+        """Converts denoised data back to a HyperSpy signal."""
+        signal = BaseSignal(self.Y_)
+
+        if self._signal_type == "spectrum":
             return signal.as_signal1D(2)
-        if self.signal_type == "image":
+
+        if self._signal_type == "image":
             return signal.as_signal2D((1, 2))
 
     def denoise(self, signal):
-        """
-        Denoises an arbitrary HyperSpy signal.
+        """Denoises an arbitrary HyperSpy signal.
 
         Parameters
         ----------
@@ -94,6 +91,8 @@ class HSPYSVT(SVT):
             Denoised data as a spectrum.
 
         """
-        x = self.prepare_to_denoise(signal)
-        super(HSPYSVT, self).denoise(x)
-        return self.denoised_data_to_signal()
+        self._prepare_to_denoise(signal)
+
+        super(HSPYSVT, self).denoise(self._X)
+
+        return self._denoised_data_to_signal()
