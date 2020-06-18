@@ -30,7 +30,7 @@ matrix:
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_CXX_COMPILER=$CXXOMP -DCMAKE_C_COMPILER=$CCOMP -DBUILD_EXECUTABLE=ON ..
+  - cmake -DCMAKE_CXX_COMPILER=$CXXOMP -DCMAKE_C_COMPILER=$CCOMP ..
   - make
   - cd ../
   - which python

@@ -12,7 +12,7 @@ project (PGURE-SVT)
 option(USE_OPENBLAS "Use OpenBLAS instead of BLAS if available" ON)
 option(USE_OPENMP "Use OpenMP if available" ON)
 option(BUILD_EXECUTABLE "Build a standalone executable" ON)
-option(BUILD_PYTHON "Build Python distribution" OFF)
+option(BUILD_PYTHON "Build Python distribution" ON)
 
 find_program(PYTHON "python")
 find_package(OpenMP)
@@ -65,9 +65,10 @@ if(ARMADILLO_FOUND)
 endif()
 
 # Enable OpenMP & std::thread
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra -Wno-unused-parameter -pthread -std=c++17")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DARMA_DONT_USE_WRAPPER ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3 -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DARMA_DONT_USE_WRAPPER")
 
 if (OPENMP_FOUND AND USE_OPENMP)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -113,6 +114,6 @@ if(BUILD_PYTHON AND PYTHON)
 
     message(STATUS "Building Python distribution")
     execute_process(COMMAND ${PYTHON} ${SETUP_PY} build_ext --inplace)
-    execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)
+    # execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)
 
 endif()
