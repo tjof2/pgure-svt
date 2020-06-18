@@ -20,6 +20,11 @@ import numpy as np
 from ._pguresvt import pguresvt_16
 
 
+def _is_power_of_two(n):
+    """Checks if n is a power of 2"""
+    return (n & (n - 1) == 0) and n != 0
+
+
 class SVT:
     """
     Parameters
@@ -56,6 +61,12 @@ class SVT:
         is estimated online.
     tol : float, default=1e-7
         Stopping tolerance of PGURE optimization algorithm.
+
+    Attributes
+    ----------
+    Y_ : np.ndarray
+        Denoised image sequence.
+
     """
 
     def __init__(
@@ -66,46 +77,74 @@ class SVT:
         motion_estimation=True,
         motion_window=7,
         motion_filter=5,
-        noise_method=4,
-        max_iter=1000,
-        n_jobs=-1,
-        random_seed=-1,
         optimize_pgure=True,
-        exponential_weighting=True,
         lambda1=0.0,
+        exponential_weighting=True,
+        noise_method=4,
         noise_alpha=-1.0,
         noise_mu=-1.0,
         noise_sigma=-1.0,
         tol=1e-7,
+        max_iter=1000,
+        n_jobs=-1,
+        random_seed=-1,
     ):
         self.trajectory_length = trajectory_length
         self.patch_size = patch_size
         self.patch_overlap = patch_overlap
+        self.motion_estimation = motion_estimation
         self.motion_window = motion_window
         self.motion_filter = motion_filter
-        self.noise_method = noise_method
-        self.max_iter = max_iter
-        self.n_jobs = n_jobs
-        self.random_seed = random_seed
         self.optimize_pgure = optimize_pgure
-        self.exponential_weighting = exponential_weighting
-        self.motion_estimation = motion_estimation
         self.lambda1 = lambda1
+        self.exponential_weighting = exponential_weighting
+        self.noise_method = noise_method
         self.noise_alpha = noise_alpha
         self.noise_mu = noise_mu
         self.noise_sigma = noise_sigma
         self.tol = tol
+        self.max_iter = max_iter
+        self.n_jobs = n_jobs
+        self.random_seed = random_seed
 
         self.Y_ = None
 
-    def _is_power_of_two(self, n):
-        n = n / 2
-        if n == 2:
-            return True
-        elif n > 2:
-            return self._is_power_of_two(n)
-        else:
-            return False
+    def _check_arguments(self):
+        if self.patch_overlap > self.patch_size:
+            raise ValueError(
+                f"Invalid patch_overlap parameter: got {self.patch_overlap}, "
+                f"should not be greater than patch_size ({self.patch_size})"
+            )
+
+        if self.motion_estimation:
+            if self.motion_window < 2:
+                raise ValueError(
+                    f"Invalid motion_window parameter: got {self.motion_window}, "
+                    "should be greater than 1 pixel"
+                )
+
+            if self.motion_filter < 1:
+                raise ValueError(
+                    f"Invalid motion_filter parameter: got {self.motion_filter}, "
+                    "should be greater than 0 pixels"
+                )
+
+        if not self.optimize_pgure and (self.lambda1 < 0.0 or self.lambda1 > 1.0):
+            raise ValueError(
+                f"Invalid lambda1 parameter: got {self.lambda1}, "
+                "should be a float in range [0, 1]"
+            )
+
+        if any(v < 0.0 for v in [self.noise_alpha, self.noise_mu, self.noise_sigma]):
+            if X.shape[0] != X.shape[1]:
+                raise ValueError(
+                    f"Quadtree noise estimation requires square images, got {X.shape}"
+                )
+
+            if not _is_power_of_two(dims[0]):
+                raise ValueError(
+                    "Quadtree noise estimation requires image dimensions 2^N"
+                )
 
     def denoise(self, X):
         """Denoise the data X
@@ -121,25 +160,7 @@ class SVT:
             Returns the denoised sequence
 
         """
-        # if self.overlap > self.patchsize:
-        #     raise ValueError("Patch overlap should not be greater than patch size")
-        # if self.arpssize % 2 == 0:
-        #     raise ValueError("ARPS motion estimation window size should be odd")
-        # if self.threshold < 0.0 or self.threshold > 1.0:
-        #     raise ValueError("Threshold should be in range [0,1]")
-        # if self.median % 2 == 0:
-        #     raise ValueError("Median filter size should be odd")
-
-        # if self.estimation:
-        #     if X.shape[0] != X.shape[1]:
-        #         raise ValueError(
-        #             f"Quadtree noise estimation requires square images, got {X.shape}"
-        #         )
-
-        #     if not self._is_power_of_two(dims[0]):
-        #         raise ValueError(
-        #             "Quadtree noise estimation requires image dimensions 2^N"
-        #         )
+        self._check_arguments()
 
         if not X.flags.f_contiguous:
             X = np.asfortranarray(X, dtype=np.uint16)
@@ -149,20 +170,20 @@ class SVT:
             trajectory_length=self.trajectory_length,
             patch_size=self.patch_size,
             patch_overlap=self.patch_overlap,
+            motion_estimation=self.motion_estimation,
             motion_window=self.motion_window,
             motion_filter=self.motion_filter,
-            noise_method=self.noise_method,
-            max_iter=self.max_iter,
-            n_jobs=self.n_jobs,
-            random_seed=self.random_seed,
             optimize_pgure=self.optimize_pgure,
-            exponential_weighting=self.exponential_weighting,
-            motion_estimation=self.motion_estimation,
             lambda1=self.lambda1,
+            exponential_weighting=self.exponential_weighting,
+            noise_method=self.noise_method,
             noise_alpha=self.noise_alpha,
             noise_mu=self.noise_mu,
             noise_sigma=self.noise_sigma,
             tol=self.tol,
+            max_iter=self.max_iter,
+            n_jobs=self.n_jobs,
+            random_seed=self.random_seed,
         )
         self.Y_ = res[0]
 
