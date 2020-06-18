@@ -12,9 +12,7 @@ project (PGURE-SVT)
 option(USE_OPENBLAS "Use OpenBLAS instead of BLAS if available" ON)
 option(USE_OPENMP "Use OpenMP if available" ON)
 option(BUILD_EXECUTABLE "Build a standalone executable" ON)
-option(BUILD_PYTHON "Build Python distribution" ON)
 
-find_program(PYTHON "python")
 find_package(OpenMP)
 include(FindArmadillo)
 include(FindTiff)
@@ -82,38 +80,3 @@ if(BUILD_EXECUTABLE AND TIFF_FOUND)
     install(TARGETS ${BINARY_NAME} DESTINATION bin)
 endif()
 
-if(BUILD_PYTHON AND PYTHON)
-    set(PYTHONLIBRARYPATH "${CMAKE_INSTALL_PREFIX}/lib")
-
-    set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py")
-    set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
-    set(DEPS        "${CMAKE_CURRENT_BINARY_DIR}/pguresvt/*.py")
-    set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
-
-    configure_file(${SETUP_PY_IN} ${SETUP_PY})
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/pguresvt.py
-                   ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/pguresvt.py)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/__init__.py
-                   ${CMAKE_CURRENT_BINARY_DIR}/pguresvt/__init__.py)
-
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/pguresvt/hspysvt.py
-         DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/pguresvt)
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/README.md
-         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/MANIFEST.in
-         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE
-         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-    add_custom_command(OUTPUT ${OUTPUT}
-                       COMMAND ${PYTHON} ${SETUP_PY} build
-                       COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
-                       DEPENDS ${DEPS})
-
-    add_custom_target(python ALL DEPENDS ${OUTPUT})
-
-    message(STATUS "Building Python distribution")
-    execute_process(COMMAND ${PYTHON} ${SETUP_PY} build_ext --inplace)
-    # execute_process(COMMAND ${PYTHON} ${SETUP_PY} sdist bdist_wheel)
-
-endif()
