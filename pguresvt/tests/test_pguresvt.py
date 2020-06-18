@@ -22,6 +22,7 @@ class TestSVT:
         self.seed = 123
         self.X = np.load(f"{cur_path}/data.npz")["a"]
 
+    @pytest.mark.xfail()
     def test_default(self):
         s = SVT(
             patch_size=16,
