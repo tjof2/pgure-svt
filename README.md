@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/tjof2/pgure-svt.svg?branch=master)](https://travis-ci.org/tjof2/pgure-svt)
+[![Coverage Status](https://coveralls.io/repos/github/tjof2/pgure-svt/badge.svg?branch=master)](https://coveralls.io/github/tjof2/pgure-svt?branch=master)
 [![DOI](https://zenodo.org/badge/48366354.svg)](https://zenodo.org/badge/latestdoi/48366354)
 
 # PGURE-SVT
