@@ -42,7 +42,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
                   const uint32_t maxIter,
                   const int64_t nJobs,
                   const int64_t randomSeed,
-                  const bool optPGURE,
+                  const bool optimizePGURE,
                   const bool expWeighting,
                   const bool motionEstimation,
                   const double lambdaEst,
@@ -94,7 +94,6 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     arma::Cube<T2> u = arma::Cube<T2>(Nx, Ny, Nt, arma::fill::zeros);
     arma::Cube<T2> v = arma::Cube<T2>(Nx, Ny, Nt, arma::fill::zeros);
     arma::Cube<T2> w = arma::Cube<T2>(Nx, Ny, Nt, arma::fill::zeros);
-    arma::icube p = arma::icube(Nx, Ny, Nt, arma::fill::zeros);
 
     if (timeIter < frameWindow) // Extract the subset of the image sequence
     {
@@ -118,7 +117,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     u /= uMax;
     w /= wMax;
 
-    if (optPGURE) // Only estimate noise if optimizing PGURE threshold
+    if (optimizePGURE) // Only estimate noise if optimizing PGURE threshold
     {
       pguresvt::NoiseEstimator *noise = new pguresvt::NoiseEstimator(noiseMethod);
       noise->Estimate(u, alpha, mu, sigma);
@@ -126,12 +125,12 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     }
 
     pguresvt::MotionEstimator<T2> *motion = new pguresvt::MotionEstimator<T2>(w, blockSize, timeIter, frameWindow, motionWindow, Nimgs);
-    p = motion->Estimate(motionEstimation);
+    arma::icube p = motion->Estimate(motionEstimation);
     delete motion;
 
     pguresvt::PGURE<T2> *optimizer = new pguresvt::PGURE<T2>(u, p, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
 
-    if (optPGURE) // Determine optimum threshold value
+    if (optimizePGURE) // Determine optimum threshold value
     {
       double upperBound = 1.0; // Image max is 1.0, so allow up to this
       lambda = optimizer->Optimize(tol, arma::accu(u) * OoNxNyNt, upperBound, maxIter);

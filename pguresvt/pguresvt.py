@@ -24,51 +24,54 @@ class SVT:
     """
     Parameters
     ----------
-    patchsize : integer
+    trajectory_length : int, default=15
+        Length in frames of the block to form
+        a Casorati matrix. Must be odd.
+    patch_size : int, default=4
+        The dimensions of the patch in pixels
+        to form a Casorati matrix.
+    patch_overlap : int, default=1
         The dimensions of the patch in pixels
         to form a Casorati matrix (default = 4)
-    length : integer
-        Length in frames of the block to form
-        a Casorati matrix. Must be odd (default = 15)
-    optimize : bool
+    motion_window : int, default=7
+        Size of neighbourhood in pixels for ARPS
+        motion estimation search. Must be odd.
+    motion_filter : int, default=5
+        Size of median filter in pixels used to
+        improve motion estimation search.
+    optimize_pgure : bool, default=True
         Whether to optimize PGURE or just denoise
         according to given threshold (default = True)
-    threshold : float
-        Threshold to use if not optimizing PGURE
-        (default = 0.5)
-    alpha : float
-        Level of noise gain, if negative then
-        estimated online (default = -1)
-    mu : float
-        Level of noise offset, if negative then
-        estimated online (default = -1)
-    sigma : float
-        Level of Gaussian noise, if negative then
-        estimated online (default = -1)
-    arpssize : integer
-        Size of neighbourhood for ARPS search
-        Must be odd
-        (default = 7 pixels)
-    tol : float
-        Tolerance of PGURE optimizers
-        (default = 1E-7)
-
+    threshold : float or None, default=None
+        Threshold to use if not optimizing PGURE.
+        Ignored if ``optimize_pgure=True``.
+    noise_alpha : float or None, default=None
+        Level of noise gain. If None, then parameter
+        is estimated online.
+    noise_mu : float or None, default=None
+        Level of noise offset. If None, then parameter
+        is estimated online.
+    noise_sigma : float or None, default=None
+        Level of Gaussian noise. If None, then parameter
+        is estimated online.
+    tol : float, default=1e-7
+        Stopping tolerance of PGURE optimization algorithm.
     """
 
     def __init__(
         self,
         trajectory_length=15,
         patch_size=4,
-        patch_overlap=2,
-        arps_window=7,
-        median_filter=5,
+        patch_overlap=1,
+        motion_estimation=True,
+        motion_window=7,
+        motion_filter=5,
         noise_method=4,
         max_iter=1000,
         n_jobs=-1,
         random_seed=-1,
         optimize_pgure=True,
         exponential_weighting=True,
-        motion_estimation=True,
         lambda1=0.0,
         noise_alpha=-1.0,
         noise_mu=-1.0,
@@ -78,8 +81,8 @@ class SVT:
         self.trajectory_length = trajectory_length
         self.patch_size = patch_size
         self.patch_overlap = patch_overlap
-        self.arps_window = arps_window
-        self.median_filter = median_filter
+        self.motion_window = motion_window
+        self.motion_filter = motion_filter
         self.noise_method = noise_method
         self.max_iter = max_iter
         self.n_jobs = n_jobs
@@ -146,8 +149,8 @@ class SVT:
             trajectory_length=self.trajectory_length,
             patch_size=self.patch_size,
             patch_overlap=self.patch_overlap,
-            arps_window=self.arps_window,
-            median_filter=self.median_filter,
+            motion_window=self.motion_window,
+            motion_filter=self.motion_filter,
             noise_method=self.noise_method,
             max_iter=self.max_iter,
             n_jobs=self.n_jobs,

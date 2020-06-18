@@ -59,7 +59,11 @@ namespace pguresvt
       motions = arma::zeros<arma::icube>(2, vecSize, 2 * timeWindow);
     };
 
-    ~MotionEstimator(){};
+    ~MotionEstimator()
+    {
+      patches.reset();
+      motions.reset();
+    };
 
     arma::icube Estimate(const bool estimateMotion)
     {
@@ -384,7 +388,6 @@ namespace pguresvt
         patches(0, it, iARPS2) = y;
         patches(1, it, iARPS2) = x;
       }
-      return;
     }
   };
 
