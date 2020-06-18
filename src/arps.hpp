@@ -61,7 +61,7 @@ namespace pguresvt
 
     ~MotionEstimator(){};
 
-    void Estimate()
+    arma::icube Estimate(const bool estimateMotion)
     {
       int negInc;
 
@@ -75,15 +75,18 @@ namespace pguresvt
           patches(1, i, timeIter) = i / (1 + nxMbs);
         }
 
-        for (size_t i = 0; i < loopEnd; i++) // Perform motion estimation forwards
+        if (estimateMotion)
         {
-          ARPSMotionEstimation(i, timeIter + i, timeIter + i + 1, timeIter + i);
-        }
+          for (size_t i = 0; i < loopEnd; i++) // Perform motion estimation forwards
+          {
+            ARPSMotionEstimation(i, timeIter + i, timeIter + i + 1, timeIter + i);
+          }
 
-        for (size_t i = 0; i < timeIter; i++) // Perform motion estimation backwards
-        {
-          negInc = -1 * (i + 1);
-          ARPSMotionEstimation(negInc, timeIter + negInc + 1, timeIter + negInc, timeIter + negInc + 1);
+          for (size_t i = 0; i < timeIter; i++) // Perform motion estimation backwards
+          {
+            negInc = -1 * (i + 1);
+            ARPSMotionEstimation(negInc, timeIter + negInc + 1, timeIter + negInc, timeIter + negInc + 1);
+          }
         }
       }
       else if (timeIter >= (nImages - timeWindow))
@@ -96,23 +99,25 @@ namespace pguresvt
           patches(0, i, endFrame) = i % (1 + nyMbs);
           patches(1, i, endFrame) = i / (1 + nxMbs);
         }
-
-        for (size_t i = 0; i < loopEnd; i++) // Perform motion estimation forwards
+        if (estimateMotion)
         {
-          ARPSMotionEstimation(i, endFrame + i, endFrame + i + 1, endFrame + i);
-        }
-
-        for (size_t i = 0; i < endFrame; i++) // Perform motion estimation backwards
-        {
-          negInc = -1 * (i + 1);
-
-          if (2 * timeWindow == endFrame)
+          for (size_t i = 0; i < loopEnd; i++) // Perform motion estimation forwards
           {
-            ARPSMotionEstimation(negInc, endFrame + negInc + 1, endFrame + negInc, endFrame + negInc);
+            ARPSMotionEstimation(i, endFrame + i, endFrame + i + 1, endFrame + i);
           }
-          else
+
+          for (size_t i = 0; i < endFrame; i++) // Perform motion estimation backwards
           {
-            ARPSMotionEstimation(negInc, endFrame + negInc + 1, endFrame + negInc, endFrame + negInc + 1);
+            negInc = -1 * (i + 1);
+
+            if (2 * timeWindow == endFrame)
+            {
+              ARPSMotionEstimation(negInc, endFrame + negInc + 1, endFrame + negInc, endFrame + negInc);
+            }
+            else
+            {
+              ARPSMotionEstimation(negInc, endFrame + negInc + 1, endFrame + negInc, endFrame + negInc + 1);
+            }
           }
         }
       }
@@ -123,22 +128,22 @@ namespace pguresvt
           patches(0, i, timeWindow) = i % (1 + nyMbs);
           patches(1, i, timeWindow) = i / (1 + nxMbs);
         }
-
-        for (size_t i = 0; i < timeWindow; i++) // Perform motion estimation forwards
+        if (estimateMotion)
         {
-          ARPSMotionEstimation(i, timeWindow + i, timeWindow + i + 1, timeWindow + i);
-        }
+          for (size_t i = 0; i < timeWindow; i++) // Perform motion estimation forwards
+          {
+            ARPSMotionEstimation(i, timeWindow + i, timeWindow + i + 1, timeWindow + i);
+          }
 
-        for (size_t i = 0; i < timeWindow; i++) // Perform motion estimation backwards
-        {
-          negInc = -1 * (i + 1);
-          ARPSMotionEstimation(negInc, timeWindow + negInc + 1, timeWindow + negInc, timeWindow + negInc + 1);
+          for (size_t i = 0; i < timeWindow; i++) // Perform motion estimation backwards
+          {
+            negInc = -1 * (i + 1);
+            ARPSMotionEstimation(negInc, timeWindow + negInc + 1, timeWindow + negInc, timeWindow + negInc + 1);
+          }
         }
       }
-      return;
+      return patches;
     }
-
-    arma::icube GetEstimate() { return patches; }
 
   private:
     arma::Cube<T> A;
