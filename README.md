@@ -42,21 +42,18 @@ $ pip install -e .
 ```
 
 #### Standalone executable
-PGURE-SVT has been tested on Ubuntu 12.04+. For OSX users, you may need to use the GCC compiler rather than the default. To build PGURE-SVT:
+PGURE-SVT has been tested on Ubuntu 12.04+. For OSX users, you may need to use the GCC compiler rather than the default.
+
+Use CMake to compile and install PGURE-SVT. Note that it requires LibTIFF to be available on your system. To install the PGURE-SVT executable into `/usr/bin`, use:
 
 ```bash
 $ git clone https://github.com/tjof2/pgure-svt.git
 $ cd pgure-svt
 $ mkdir build
 $ cd build
-```
-
-Use CMake to compile and install PGURE-SVT. Note that it requires LibTIFF to be available on your system. To install the PGURE-SVT executable into `/usr/bin`, use:
-
-```bash
-cmake ..
-make
-sudo make install
+$ cmake ..
+$ make
+$ sudo make install
 ```
 
 To change the install location, type `cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..`, and recompile with `make && sudo make install`.
