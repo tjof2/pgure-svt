@@ -3,7 +3,6 @@
 [![DOI](https://zenodo.org/badge/48366354.svg)](https://zenodo.org/badge/latestdoi/48366354)
 
 # PGURE-SVT
-
 PGURE-SVT (Poisson-Gaussian Unbiased Risk Estimator - Singular Value Thresholding) is an algorithm designed to denoise image sequences acquired in microscopy. It exploits the correlations between consecutive frames to form low-rank matrices, which are then recovered using a technique known as nuclear norm minimization. An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate the selection of the regularization parameter, while robust noise and motion estimation maintain broad applicability to many different types of microscopy.
 
 More information on the algorithm can be found [in our paper](http://dx.doi.org/10.1016/j.ultramic.2016.05.005) in *Ultramicroscopy*.
@@ -16,11 +15,14 @@ PGURE-SVT is released free of charge under the GNU General Public License ([GPLv
 
 ## Installation
 
-#### Building from source (Linux/OSX)
+<!-- The easiest way to install the package is with `pip`:
 
-PGURE-SVT has been tested on Ubuntu 12.04+. For OSX users, you may need to use the GCC compiler rather than the default.
+```bash
+$ pip install -U ctrwfractal
+$ pip install git+https://github.com/tjof2/ctrwfractal.git
+``` -->
 
-##### Dependencies
+#### Dependencies
 To successfully compile the C++ code, PGURE-SVT requires the following packages and libraries to be installed on your machine first.
 
 - [CMake](http://www.cmake.org) 2.8+
@@ -30,21 +32,28 @@ To successfully compile the C++ code, PGURE-SVT requires the following packages 
 
 When installing the Armadillo linear algebra library, it is recommended that you also install a high-speed BLAS replacement such as OpenBLAS or MKL; more information can be found in the [Armadillo](http://arma.sourceforge.net/faq.html#blas_lapack_replacements) documentation.
 
-##### Compilation
-
-By default, the system will build a C++ library for linking with Python. Installation of the standalone executable must be specified by the user. To build PGURE-SVT:
+#### Python
+To build the Python package from source:
 
 ```bash
-tar -xzf pgure-svt-0.5.0.tar.gz
-cd pgure-svt-0.5.0
-mkdir build
-cd build
+$ git clone https://github.com/tjof2/pgure-svt.git
+$ cd pgure-svt
+$ pip install -e .
 ```
 
-Use CMake to compile and install PGURE-SVT. By default, this will generate a shared library in the `/usr/lib` directory. It will also install the Python wrapper by running `python setup.py install`.
+#### Standalone executable
+PGURE-SVT has been tested on Ubuntu 12.04+. For OSX users, you may need to use the GCC compiler rather than the default. To build PGURE-SVT:
 
 ```bash
-cd build
+$ git clone https://github.com/tjof2/pgure-svt.git
+$ cd pgure-svt
+$ mkdir build
+$ cd build
+```
+
+Use CMake to compile and install PGURE-SVT. Note that it requires LibTIFF to be available on your system. To install the PGURE-SVT executable into `/usr/bin`, use:
+
+```bash
 cmake ..
 make
 sudo make install
@@ -52,26 +61,10 @@ sudo make install
 
 To change the install location, type `cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..`, and recompile with `make && sudo make install`.
 
-The standalone executable is **not** built by default, as it requires LibTIFF to be installed. To install the PGURE-SVT executable into `/usr/bin`, use:
-
-```bash
-cmake -DBUILD_EXECUTABLE=ON ..
-make
-sudo make install
-```
-
-#### Windows
-
-The Windows binaries have been tested on 64-bit versions of Windows 7 and Windows 10. You may need to install the [Microsoft Visual C++ 2015 redistributable package](https://www.microsoft.com/en-gb/download/details.aspx?id=48145) before running PGURE-SVT.
-
-**[Download 64-bit Windows release](https://github.com/tjof2/pgure-svt/releases/download/v0.3.3/PGURE-SVT_Win64.zip)**
-
 ## Usage
-
 PGURE-SVT can be used either from Python, or as a standalone executable.
 
 #### Python
-
 PGURE-SVT comes with a simple Python wrapper that accepts any NumPy array with dimensions `(nx, ny, T)` for denoising.
 
 ```python
@@ -94,7 +87,6 @@ Y = svt.Y
 ```
 
 ##### Options
-
 For more information on the effects of the parameters, users are referred to the publication.
 
 - `patchsize` - Dimensions of spatial patches in pixels
@@ -119,13 +111,10 @@ For more information on the effects of the parameters, users are referred to the
 - `numthreads` - Number of threads to use on a multicore computer
 
 ##### Integration with HyperSpy
-
-PGURE-SVT can be integrated with the HyperSpy multi-dimensional data analysis toolbox, which provides a number of useful features including data visualization and data import from a number of microscopy file formats. An example iPython notebook is [provided here](https://github.com/tjof2/pgure-svt/blob/master/examples/PGURE-SVT-HyperSpy-Demo.ipynb).
+PGURE-SVT can be integrated with the [HyperSpy](http://hyperspy.org) multi-dimensional data analysis toolbox, which provides a number of useful features including data visualization and data import from a number of microscopy file formats. An example Jupyter notebook is [provided here](https://github.com/tjof2/pgure-svt/blob/master/examples/PGURE-SVT-HyperSpy-Demo.ipynb).
 
 #### Standalone executable
-
-
-The PGURE-SVT standalone executable uses a simple command-line interface along with a separate parameter file. It is convenient to use on remote computing clusters. The parameter file allows the user to customize various options of the PGURE-SVT algorithm. Note that the standalone executable currently only supports TIFF sequences.
+The PGURE-SVT standalone executable uses a simple command-line interface along with a separate parameter file. It is convenient to use on remote computing clusters. The parameter file allows the user to customize various options of the PGURE-SVT algorithm. Note that the standalone executable currently only supports 8-bit and 16-bit TIFF sequences.
 
 ```bash
 ./PGURE-SVT param.svt
