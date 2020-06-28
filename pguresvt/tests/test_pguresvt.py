@@ -39,6 +39,39 @@ class TestSVT:
             n_jobs=1,
             random_seed=self.seed,
         )
-        s.denoise(self.X.copy())
+        s.denoise(self.X)
 
         assert _hash_ndarray(s.Y_, 8) == "5c3a8c72"
+
+    def test_error_patch_overlap(self):
+        with pytest.raises(ValueError, match="Invalid patch_overlap parameter"):
+            s = SVT(patch_size=10, patch_overlap=11)
+            s.denoise(self.X)
+
+    def test_error_motion_window(self):
+        with pytest.raises(ValueError, match="Invalid motion_window parameter"):
+            s = SVT(motion_estimation=True, motion_window=1)
+            s.denoise(self.X)
+
+    def test_error_motion_filter(self):
+        with pytest.raises(ValueError, match="Invalid motion_filter parameter"):
+            s = SVT(motion_estimation=True, motion_filter=0)
+            s.denoise(self.X)
+
+    def test_error_lambda1(self):
+        with pytest.raises(ValueError, match="Invalid lambda1 parameter"):
+            s = SVT(optimize_pgure=False, lambda1=-1.0)
+            s.denoise(self.X)
+
+    def test_error_non_square(self):
+        m, _, _ = self.X.shape
+        with pytest.raises(ValueError, match="requires square images"):
+            s = SVT()
+            s.denoise(self.X[: m // 2, :, :])
+
+    def test_error_non_power_of_two(self):
+        m, n, _ = self.X.shape  # Should be 32x32x16
+        assert m == n
+        with pytest.raises(ValueError, match="requires image dimensions 2\\^N"):
+            s = SVT()
+            s.denoise(self.X[: m - 1, : n - 1, :])

@@ -95,7 +95,7 @@ class SVT:
 
         self.Y_ = None
 
-    def _check_arguments(self):
+    def _check_arguments(self, X_shape):
         if self.patch_overlap > self.patch_size:
             raise ValueError(
                 f"Invalid patch_overlap parameter: got {self.patch_overlap}, "
@@ -122,12 +122,12 @@ class SVT:
             )
 
         if any(v < 0.0 for v in [self.noise_alpha, self.noise_mu, self.noise_sigma]):
-            if X.shape[0] != X.shape[1]:
+            if X_shape[0] != X_shape[1]:
                 raise ValueError(
-                    f"Quadtree noise estimation requires square images, got {X.shape}"
+                    f"Quadtree noise estimation requires square images, got {X_shape}"
                 )
 
-            if not _is_power_of_two(dims[0]):
+            if not _is_power_of_two(X_shape[0]):
                 raise ValueError(
                     "Quadtree noise estimation requires image dimensions 2^N"
                 )
@@ -146,7 +146,7 @@ class SVT:
             Returns the denoised sequence
 
         """
-        self._check_arguments()
+        self._check_arguments(X.shape)
 
         if not X.flags.f_contiguous:
             X = np.asfortranarray(X, dtype=np.uint16)
