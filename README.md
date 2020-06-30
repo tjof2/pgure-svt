@@ -89,18 +89,15 @@ For more information on the effects of the parameters, users are referred to the
 PGURE-SVT can be integrated with the [HyperSpy](http://hyperspy.org) multi-dimensional data analysis toolbox, which provides a number of useful features including data visualization and data import from a number of microscopy file formats. An example Jupyter notebook is [provided here](https://github.com/tjof2/pgure-svt/blob/master/examples/PGURE-SVT-HyperSpy-Demo.ipynb).
 
 #### Standalone executable
-The PGURE-SVT standalone executable uses a simple command-line interface along with a separate parameter file. It is convenient to use on remote computing clusters. The parameter file allows the user to customize various options of the PGURE-SVT algorithm. Note that the standalone executable currently only supports 8-bit and 16-bit TIFF sequences.
+The PGURE-SVT standalone executable uses a simple command-line interface along with a separate parameter file. An example file, [`examples/param.svt`](https://github.com/tjof2/pgure-svt/blob/master/examples/param.svt) is provided. Note that the standalone executable currently only supports 8-bit and 16-bit TIFF sequences.
 
 ```bash
-./PGURE-SVT param.svt
+$ ./PGURE-SVT param.svt
 ```
 
-An example file, [param.svt](https://github.com/tjof2/pgure-svt/blob/master/examples/param.svt) is provided.
-
 ```
-##### Example parameter file for PGURE-SVT program #####
+# Example parameter file for PGURE-SVT program
 
-##### REQUIRED #####
 # Specify the file name of the TIFF stack to be denoised
 filename             : ../test/examplesequence.tif
 
