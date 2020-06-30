@@ -83,29 +83,7 @@ svt.denoise(X)
 Y = svt.Y
 ```
 
-##### Options
 For more information on the effects of the parameters, users are referred to the publication.
-
-- `patchsize` - Dimensions of spatial patches in pixels
-- `patchoverlap` - Step size in pixels by which successive spatial patches are displaced with respect to one another
-- `length` - Length in frames of a temporal block (must be **odd** integer)
-- `optimize` - Turn on (`True`) or off (`False`) optimization of lambda with PGURE
-(if `False`, threshold must be specified)
-- `threshold` - Option to specify lambda when PGURE is not used
-(ignored when optimize=True)
-- `estimatenoise` - Turn automated noise estimation on (`True`) or off (`False`)
-(if `False`, `alpha`, `mu` and `sigma` must be specified)
-- `alpha` - Option to specify detector gain
-(ignored when `estimatenoise=True`)
-- `mu` - Option to specify detector offset
-(ignored when `estimatenoise=True`)
-- `sigma` - Option to specify Gaussian noise component
-(ignored when `estimatenoise=True`)
-- `arpssize` - Size in pixels of ARPS motion estimation neighbourhood
-- `tol` - PGURE optimization terminates after relative change is below tolerance
-- `median` - Size of median filter window in pixels
-- `hotpixelthreshold` - `n` * median absolute deviation above the image median, where `n` is the user value. Any hot pixels are replaced by the median of their immediate neighbours.
-- `numthreads` - Number of threads to use on a multicore computer
 
 ##### Integration with HyperSpy
 PGURE-SVT can be integrated with the [HyperSpy](http://hyperspy.org) multi-dimensional data analysis toolbox, which provides a number of useful features including data visualization and data import from a number of microscopy file formats. An example Jupyter notebook is [provided here](https://github.com/tjof2/pgure-svt/blob/master/examples/PGURE-SVT-HyperSpy-Demo.ipynb).
