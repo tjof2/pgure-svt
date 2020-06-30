@@ -55,6 +55,5 @@ setup(
     packages=find_packages(),
     package_data={"": ["LICENSE", "README.md"], "pguresvt": ["*.py"]},
     install_requires=["numpy"],
-    setup_requires=["wheel", "auditwheel"],
     ext_modules=cythonize(extensions),
 )
