@@ -33,7 +33,8 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
                   const double alphaEst,
                   const double muEst,
                   const double sigmaEst,
-                  const double tol)
+                  const double tol,
+                  const bool verbose = false)
 {
   uint32_t Nx = X.n_cols;
   uint32_t Ny = X.n_rows;
@@ -42,8 +43,11 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
   Y.set_size(arma::size(X)); // Set output sequence size
   Y.zeros();
 
-  //pguresvt::PrintFixed(1, "Input type=", typeid(T1).name(), ", Output type=", typeid(T2).name());
-  //pguresvt::PrintFixed(1, "Dimensions=", arma::size(X));
+  if (verbose)
+  {
+    pguresvt::PrintFixed(1, "Input type=", typeid(T1).name(), ", Output type=", typeid(T2).name());
+    pguresvt::PrintFixed(1, "Dimensions=", arma::size(X));
+  }
 
   // Check trajectory length against block size
   uint32_t Nt = (blockSize * blockSize < trajLength) ? (blockSize * blockSize) - 1 : trajLength;

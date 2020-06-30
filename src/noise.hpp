@@ -11,6 +11,8 @@
 #include <vector>
 #include <armadillo>
 
+#include "utils.hpp"
+
 namespace pguresvt
 {
   class NoiseEstimator
@@ -22,7 +24,6 @@ namespace pguresvt
                                                     size(size),
                                                     weightType(weightType)
     {
-      // weightType: 0 - "Huber", 1 - "BiSquare"
       laplacian.fill(1.0);
       laplacian *= 0.125;
       laplacian(1, 1) = -1;
@@ -32,13 +33,13 @@ namespace pguresvt
     ~NoiseEstimator(){};
 
     void Estimate(const arma::cube &input,
-                  double &alphaIn,
-                  double &muIn,
-                  double &sigmaIn)
+                  double &alpha_,
+                  double &mu_,
+                  double &sigma_)
     {
-      alpha = alphaIn;
-      mu = muIn;
-      sigma = sigmaIn;
+      alpha = alpha_;
+      mu = mu_;
+      sigma = sigma_;
 
       dSi = 0.0; // Set some parameters
       Nx = input.n_cols;
@@ -60,12 +61,16 @@ namespace pguresvt
         QuadTree(input.slice(i).eval(), 0);
 
         arma::umat tree = treeDelete[0];
-        arma::umat dele = arma::unique(arma::sort(treeDelete[1]));
+        arma::uvec dele = arma::vectorise(arma::unique(arma::sort(treeDelete[1])));
 
-        for (size_t k = dele.n_elem - 1; k > 0; k--) // Shed parents from quadtree
+        if (dele.n_elem > 0) // Shed parents from quadtree
         {
-          tree.shed_col(dele(0, k));
+          for (size_t k = dele.n_elem - 1; k > 0; k--) // Shed parents from quadtree
+          {
+            tree.shed_col(dele(k));
+          }
         }
+        pguresvt::PrintFixed(1, "Shedding done");
 
         for (size_t n = 0; n < tree.n_cols; n++) // Extract patches for robust estimation
         {
@@ -142,9 +147,9 @@ namespace pguresvt
       }
       }
 
-      alphaIn = alpha;
-      muIn = mu;
-      sigmaIn = sigma;
+      alpha_ = alpha;
+      mu_ = mu;
+      sigma_ = sigma;
       return;
     };
 
@@ -192,8 +197,6 @@ namespace pguresvt
         {
           int xp = ((x + 1) == N) ? 1 : (x + 1);
           int yp = ((y + 1) == N) ? 1 : (y + 1);
-          // int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
-          // int ym = ((y - 1) < 0) ? (N - 2) : (y - 1);
           int xm = (x == 0) ? (N - 2) : (x - 1);
           int ym = (y == 0) ? (N - 2) : (y - 1);
           resids(y, x) = l * A(y, x) - (A(yp, x) + A(ym, x) + A(y, xm) + A(y, xp));
@@ -303,17 +306,17 @@ namespace pguresvt
       double p, pp;
       switch (weightType)
       {
-      case 0:
+      case 0: // Huber
         p = 0.75;
         for (size_t i = 0; i < x.n_elem; i++)
         {
           w(i) = (std::abs(x(i)) < p) ? 1. : p / std::abs(x(i));
         }
         break;
-      case 1:
+      case 1: // Bisquare
       default:
         p = 3.5;
-        pp = p * p;
+        pp = 12.25; // p**2
         for (size_t i = 0; i < x.n_elem; i++)
         {
           w(i) = (std::abs(x(i)) > p) ? 0. : (pp - x(i) * x(i)) * (pp - x(i) * x(i)) / (pp * pp);
@@ -363,7 +366,6 @@ namespace pguresvt
         params(1) = (std::abs(aux) < eps) ? b0 : params(1) / sw2;
 
         f = x * params(0) + params(1);
-
         r = y - f;
         e = arma::mean(arma::abs(r));
 
@@ -402,8 +404,6 @@ namespace pguresvt
         {
           int xp = ((x + 1) == N) ? 1 : (x + 1);
           int yp = ((y + 1) == N) ? 1 : (y + 1);
-          // int xm = ((x - 1) < 0) ? (N - 2) : (x - 1);
-          // int ym = ((y - 1) < 0) ? (N - 2) : (y - 1);
           int xm = (x == 0) ? (N - 2) : (x - 1);
           int ym = (y == 0) ? (N - 2) : (y - 1);
 

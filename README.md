@@ -69,8 +69,8 @@ import numpy as np
 from pguresvt import pguresvt
 
 # Example dataset has dimensions (nx, ny, T),
-# in this case a 128x128px video with 25 frames
-X = np.random.randn(128, 128, 25)
+# in this case a 64x64px video with 25 frames
+X = np.random.randn(64, 64, 25)
 
 # Initialize the algorithm
 # with default parameters

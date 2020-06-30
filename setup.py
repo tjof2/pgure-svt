@@ -22,6 +22,7 @@ extensions = [
             "-Wall",
             "-Wextra",
             "-Wno-unused-parameter",
+            "-Wno-unused-function",
             "-D NPY_NO_DEPRECATED_API",
         ],
     ),

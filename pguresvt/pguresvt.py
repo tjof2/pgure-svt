@@ -12,7 +12,17 @@ def _is_power_of_two(n):
 
 
 class SVT:
-    """
+    """Singular value thresholding for denoising image sequences.
+
+    PGURE-SVT is an algorithm designed to denoise image sequences
+    acquired in microscopy. It exploits the correlations between
+    consecutive frames to form low-rank matrices, which are then
+    recovered using a technique known as nuclear norm minimization.
+    An unbiased risk estimator for mixed Poisson-Gaussian noise is
+    used to automate the selection of the regularization parameter,
+    while robust noise and motion estimation maintain broad applicability
+    to many different types of microscopy. See [Furnival2017]_.
+
     Parameters
     ----------
     trajectory_length : int, default=15
@@ -23,7 +33,7 @@ class SVT:
         to form a Casorati matrix.
     patch_overlap : int, default=1
         The dimensions of the patch in pixels
-        to form a Casorati matrix (default = 4)
+        to form a Casorati matrix.
     motion_window : int, default=7
         Size of neighbourhood in pixels for ARPS
         motion estimation search. Must be odd.
@@ -32,26 +42,44 @@ class SVT:
         improve motion estimation search.
     optimize_pgure : bool, default=True
         Whether to optimize PGURE or just denoise
-        according to given threshold (default = True)
+        according to given threshold.
     threshold : float or None, default=None
         Threshold to use if not optimizing PGURE.
         Ignored if ``optimize_pgure=True``.
     noise_alpha : float or None, default=None
-        Level of noise gain. If None, then parameter
-        is estimated online.
+        Level of noise gain. If None, then parameter is
+        estimated online. Ignored if ``optimize_pgure=False``.
     noise_mu : float or None, default=None
-        Level of noise offset. If None, then parameter
-        is estimated online.
+        Level of noise offset. If None, then parameter is
+        estimated online. Ignored if ``optimize_pgure=False``.
     noise_sigma : float or None, default=None
-        Level of Gaussian noise. If None, then parameter
-        is estimated online.
+        Level of Gaussian noise. If None, then parameter is
+        estimated online. Ignored if ``optimize_pgure=False``.
     tol : float, default=1e-7
         Stopping tolerance of PGURE optimization algorithm.
+        Ignored if ``optimize_pgure=False``.
+    max_iter : int, default=1000
+        Maximum iterations of PGURE optimization algorithm.
+        Ignored if ``optimize_pgure=False``.
+    n_jobs : int or None, default=None
+        The number of threads to use. A value of ``None`` means
+        using a single thread, while -1 means using all
+        threads dependent on the available hardware.
+    random_seed : int or None, default=None
+        Random seed used when optimizing PGURE.
+        Ignored if ``optimize_pgure=False``.
 
     Attributes
     ----------
     Y_ : np.ndarray
         Denoised image sequence.
+
+    References
+    ----------
+    .. [Furnival2017] T. Furnival, R. K. Leary and P. A. Midgley, "Denoising
+                      time-resolved microscopy sequences with singular value
+                      thresholding", Ultramicroscopy, vol. 178, pp. 112–124,
+                      2017. DOI:10.1016/j.ultramic.2016.05.005
 
     """
 
@@ -72,8 +100,8 @@ class SVT:
         noise_sigma=-1.0,
         tol=1e-7,
         max_iter=1000,
-        n_jobs=-1,
-        random_seed=-1,
+        n_jobs=None,
+        random_seed=None,
     ):
         self.trajectory_length = trajectory_length
         self.patch_size = patch_size
@@ -148,8 +176,15 @@ class SVT:
         """
         self._check_arguments(X.shape)
 
+        X_dtype = getattr(X, "dtype", None)
+
         if not X.flags.f_contiguous:
             X = np.asfortranarray(X, dtype=np.uint16)
+        elif X_dtype != "uint16":
+            X = X.astype(np.uint16)
+
+        self.n_jobs_ = 0 if self.n_jobs is None else self.n_jobs
+        self.random_seed_ = -1 if self.random_seed is None else self.random_seed
 
         res = pguresvt_16(
             input_images=X,
@@ -168,8 +203,8 @@ class SVT:
             noise_sigma=self.noise_sigma,
             tol=self.tol,
             max_iter=self.max_iter,
-            n_jobs=self.n_jobs,
-            random_seed=self.random_seed,
+            n_jobs=self.n_jobs_,
+            random_seed=self.random_seed_,
         )
         self.Y_ = res[0]
 
