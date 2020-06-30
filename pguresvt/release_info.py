@@ -9,6 +9,7 @@ credits = [
     "Rowan K. Leary",
     "Feng Wang",
     "Trond Henninen",
+    "Eric Prestat",
 ]
 description = "Singular value thresholding for denoising video microscopy data"
 license = "GPLv3"
