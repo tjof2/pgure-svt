@@ -53,7 +53,7 @@ setup(
         "Topic :: Scientific/Engineering :: Physics",
     ],
     packages=find_packages(),
-    package_data={"": ["LICENSE", "README.md"], "pguresvt": ["*.py"]},
+    package_data={"": ["LICENSE", "README.md"], "pguresvt": ["*.py", "tests/*"]},
     install_requires=["numpy"],
     ext_modules=cythonize(extensions),
 )
