@@ -34,13 +34,13 @@ class TestSVT:
             noise_sigma=0.1,
             motion_estimation=True,
             motion_window=7,
-            motion_filter=None,
+            motion_filter=3,
             n_jobs=1,
             random_seed=self.seed,
         )
         s.denoise(self.X)
 
-        assert _hash_ndarray(s.Y_, 8) == "6b7cd8f8"
+        assert _hash_ndarray(s.Y_, 8) == "5345bc0a"
 
     def test_no_motion(self):
         s = SVT(

@@ -61,14 +61,15 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
   double sigma0 = (sigmaEst >= 0.) ? sigmaEst : -1.;
 
   arma::Cube<T1> Z(Nx, Ny, Nimgs); // Median-filtered sequence
-  int memSize = 512 * 1024;        // L2 cache size
+  int memSize = 1 * 512 * 1024;    // assumes 1024 KB L2 cache size
 
   auto &&medianFunc = [&](uint32_t i) {
     uint16_t *zBuffer = new uint16_t[Nx * Ny];
-    arma::Mat<uint16_t> zSlice(zBuffer, Nx, Ny);
-
     ConstantTimeMedianFilter(X.slice(i).memptr(), zBuffer, Nx, Ny, Nx, Nx, medianSize, 1, memSize);
+
+    arma::Mat<uint16_t> zSlice(zBuffer, Nx, Ny);
     Z.slice(i) = zSlice;
+    delete zBuffer;
   };
 
   if (medianSize > 0) // Apply median filter to the images prior to motion estimation
