@@ -43,6 +43,26 @@ class TestSVT:
 
         assert _hash_ndarray(s.Y_, 8) == "5c3a8c72"
 
+    def test_no_motion(self):
+        s = SVT(
+            patch_size=16,
+            trajectory_length=15,
+            patch_overlap=3,
+            optimize_pgure=False,
+            lambda1=0.15,
+            noise_alpha=0.1,
+            noise_mu=0.1,
+            noise_sigma=0.1,
+            motion_estimation=False,
+            motion_window=7,
+            motion_filter=1,
+            n_jobs=1,
+            random_seed=self.seed,
+        )
+        s.denoise(self.X)
+
+        assert _hash_ndarray(s.Y_, 8) == "0115ba23"
+
     def test_error_patch_overlap(self):
         with pytest.raises(ValueError, match="Invalid patch_overlap parameter"):
             s = SVT(patch_size=10, patch_overlap=11)
