@@ -37,9 +37,10 @@ class SVT:
     motion_window : int, default=7
         Size of neighbourhood in pixels for ARPS
         motion estimation search. Must be odd.
-    motion_filter : int, default=5
+    motion_filter : int or None, default=5
         Size of median filter in pixels used to
-        improve motion estimation search.
+        improve motion estimation search. If ``None``,
+        no median filtering is performed.
     optimize_pgure : bool, default=True
         Whether to optimize PGURE or just denoise
         according to given threshold.
@@ -124,6 +125,13 @@ class SVT:
         self.Y_ = None
 
     def _check_arguments(self, X_shape):
+        """Sanity-checking of arguments before calling C++ code."""
+        # C++ uses numerical values instead of None for defaults
+        self.motion_filter_ = -1 if self.motion_filter is None else self.motion_filter
+        self.n_jobs_ = 0 if self.n_jobs is None else self.n_jobs
+        self.random_seed_ = -1 if self.random_seed is None else self.random_seed
+
+        # Check arguments
         if self.patch_overlap > self.patch_size:
             raise ValueError(
                 f"Invalid patch_overlap parameter: got {self.patch_overlap}, "
@@ -137,10 +145,10 @@ class SVT:
                     "should be greater than 1 pixel"
                 )
 
-            if self.motion_filter < 1:
+            if not isinstance(self.motion_filter_, int):
                 raise ValueError(
-                    f"Invalid motion_filter parameter: got {self.motion_filter}, "
-                    "should be greater than 0 pixels"
+                    f"Invalid motion_filter parameter: got {type(self.motion_filter)}, "
+                    "should be an integer number of pixels or None."
                 )
 
         if not self.optimize_pgure and (self.lambda1 < 0.0 or self.lambda1 > 1.0):
@@ -183,9 +191,6 @@ class SVT:
         elif X_dtype != "uint16":
             X = X.astype(np.uint16)
 
-        self.n_jobs_ = 0 if self.n_jobs is None else self.n_jobs
-        self.random_seed_ = -1 if self.random_seed is None else self.random_seed
-
         res = pguresvt_16(
             input_images=X,
             trajectory_length=self.trajectory_length,
@@ -193,7 +198,7 @@ class SVT:
             patch_overlap=self.patch_overlap,
             motion_estimation=self.motion_estimation,
             motion_window=self.motion_window,
-            motion_filter=self.motion_filter,
+            motion_filter=self.motion_filter_,
             optimize_pgure=self.optimize_pgure,
             lambda1=self.lambda1,
             exponential_weighting=self.exponential_weighting,

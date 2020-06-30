@@ -21,7 +21,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
                   const uint32_t blockSize,
                   const uint32_t blockOverlap,
                   const uint32_t motionWindow,
-                  const uint32_t medianSize,
+                  const int64_t medianSize,
                   const uint32_t noiseMethod,
                   const uint32_t maxIter,
                   const int64_t nJobs,
@@ -71,7 +71,14 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     Z.slice(i) = zSlice;
   };
 
-  pguresvt::parallel(medianFunc, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs); // Apply over the images
+  if (medianSize > 0) // Apply median filter to the images prior to motion estimation
+  {
+    pguresvt::parallel(medianFunc, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs);
+  }
+  else // Motion estimation is applied to the unfiltered images
+  {
+    Z = X;
+  }
 
   auto &&pgureFunc = [&, lambda_ = lambda0, alpha_ = alpha0, mu_ = mu0, sigma_ = sigma0](uint32_t timeIter) {
     auto lambda = lambda_;

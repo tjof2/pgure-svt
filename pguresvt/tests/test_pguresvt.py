@@ -22,7 +22,6 @@ class TestSVT:
         self.seed = 123
         self.X = np.load(f"{cur_path}/data.npz")["a"]
 
-    @pytest.mark.xfail()
     def test_default(self):
         s = SVT(
             patch_size=16,
@@ -35,13 +34,13 @@ class TestSVT:
             noise_sigma=0.1,
             motion_estimation=True,
             motion_window=7,
-            motion_filter=1,
+            motion_filter=None,
             n_jobs=1,
             random_seed=self.seed,
         )
         s.denoise(self.X)
 
-        assert _hash_ndarray(s.Y_, 8) == "5c3a8c72"
+        assert _hash_ndarray(s.Y_, 8) == "6b7cd8f8"
 
     def test_no_motion(self):
         s = SVT(
@@ -75,7 +74,7 @@ class TestSVT:
 
     def test_error_motion_filter(self):
         with pytest.raises(ValueError, match="Invalid motion_filter parameter"):
-            s = SVT(motion_estimation=True, motion_filter=0)
+            s = SVT(motion_estimation=True, motion_filter=0.5)
             s.denoise(self.X)
 
     def test_error_lambda1(self):

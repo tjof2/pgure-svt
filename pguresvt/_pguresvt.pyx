@@ -98,7 +98,7 @@ cdef np.ndarray[np.double_t, ndim=3] numpy_from_cube_d(Cube[double] &m) except +
 cdef extern from "../src/pguresvt.hpp":
     cdef uint32_t c_pgure "PGURESVT"[T1, T2] (Cube[T2] &, Cube[T1] &,
                                               uint32_t, uint32_t, uint32_t, uint32_t,
-                                              uint32_t, uint32_t, uint32_t,
+                                              int64_t, uint32_t, uint32_t,
                                               int64_t, int64_t, bool, bool, bool,
                                               double, double, double, double, double)
 
@@ -108,7 +108,7 @@ def pguresvt_16(np.ndarray[np.uint16_t, ndim=3] input_images,
                 uint32_t patch_size = 4,
                 uint32_t patch_overlap = 1,
                 uint32_t motion_window = 7,
-                uint32_t motion_filter = 5,
+                int64_t motion_filter = 5,
                 uint32_t noise_method = 4,
                 uint32_t max_iter = 1000,
                 int64_t n_jobs = -1,
