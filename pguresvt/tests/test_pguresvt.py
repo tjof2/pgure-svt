@@ -34,7 +34,7 @@ class TestGaussianNoise:
         self.Y[self.Y < 0.0] = 0.0
 
     def test_default_single_threaded(self):
-        s = SVT(random_seed=self.seed)
+        s = SVT(n_jobs=1, random_seed=self.seed)
         s.denoise(self.Y)
         assert _nsed(self.X, s.Y_) < 0.025
 

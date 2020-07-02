@@ -63,9 +63,9 @@ class SVT:
         Maximum iterations of PGURE optimization algorithm.
         Ignored if ``optimize_pgure=False``.
     n_jobs : int or None, default=None
-        The number of threads to use. A value of ``None`` means
-        using a single thread, while -1 means using all
-        threads dependent on the available hardware.
+        The number of threads to use. A value of ``None``
+        means using all threads dependent on the available
+        hardware.
     random_seed : int or None, default=None
         Random seed used when optimizing PGURE.
         Ignored if ``optimize_pgure=False``.
@@ -135,7 +135,7 @@ class SVT:
 
         # C++ uses numerical values instead of None for defaults
         self.motion_filter_ = -1 if self.motion_filter is None else self.motion_filter
-        self.n_jobs_ = 0 if self.n_jobs is None else self.n_jobs
+        self.n_jobs_ = -1 if self.n_jobs is None else self.n_jobs
         self.random_seed_ = -1 if self.random_seed is None else self.random_seed
 
         # Check arguments
