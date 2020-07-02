@@ -15,12 +15,11 @@ PGURE-SVT is released free of charge under the GNU General Public License ([GPLv
 
 ## Installation
 
-<!-- The easiest way to install the package is with `pip`:
+To install ``pgure-svt`` in a `conda` environment (Linux and MacOS only):
 
 ```bash
-$ pip install -U ctrwfractal
-$ pip install git+https://github.com/tjof2/ctrwfractal.git
-``` -->
+$ conda install pgure-svt -c conda-forge
+```
 
 #### Dependencies
 To successfully compile the C++ code, PGURE-SVT requires the following packages and libraries to be installed on your machine first.
