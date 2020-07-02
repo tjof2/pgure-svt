@@ -59,7 +59,7 @@ class SVT:
     tol : float, default=1e-7
         Stopping tolerance of PGURE optimization algorithm.
         Ignored if ``optimize_pgure=False``.
-    max_iter : int, default=1000
+    max_iter : int, default=500
         Maximum iterations of PGURE optimization algorithm.
         Ignored if ``optimize_pgure=False``.
     n_jobs : int or None, default=None
@@ -100,7 +100,7 @@ class SVT:
         noise_mu=-1.0,
         noise_sigma=-1.0,
         tol=1e-7,
-        max_iter=1000,
+        max_iter=500,
         n_jobs=None,
         random_seed=None,
     ):
@@ -124,8 +124,15 @@ class SVT:
 
         self.Y_ = None
 
-    def _check_arguments(self, X_shape):
+    def _check_arguments(self, X):
         """Sanity-checking of arguments before calling C++ code."""
+
+        if X.min() < 0.0:
+            raise ValueError(
+                "Negative values found in data. PGURE-SVT "
+                "requires strictly non-negative image data."
+            )
+
         # C++ uses numerical values instead of None for defaults
         self.motion_filter_ = -1 if self.motion_filter is None else self.motion_filter
         self.n_jobs_ = 0 if self.n_jobs is None else self.n_jobs
@@ -158,12 +165,12 @@ class SVT:
             )
 
         if any(v < 0.0 for v in [self.noise_alpha, self.noise_mu, self.noise_sigma]):
-            if X_shape[0] != X_shape[1]:
+            if X.shape[0] != X.shape[1]:
                 raise ValueError(
-                    f"Quadtree noise estimation requires square images, got {X_shape}"
+                    f"Quadtree noise estimation requires square images, got {X.shape}"
                 )
 
-            if not _is_power_of_two(X_shape[0]):
+            if not _is_power_of_two(X.shape[0]):
                 raise ValueError(
                     "Quadtree noise estimation requires image dimensions 2^N"
                 )
@@ -182,7 +189,7 @@ class SVT:
             Returns the denoised sequence
 
         """
-        self._check_arguments(X.shape)
+        self._check_arguments(X)
 
         X_dtype = getattr(X, "dtype", None)
 
@@ -211,6 +218,6 @@ class SVT:
             n_jobs=self.n_jobs_,
             random_seed=self.random_seed_,
         )
-        self.Y_ = res[0]
+        self.Y_ = np.transpose(res[0], (2, 1, 0))
 
         return self

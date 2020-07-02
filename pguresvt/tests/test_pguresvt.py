@@ -1,8 +1,6 @@
 # Author: Tom Furnival
 # License: GPLv3
 
-import hashlib
-
 import os
 import numpy as np
 import pytest
@@ -10,59 +8,58 @@ import pytest
 from pguresvt import SVT
 
 
-def _hash_ndarray(arr, n_char=-1):
-    """Simple function to hash a np.ndarray object."""
-    return hashlib.sha256(arr.data.tobytes()).hexdigest()[:n_char]
+def _nsed(A, B):
+    """Calculate the normalized Euclidean distance between two arrays."""
+    A_m = A - A.mean()
+    B_m = B - B.mean()
+
+    return (
+        0.5
+        * np.linalg.norm(A_m - B_m) ** 2
+        / (np.linalg.norm(A_m) ** 2 + np.linalg.norm(B_m) ** 2)
+    )
 
 
-class TestSVT:
+class TestGaussianNoise:
     def setup_method(self, method):
         cur_path = os.path.dirname(os.path.realpath(__file__))
-
-        self.seed = 123
         self.X = np.load(f"{cur_path}/data.npz")["a"]
 
-    @pytest.mark.xfail()
-    def test_default(self):
+        self.seed = 123
+        self.rng = np.random.RandomState(self.seed)
+        self.mu = 100.0
+        self.sigma = 100.0
+
+        self.Y = self.X + self.mu + self.sigma * self.rng.randn(*self.X.shape)
+        self.Y[self.Y < 0.0] = 0.0
+
+    def test_default_single_threaded(self):
+        s = SVT(random_seed=self.seed)
+        s.denoise(self.Y)
+        assert _nsed(self.X, s.Y_) < 0.025
+
+    def test_default_multi_threaded(self):
+        s = SVT(n_jobs=-1, random_seed=self.seed)
+        s.denoise(self.Y)
+        assert _nsed(self.X, s.Y_) < 0.025
+
+    def test_default_known_noise(self):
         s = SVT(
-            patch_size=16,
-            trajectory_length=15,
-            patch_overlap=3,
-            optimize_pgure=False,
-            lambda1=0.15,
-            noise_alpha=0.1,
-            noise_mu=0.1,
-            noise_sigma=0.1,
-            motion_estimation=True,
-            motion_window=7,
-            motion_filter=3,
-            n_jobs=1,
-            random_seed=self.seed,
+            noise_mu=self.mu, noise_sigma=self.sigma, n_jobs=-1, random_seed=self.seed
         )
-        s.denoise(self.X)
+        s.denoise(self.Y)
+        assert _nsed(self.X, s.Y_) < 0.3
 
-        assert _hash_ndarray(s.Y_, 8) == "5345bc0a"
 
-    @pytest.mark.xfail()
-    def test_no_motion(self):
-        s = SVT(
-            patch_size=16,
-            trajectory_length=15,
-            patch_overlap=3,
-            optimize_pgure=False,
-            lambda1=0.15,
-            noise_alpha=0.1,
-            noise_mu=0.1,
-            noise_sigma=0.1,
-            motion_estimation=False,
-            motion_window=7,
-            motion_filter=1,
-            n_jobs=1,
-            random_seed=self.seed,
-        )
-        s.denoise(self.X)
+class TestErrors:
+    def setup_method(self, method):
+        self.X = np.ones((32, 32, 16))
 
-        assert _hash_ndarray(s.Y_, 8) == "0115ba23"
+    def test_negative_data(self):
+        with pytest.raises(ValueError, match="Negative values found in data"):
+            s = SVT()
+            self.X[0, 0, 0] = -1
+            s.denoise(self.X)
 
     def test_error_patch_overlap(self):
         with pytest.raises(ValueError, match="Invalid patch_overlap parameter"):

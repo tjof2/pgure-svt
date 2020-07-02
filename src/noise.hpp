@@ -70,7 +70,6 @@ namespace pguresvt
             tree.shed_col(dele(k));
           }
         }
-        pguresvt::PrintFixed(1, "Shedding done");
 
         for (size_t n = 0; n < tree.n_cols; n++) // Extract patches for robust estimation
         {
