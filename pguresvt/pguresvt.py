@@ -36,7 +36,7 @@ def mixed_noise_model(X, alpha=0.1, mu=0.1, sigma=0.1, random_seed=None):
     if alpha <= 0.0 or alpha > 1.0:
         raise ValueError("alpha should be in range [0, 1]")
     if sigma < 0.0:
-        raise ValueError("sigma should be in >= 0.0")
+        raise ValueError("sigma should be >= 0.0")
 
     rng = np.random.RandomState(random_seed)
 

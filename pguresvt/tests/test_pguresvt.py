@@ -5,7 +5,7 @@ import os
 import numpy as np
 import pytest
 
-from pguresvt import SVT
+from pguresvt import SVT, mixed_noise_model
 
 
 def _nsed(A, B):
@@ -18,6 +18,20 @@ def _nsed(A, B):
         * np.linalg.norm(A_m - B_m) ** 2
         / (np.linalg.norm(A_m) ** 2 + np.linalg.norm(B_m) ** 2)
     )
+
+
+class TestMixedNoiseModel:
+    def setup_method(self, method):
+        self.seed = 101
+        self.X = np.ones((10, 10, 10))
+
+    def test_error_alpha(self):
+        with pytest.raises(ValueError, match="alpha should be in range"):
+            _ = mixed_noise_model(self.X, alpha=-1.0)
+
+    def test_error_sigma(self):
+        with pytest.raises(ValueError, match="sigma should be"):
+            _ = mixed_noise_model(self.X, sigma=-1.0)
 
 
 class TestGaussianNoise:
