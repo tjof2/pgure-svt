@@ -31,26 +31,23 @@ namespace pguresvt
           const uint32_t blockSize,
           const uint32_t blockOverlap,
           const int64_t randomSeed,
-          const bool expWeighting) : U(U),
-                                     patches(patches),
-                                     alpha(alpha),
-                                     mu(mu),
-                                     sigma(sigma),
-                                     blockSize(blockSize),
-                                     blockOverlap(blockOverlap),
-                                     randomSeed(randomSeed),
-                                     expWeighting(expWeighting)
+          const bool expWeighting,
+          const bool optimizePGURE = true) : U(U),
+                                             patches(patches),
+                                             alpha(alpha),
+                                             mu(mu),
+                                             sigma(sigma),
+                                             blockSize(blockSize),
+                                             blockOverlap(blockOverlap),
+                                             randomSeed(randomSeed),
+                                             expWeighting(expWeighting),
+                                             optimizePGURE(optimizePGURE)
     {
       Nx = U.n_rows;
       Ny = U.n_cols;
       Nt = U.n_slices;
       OoNxNyNt = 1.0 / (Nx * Ny * Nt);
       sigmasq = sigma * sigma;
-
-      Uhat.set_size(Nx, Ny, Nt);
-      U1.set_size(Nx, Ny, Nt);
-      U2p.set_size(Nx, Ny, Nt);
-      U2m.set_size(Nx, Ny, Nt);
 
       if (randomSeed < 0) // Seed with external entropy from std::random_device
       {
@@ -61,44 +58,58 @@ namespace pguresvt
         RNG.seed(randomSeed);
       }
 
-      eps1 = U.max() * 1E-4; // Specify perturbations
-      eps2 = eps1 * 1E2;     // Heuristic: 100 * eps1
-
-      delta1.set_size(Nx, Ny, Nt); // Generate random samples for stochastic evaluation
-      delta2.set_size(Nx, Ny, Nt);
-
-      GenerateRandomPerturbations();
-
-      U1 = U + (delta1 * eps1);
-      U2p = U + (delta2 * eps2);
-      U2m = U - (delta2 * eps2);
-
       // Initialize the block SVDs
       svt0 = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
-      svt1 = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
-      svt2p = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
-      svt2m = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
-
       svt0->Decompose(U);
-      svt1->Decompose(U1);
-      svt2p->Decompose(U2p);
-      svt2m->Decompose(U2m);
+
+      if (optimizePGURE)
+      {
+        Uhat.set_size(Nx, Ny, Nt);
+        U1.set_size(Nx, Ny, Nt);
+        U2p.set_size(Nx, Ny, Nt);
+        U2m.set_size(Nx, Ny, Nt);
+
+        eps1 = U.max() * 0.0001; // Specify perturbations
+        eps2 = 100 * eps1;       // Heuristic: 100 * eps1
+
+        delta1.set_size(Nx, Ny, Nt); // Generate random samples for stochastic evaluation
+        delta2.set_size(Nx, Ny, Nt);
+
+        GenerateRandomPerturbations();
+
+        U1 = U + (delta1 * eps1);
+        U2p = U + (delta2 * eps2);
+        U2m = U - (delta2 * eps2);
+
+        // Initialize the remaining block SVDs
+        svt1 = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+        svt2p = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+        svt2m = new pguresvt::SVT<T>(patches, Nx, Ny, Nt, blockSize, blockOverlap, expWeighting);
+
+        svt1->Decompose(U1);
+        svt2p->Decompose(U2p);
+        svt2m->Decompose(U2m);
+      }
     }
 
     ~PGURE()
     {
       delete svt0;
-      delete svt1;
-      delete svt2p;
-      delete svt2m;
 
-      Uhat.reset();
-      U1.reset();
-      U2p.reset();
-      U2m.reset();
+      if (optimizePGURE)
+      {
+        delete svt1;
+        delete svt2p;
+        delete svt2m;
 
-      delta1.reset();
-      delta2.reset();
+        Uhat.reset();
+        U1.reset();
+        U2p.reset();
+        U2m.reset();
+
+        delta1.reset();
+        delta2.reset();
+      }
     }
 
     arma::Cube<T> Reconstruct(const double user_lambda)
@@ -108,17 +119,21 @@ namespace pguresvt
 
     double CalculatePGURE(const std::vector<double> &x, std::vector<double> &grad, void *data)
     {
-      Uhat = svt0->Reconstruct(x[0]);
-      U1 = svt1->Reconstruct(x[0]);
-      U2p = svt2p->Reconstruct(x[0]);
-      U2m = svt2m->Reconstruct(x[0]);
-
-      // Modified from [1] to include mean/offset
-      double pgURE = OoNxNyNt * (arma::accu(arma::square(arma::abs(Uhat - U))) - (alpha + mu) * arma::accu(U) + (2 / eps1 * arma::accu(delta1 % (alpha * U - alpha * mu + sigmasq) % (U1 - Uhat))) - (2 * sigmasq * alpha / (eps2 * eps2) * arma::accu(delta2 % (U2p - 2 * Uhat + U2m))) + (2 * mu * arma::accu(Uhat)) + mu) - sigmasq;
+      if (!optimizePGURE) // Should not get here!
+      {
+        pguresvt::Print(std::cerr, "ERROR: CalculatePGURE() can only be called if optimizePGURE=true");
+        return 0;
+      }
 
       lambda = x[0]; // Set new lambda
 
-      return pgURE;
+      Uhat = svt0->Reconstruct(lambda);
+      U1 = svt1->Reconstruct(lambda);
+      U2p = svt2p->Reconstruct(lambda);
+      U2m = svt2m->Reconstruct(lambda);
+
+      // Modified from [1] to include mean/offset
+      return OoNxNyNt * (arma::accu(arma::square(arma::abs(Uhat - U))) - (alpha + mu) * arma::accu(U) + (2 / eps1 * arma::accu(delta1 % (alpha * U - alpha * mu + sigmasq) % (U1 - Uhat))) - (2 * sigmasq * alpha / (eps2 * eps2) * arma::accu(delta2 % (U2p - 2 * Uhat + U2m))) + (2 * mu * arma::accu(Uhat)) + mu) - sigmasq;
     }
 
     double Optimize(const double tol, const double start, const double bound, const int eval);
@@ -129,7 +144,7 @@ namespace pguresvt
     double alpha, mu, sigma, sigmasq;
     uint32_t Nx, Ny, Nt, blockSize, blockOverlap;
     int64_t randomSeed;
-    bool expWeighting;
+    bool expWeighting, optimizePGURE;
 
     double OoNxNyNt;
     double eps1, eps2;
@@ -182,27 +197,42 @@ namespace pguresvt
   double PGURE<T>::Optimize(const double tol, const double start, const double bound, const int eval) // Optimization function using BOBYQA gradient-free algorithm
   {
     double minf;
-    double startingStep = 0.5 * start;
 
     std::vector<double> x(1);
     x[0] = start;
 
-    nlopt::opt opt(nlopt::LN_BOBYQA, 1);
+    // TODO: profile nlopt::LN_BOBYQA against nlopt::LN_SBPLX
+    //nlopt::opt opt(nlopt::LN_BOBYQA, 1);
+    nlopt::opt opt(nlopt::LN_SBPLX, 1);
+
     opt.set_min_objective(obj_wrapper<T>, this);
     opt.set_maxeval(eval);
-    opt.set_lower_bounds(0.);
+    opt.set_lower_bounds(0.0); // Avoid negative thresholding
     opt.set_upper_bounds(bound);
     opt.set_ftol_rel(tol);
     opt.set_xtol_abs(1E-12);
-    opt.set_initial_step(startingStep);
+    opt.set_initial_step(std::sqrt(start)); // Heuristic step-size
 
     nlopt::result status = opt.optimize(x, minf);
 
-    if (status == 5)
+    if (status < 1)
+    {
+      pguresvt::Print(std::cerr, "ERROR: optimization terminated unsuccessfully with NLOPT error code=", status, ".");
+    }
+    // else if (status == 3)
+    // {
+    //   pguresvt::Print(std::cout, "Optimization terminated successfully after reaching ftol=", tol, ".");
+    // }
+    // else if (status == 4)
+    // {
+    //   pguresvt::Print(std::cout, "Optimization terminated successfully after reaching xtol=", 1E-12, ".");
+    // }
+    else if (status == 5)
     {
       pguresvt::Print(std::cerr, "WARNING: optimization terminated after max_eval (", eval, ") was reached.\n",
                       "Consider increasing the max_eval or increasing the convergence tolerance (tol=", tol, ").");
     }
+
     return lambda;
   }
 
