@@ -173,10 +173,10 @@ class SVT:
                     "should be an integer number of pixels or None."
                 )
 
-        if not self.optimize_pgure and (self.lambda1 < 0.0 or self.lambda1 > 1.0):
+        if not self.optimize_pgure and (self.lambda1 is None or self.lambda1 < 0.0):
             raise ValueError(
                 f"Invalid lambda1 parameter: got {self.lambda1}, "
-                "should be a float in range [0, 1]"
+                "should be a float >= 0.0 if optimize_pgure is None."
             )
 
         if any(v < 0.0 for v in [self.noise_alpha, self.noise_mu, self.noise_sigma]):

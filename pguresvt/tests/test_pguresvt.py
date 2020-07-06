@@ -37,6 +37,13 @@ class TestGaussianNoise:
     def test_single_threaded(self):
         s = SVT(n_jobs=1, random_seed=self.seed)
         s.denoise(self.Y)
+
+        assert hasattr(s, "Y_")
+        assert hasattr(s, "lambda1s_")
+        assert hasattr(s, "noise_alphas_")
+        assert hasattr(s, "noise_mus_")
+        assert hasattr(s, "noise_sigmas_")
+
         assert _nsed(self.X, s.Y_) < 0.025
 
     def test_multi_threaded(self):
@@ -44,10 +51,16 @@ class TestGaussianNoise:
         s.denoise(self.Y)
         assert _nsed(self.X, s.Y_) < 0.025
 
-    def test_fortran_array(self):
-        s = SVT(noise_mu=self.mu, noise_sigma=self.sigma, random_seed=self.seed)
+    @pytest.mark.parametrize("opt", [True, False])
+    def test_opt_lambda1(self, opt):
+        s = SVT(lambda1=5.0, optimize_pgure=opt, random_seed=self.seed)
         s.denoise(np.asfortranarray(self.Y))
-        assert _nsed(self.X, s.Y_) < 0.3
+        assert _nsed(self.X, s.Y_) < 0.025
+
+    def test_fortran_array(self):
+        s = SVT(random_seed=self.seed)
+        s.denoise(np.asfortranarray(self.Y))
+        assert _nsed(self.X, s.Y_) < 0.025
 
     def test_known_noise(self):
         s = SVT(noise_mu=self.mu, noise_sigma=self.sigma, random_seed=self.seed)
