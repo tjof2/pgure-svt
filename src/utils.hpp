@@ -170,7 +170,13 @@ namespace pguresvt
 } // namespace pguresvt
 
 template <typename T>
-void SetMemState(T &t, int state)
+void SetMemStateMat(T &t, int state)
+{
+    const_cast<arma::uhword &>(t.mem_state) = state;
+}
+
+template <typename T>
+void SetMemStateCube(T &t, int state)
 {
     const_cast<arma::uword &>(t.mem_state) = state;
 }
