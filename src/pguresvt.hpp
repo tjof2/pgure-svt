@@ -64,25 +64,27 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
   double mu0 = (muEst >= 0.0) ? muEst : -1.0;
   double sigma0 = (sigmaEst >= 0.0) ? sigmaEst : -1.0;
 
-  arma::Cube<T1> Z(Nx, Ny, Nimgs); // Median-filtered sequence
-  int memSize = 1024 * 1024;       // assumes 1024 KB L2 cache size
-
-  auto &&medianFunc = [&](uint32_t i) {
-    uint16_t *zBuffer = new uint16_t[Nx * Ny];
-    ConstantTimeMedianFilter(X.slice(i).memptr(), zBuffer, Nx, Ny, Nx, Nx, medianSize, 1, memSize);
-
-    arma::Mat<uint16_t> zSlice(zBuffer, Nx, Ny);
-    Z.slice(i) = zSlice;
-    delete zBuffer;
-  };
+  arma::Cube<T2> Z(Nx, Ny, Nimgs); // Median-filtered sequence
 
   if (medianSize > 0) // Apply median filter to the images prior to motion estimation
   {
+    int memSize = 1024 * 1024; // assumes 1024 KB L2 cache size
+
+    auto &&medianFunc = [&](uint32_t i) {
+      uint16_t *zBuffer = new uint16_t[Nx * Ny];
+      ConstantTimeMedianFilter(arma::conv_to<arma::Mat<uint16_t>>::from(X.slice(i)).memptr(),
+                               zBuffer, Nx, Ny, Nx, Nx, medianSize, 1, memSize);
+
+      arma::Mat<uint16_t> zSlice(zBuffer, Nx, Ny);
+      Z.slice(i) = arma::conv_to<arma::Mat<T2>>::from(zSlice);
+      delete zBuffer;
+    };
+
     pguresvt::parallel(medianFunc, static_cast<uint32_t>(0), static_cast<uint32_t>(Nimgs), nJobs);
   }
   else // Motion estimation is applied to the unfiltered images
   {
-    Z = X;
+    Z = arma::conv_to<arma::Cube<T2>>::from(X);
   }
 
   auto &&pgureFunc = [&, lambda_ = lambda0, alpha_ = alpha0, mu_ = mu0, sigma_ = sigma0](uint32_t timeIter) {

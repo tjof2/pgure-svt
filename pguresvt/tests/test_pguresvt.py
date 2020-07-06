@@ -32,6 +32,7 @@ class TestGaussianNoise:
 
         self.Y = self.X + self.mu + self.sigma * self.rng.randn(*self.X.shape)
         self.Y[self.Y < 0.0] = 0.0
+        self.Y = self.Y.astype(np.uint16)  # Temporary for now
 
     def test_default_single_threaded(self):
         s = SVT(n_jobs=1, random_seed=self.seed)
@@ -93,3 +94,8 @@ class TestErrors:
         with pytest.raises(ValueError, match="requires image dimensions 2\\^N"):
             s = SVT()
             s.denoise(self.X[: m - 1, : n - 1, :])
+
+    def test_error_dtype(self):
+        with pytest.raises(TypeError, match="Invalid dtype"):
+            s = SVT()
+            s.denoise((self.X == 0))

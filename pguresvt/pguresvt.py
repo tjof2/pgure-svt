@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from ._pguresvt import pguresvt_u16
+from ._pguresvt import pguresvt_d, pguresvt_f, pguresvt_u8, pguresvt_u16
 
 
 def _is_power_of_two(n):
@@ -206,14 +206,23 @@ class SVT:
         """
         self._check_arguments(X)
 
+        supported_dtypes = {
+            np.dtype("uint8"): pguresvt_u8,
+            np.dtype("uint16"): pguresvt_u16,
+            np.dtype("float32"): pguresvt_f,
+            np.dtype("float64"): pguresvt_d,
+        }
+
         X_dtype = getattr(X, "dtype", None)
+        if X_dtype not in supported_dtypes:
+            raise TypeError(
+                f"Invalid dtype: got {X_dtype}, but only {list(supported_dtypes.keys())} are supported"
+            )
 
         if not X.flags.f_contiguous:
-            X = np.asfortranarray(X, dtype=np.uint16)
-        elif X_dtype != "uint16":
-            X = X.astype(np.uint16)
+            X = np.asfortranarray(X, dtype=X_dtype)
 
-        res = pguresvt_u16(
+        res = supported_dtypes[X_dtype](
             input_images=X,
             trajectory_length=self.trajectory_length,
             patch_size=self.patch_size,

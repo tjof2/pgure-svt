@@ -66,6 +66,7 @@ cdef extern from "../src/utils.hpp":
     double* GetMemory(Mat[double]& m)
     double* GetMemory(Cube[double]& m)
 
+######################################
 # Cube conversion (numpy to Armadillo)
 
 cdef Cube[uint8_t] numpy_to_cube_u8(np.ndarray[uint8_t, ndim=3] X):
@@ -91,6 +92,7 @@ cdef Cube[float] numpy_to_cube_f(np.ndarray[float, ndim=3] X):
 cdef Cube[double] numpy_to_cube_d(np.ndarray[double, ndim=3] X):
     return Cube[double](<double*> X.data, X.shape[0], X.shape[1], X.shape[2], False, False)
 
+########################################
 # Matrix conversion (Armadillo to numpy)
 
 cdef np.ndarray[np.double_t, ndim=2] numpy_from_mat_d(Mat[double] &m) except +:
@@ -105,6 +107,7 @@ cdef np.ndarray[np.double_t, ndim=2] numpy_from_mat_d(Mat[double] &m) except +:
 
     return arr
 
+######################################
 # Cube conversion (Armadillo to numpy)
 
 cdef np.ndarray[np.float_t, ndim=3] numpy_from_cube_f(Cube[float] &m) except +:
@@ -134,6 +137,8 @@ cdef np.ndarray[np.double_t, ndim=3] numpy_from_cube_d(Cube[double] &m) except +
 
     return arr
 
+#############
+# C++ wrapper
 
 cdef extern from "../src/pguresvt.hpp":
     cdef uint32_t c_pgure "PGURESVT"[T1, T2] (Cube[T2] &, Mat[double] & , Cube[T1] &,
@@ -141,6 +146,65 @@ cdef extern from "../src/pguresvt.hpp":
                                               int64_t, uint32_t, uint32_t,
                                               int64_t, int64_t, bool, bool, bool,
                                               double, double, double, double, double)
+
+
+def pguresvt_u8(np.ndarray[np.uint8_t, ndim=3] input_images,
+                uint32_t trajectory_length = 15,
+                uint32_t patch_size = 4,
+                uint32_t patch_overlap = 1,
+                uint32_t motion_window = 7,
+                int64_t motion_filter = 5,
+                uint32_t noise_method = 4,
+                uint32_t max_iter = 500,
+                int64_t n_jobs = -1,
+                int64_t random_seed = -1,
+                bool optimize_pgure = True,
+                bool exponential_weighting = True,
+                bool motion_estimation = True,
+                double lambda1 = 0.0,
+                double noise_alpha = -1.0,
+                double noise_mu = -1.0,
+                double noise_sigma = -1.0,
+                double tol = 1e-7):
+
+    cdef uint32_t result
+
+    cdef np.ndarray[np.double_t, ndim=3] X
+    cdef np.ndarray[np.double_t, ndim=2] estimates
+
+    cdef Cube[double] _X
+    cdef Mat[double] _estimates
+
+    _X = Cube[double]()
+    _estimates = Mat[double]()
+
+    result = c_pgure[uint8_t, double](
+        _X,
+        _estimates,
+        numpy_to_cube_u8(input_images),
+        trajectory_length,
+        patch_size,
+        patch_overlap,
+        motion_window,
+        motion_filter,
+        noise_method,
+        max_iter,
+        n_jobs,
+        random_seed,
+        optimize_pgure,
+        exponential_weighting,
+        motion_estimation,
+        lambda1,
+        noise_alpha,
+        noise_mu,
+        noise_sigma,
+        tol,
+    )
+
+    X = numpy_from_cube_d(_X)
+    estimates = numpy_from_mat_d(_estimates)
+
+    return X, estimates, result
 
 
 def pguresvt_u16(np.ndarray[np.uint16_t, ndim=3] input_images,
@@ -177,6 +241,124 @@ def pguresvt_u16(np.ndarray[np.uint16_t, ndim=3] input_images,
         _X,
         _estimates,
         numpy_to_cube_u16(input_images),
+        trajectory_length,
+        patch_size,
+        patch_overlap,
+        motion_window,
+        motion_filter,
+        noise_method,
+        max_iter,
+        n_jobs,
+        random_seed,
+        optimize_pgure,
+        exponential_weighting,
+        motion_estimation,
+        lambda1,
+        noise_alpha,
+        noise_mu,
+        noise_sigma,
+        tol,
+    )
+
+    X = numpy_from_cube_d(_X)
+    estimates = numpy_from_mat_d(_estimates)
+
+    return X, estimates, result
+
+
+def pguresvt_f(np.ndarray[np.float_t, ndim=3] input_images,
+               uint32_t trajectory_length = 15,
+               uint32_t patch_size = 4,
+               uint32_t patch_overlap = 1,
+               uint32_t motion_window = 7,
+               int64_t motion_filter = 5,
+               uint32_t noise_method = 4,
+               uint32_t max_iter = 500,
+               int64_t n_jobs = -1,
+               int64_t random_seed = -1,
+               bool optimize_pgure = True,
+               bool exponential_weighting = True,
+               bool motion_estimation = True,
+               double lambda1 = 0.0,
+               double noise_alpha = -1.0,
+               double noise_mu = -1.0,
+               double noise_sigma = -1.0,
+               double tol = 1e-7):
+
+    cdef uint32_t result
+
+    cdef np.ndarray[np.double_t, ndim=3] X
+    cdef np.ndarray[np.double_t, ndim=2] estimates
+
+    cdef Cube[double] _X
+    cdef Mat[double] _estimates
+
+    _X = Cube[double]()
+    _estimates = Mat[double]()
+
+    result = c_pgure[float, double](
+        _X,
+        _estimates,
+        numpy_to_cube_f(input_images),
+        trajectory_length,
+        patch_size,
+        patch_overlap,
+        motion_window,
+        motion_filter,
+        noise_method,
+        max_iter,
+        n_jobs,
+        random_seed,
+        optimize_pgure,
+        exponential_weighting,
+        motion_estimation,
+        lambda1,
+        noise_alpha,
+        noise_mu,
+        noise_sigma,
+        tol,
+    )
+
+    X = numpy_from_cube_d(_X)
+    estimates = numpy_from_mat_d(_estimates)
+
+    return X, estimates, result
+
+
+def pguresvt_d(np.ndarray[np.double_t, ndim=3] input_images,
+               uint32_t trajectory_length = 15,
+               uint32_t patch_size = 4,
+               uint32_t patch_overlap = 1,
+               uint32_t motion_window = 7,
+               int64_t motion_filter = 5,
+               uint32_t noise_method = 4,
+               uint32_t max_iter = 500,
+               int64_t n_jobs = -1,
+               int64_t random_seed = -1,
+               bool optimize_pgure = True,
+               bool exponential_weighting = True,
+               bool motion_estimation = True,
+               double lambda1 = 0.0,
+               double noise_alpha = -1.0,
+               double noise_mu = -1.0,
+               double noise_sigma = -1.0,
+               double tol = 1e-7):
+
+    cdef uint32_t result
+
+    cdef np.ndarray[np.double_t, ndim=3] X
+    cdef np.ndarray[np.double_t, ndim=2] estimates
+
+    cdef Cube[double] _X
+    cdef Mat[double] _estimates
+
+    _X = Cube[double]()
+    _estimates = Mat[double]()
+
+    result = c_pgure[double, double](
+        _X,
+        _estimates,
+        numpy_to_cube_d(input_images),
         trajectory_length,
         patch_size,
         patch_overlap,
