@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from ._pguresvt import pguresvt_16
+from ._pguresvt import pguresvt_u16
 
 
 def _is_power_of_two(n):
@@ -45,8 +45,13 @@ class SVT:
         Whether to optimize PGURE or just denoise
         according to given threshold.
     threshold : float or None, default=None
-        Threshold to use if not optimizing PGURE.
-        Ignored if ``optimize_pgure=True``.
+        If ``optimize_pgure=False``:
+            Singular value threshold value to use for
+            the entire image sequence.
+        If ``optimize_pgure=True``:
+            Used as the initial guess for the optimization
+            of the singular value threshold. If None, a
+            heuristic is used for the guess instead.
     noise_alpha : float or None, default=None
         Level of noise gain. If None, then parameter is
         estimated online. Ignored if ``optimize_pgure=False``.
@@ -72,8 +77,17 @@ class SVT:
 
     Attributes
     ----------
-    Y_ : np.ndarray
-        Denoised image sequence.
+    Y_ : np.ndarray, shape (nx, ny, nt)
+        The denoised image sequence.
+    lambda1s : np.ndarray, shape (nt,)
+        The singular value threshold applied to each frame.
+        If ``optimize_pgure=True``, these are the optimized values.
+    noise_alphas_ : np.ndarray, shape (nt,)
+        Level of noise gain for each frame.
+    noise_mus_ : np.ndarray, shape (nt,)
+        Level of noise offset for each frame.
+    noise_sigmas_ : np.ndarray, shape (nt,)
+        Level of Gaussian noise for each frame.
 
     References
     ----------
@@ -93,7 +107,7 @@ class SVT:
         motion_window=7,
         motion_filter=5,
         optimize_pgure=True,
-        lambda1=0.0,
+        lambda1=None,
         exponential_weighting=True,
         noise_method=4,
         noise_alpha=-1.0,
@@ -134,6 +148,7 @@ class SVT:
             )
 
         # C++ uses numerical values instead of None for defaults
+        self.lambda1_ = -1 if self.lambda1 is None else self.lambda1
         self.motion_filter_ = -1 if self.motion_filter is None else self.motion_filter
         self.n_jobs_ = -1 if self.n_jobs is None else self.n_jobs
         self.random_seed_ = -1 if self.random_seed is None else self.random_seed
@@ -176,17 +191,17 @@ class SVT:
                 )
 
     def denoise(self, X):
-        """Denoise the data X
+        """Denoise the data X.
 
         Parameters
         ----------
-        X : array [nx, ny, time]
-            The image sequence to be denoised
+        X : np.ndarray, shape (nx, ny, nt)
+            The image sequence to be denoised.
 
         Returns
         -------
-        Y : array [nx, ny, time]
-            Returns the denoised sequence
+        self : object
+            Returns the instance itself.
 
         """
         self._check_arguments(X)
@@ -198,7 +213,7 @@ class SVT:
         elif X_dtype != "uint16":
             X = X.astype(np.uint16)
 
-        res = pguresvt_16(
+        res = pguresvt_u16(
             input_images=X,
             trajectory_length=self.trajectory_length,
             patch_size=self.patch_size,
@@ -207,7 +222,7 @@ class SVT:
             motion_window=self.motion_window,
             motion_filter=self.motion_filter_,
             optimize_pgure=self.optimize_pgure,
-            lambda1=self.lambda1,
+            lambda1=self.lambda1_,
             exponential_weighting=self.exponential_weighting,
             noise_method=self.noise_method,
             noise_alpha=self.noise_alpha,
@@ -218,6 +233,16 @@ class SVT:
             n_jobs=self.n_jobs_,
             random_seed=self.random_seed_,
         )
-        self.Y_ = np.transpose(res[0], (2, 1, 0))
+
+        # Apply transpose to get back to the original order and C-contiguous
+        self.Y_ = np.ascontiguousarray(np.transpose(res[0], (2, 1, 0)))
+
+        self.lambda1s_ = res[1][0]
+        self.noise_alphas_ = res[1][1]
+        self.noise_mus_ = res[1][2]
+        self.noise_sigmas_ = res[1][3]
+
+        # Unused for now
+        # self.err_code_ = res[2]
 
         return self

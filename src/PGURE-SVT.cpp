@@ -181,9 +181,10 @@ int main(int argc, char **argv)
   t0 = std::chrono::high_resolution_clock::now(); // PGURE-SVT timer
 
   arma::cube cleanSeq;
+  arma::mat res;
   uint32_t result;
 
-  result = PGURESVT(cleanSeq, inputSeq,
+  result = PGURESVT(cleanSeq, res, inputSeq,
                     trajLength, blockSize, blockOverlap, motionWindow,
                     medianSize, noiseMethod, maxIter, nJobs, randomSeed,
                     optPGURE, expWeighting, motionEstimation,

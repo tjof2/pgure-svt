@@ -16,6 +16,7 @@
 
 template <typename T1, typename T2>
 uint32_t PGURESVT(arma::Cube<T2> &Y,
+                  arma::Mat<T2> &estimates,
                   const arma::Cube<T1> &X,
                   const uint32_t trajLength,
                   const uint32_t blockSize,
@@ -43,6 +44,9 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
   Y.set_size(arma::size(X)); // Set output sequence size
   Y.zeros();
 
+  estimates.set_size(Nimgs, 4); // Set results vector size
+  estimates.zeros();
+
   if (verbose)
   {
     pguresvt::PrintFixed(1, "Input type=", typeid(T1).name(), ", Output type=", typeid(T2).name());
@@ -55,13 +59,13 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
 
   double OoNxNyNt = 1.0 / (Nx * Ny * Nt);
 
-  double lambda0 = (lambdaEst >= 0.) ? lambdaEst : -1.;
-  double alpha0 = (alphaEst >= 0.) ? alphaEst : -1.;
-  double mu0 = (muEst >= 0.) ? muEst : -1.;
-  double sigma0 = (sigmaEst >= 0.) ? sigmaEst : -1.;
+  double lambda0 = (lambdaEst >= 0.0) ? lambdaEst : -1.0;
+  double alpha0 = (alphaEst >= 0.0) ? alphaEst : -1.0;
+  double mu0 = (muEst >= 0.0) ? muEst : -1.0;
+  double sigma0 = (sigmaEst >= 0.0) ? sigmaEst : -1.0;
 
   arma::Cube<T1> Z(Nx, Ny, Nimgs); // Median-filtered sequence
-  int memSize = 1 * 512 * 1024;    // assumes 1024 KB L2 cache size
+  int memSize = 1024 * 1024;       // assumes 1024 KB L2 cache size
 
   auto &&medianFunc = [&](uint32_t i) {
     uint16_t *zBuffer = new uint16_t[Nx * Ny];
@@ -124,17 +128,27 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     arma::icube p = motion->Estimate(motionEstimation);
     delete motion;
 
-    pguresvt::PGURE<T2> *optimizer = new pguresvt::PGURE<T2>(u, p, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting);
+    pguresvt::PGURE<T2> *optimizer = new pguresvt::PGURE<T2>(u, p, alpha, sigma, mu, blockSize, blockOverlap, randomSeed, expWeighting, optimizePGURE);
 
     if (optimizePGURE) // Determine optimum threshold value
     {
-      double upperBound = 1.0; // Image max is 1.0, so allow up to this
-      lambda = optimizer->Optimize(tol, arma::accu(u) * OoNxNyNt, upperBound, maxIter);
+      double startPoint, upperBound;
+
+      startPoint = (lambda >= 0.0) ? lambda : arma::accu(u) * OoNxNyNt; // User can provide initial guess
+      startPoint = std::max(0.0, startPoint);                           // Initial guess for lambda should be positive
+      upperBound = std::max(100.0, startPoint);                         // Image max is 1.0, so bound lambda a little higher than this
+
+      lambda = optimizer->Optimize(tol, startPoint, upperBound, maxIter);
     }
 
     v = optimizer->Reconstruct(lambda); // Reconstruct the sequence
     v *= uMax;                          // Rescale back to original range
     delete optimizer;
+
+    estimates(timeIter, 0) = lambda; // Update estimates
+    estimates(timeIter, 1) = alpha;
+    estimates(timeIter, 2) = mu;
+    estimates(timeIter, 3) = sigma;
 
     if (timeIter < frameWindow) // Place frames back into sequence
     {
@@ -142,8 +156,7 @@ uint32_t PGURESVT(arma::Cube<T2> &Y,
     }
     else if (timeIter >= (Nimgs - frameWindow))
     {
-      int endseqFrame = timeIter - (Nimgs - Nt);
-      Y.slice(timeIter) = v.slice(endseqFrame);
+      Y.slice(timeIter) = v.slice(timeIter - (Nimgs - Nt));
     }
     else
     {
