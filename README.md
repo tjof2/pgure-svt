@@ -79,7 +79,7 @@ svt = pguresvt.SVT()
 svt.denoise(X)
 
 # Get the denoised data Y
-Y = svt.Y
+Y = svt.Y_
 ```
 
 For more information on the effects of the parameters, users are referred to the publication.
