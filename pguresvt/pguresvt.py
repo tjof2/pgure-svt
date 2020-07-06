@@ -11,6 +11,50 @@ def _is_power_of_two(n):
     return (n & (n - 1) == 0) and n != 0
 
 
+def mixed_noise_model(X, alpha=0.1, mu=0.1, sigma=0.1, random_seed=None):
+    """Add Poisson-Gaussian noise to the data X
+
+    Parameters
+    ----------
+    X : array
+        The data to be corrupted.
+    alpha : float
+        Level of noise gain. Should be in range [0, 1].
+    mu : float
+        Level of noise offset.
+    sigma : float
+        Level of Gaussian noise. Should be >= 0.0.
+    random_seed : int or None, default=None
+        Random seed used to generate noise.
+
+    Returns
+    -------
+    Y : array
+        The corrupted data.
+
+    """
+    if alpha <= 0.0 or alpha > 1.0:
+        raise ValueError("alpha should be in range [0, 1]")
+    if sigma < 0.0:
+        raise ValueError("sigma should be in >= 0.0")
+
+    rng = np.random.RandomState(random_seed)
+
+    # Rescale
+    X = X.astype(float)
+    Xmax = X.max()
+    np.divide(X, Xmax, out=X)
+
+    # Add noise
+    Y = alpha * rng.poisson(X / alpha) + mu + sigma * rng.normal(size=X.shape)
+
+    # Rescale
+    Y -= Y.min()
+    Y *= Xmax / Y.max()
+
+    return Y
+
+
 class SVT:
     """Singular value thresholding for denoising image sequences.
 
