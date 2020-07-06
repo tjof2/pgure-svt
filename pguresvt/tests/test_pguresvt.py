@@ -22,8 +22,27 @@ def _nsed(A, B):
 
 class TestMixedNoiseModel:
     def setup_method(self, method):
-        self.seed = 101
-        self.X = np.ones((10, 10, 10))
+        self.rng = np.random.RandomState(101)
+        self.X = self.rng.uniform(low=0, high=255, size=(64, 64, 32))
+
+    def test_default(self):
+        Y = mixed_noise_model(self.X, random_state=self.rng)
+        np.testing.assert_allclose(_nsed(self.X, Y), 0.3753506, rtol=1e-6)
+
+    def test_alpha(self):
+        Y = mixed_noise_model(self.X, alpha=1e-5, random_state=self.rng)
+        np.testing.assert_allclose(_nsed(self.X, Y), 1.4986839425e-05, rtol=1e-6)
+
+    def test_mu(self):
+        Y = mixed_noise_model(self.X, alpha=1e-5, mu=0.1, random_state=self.rng)
+        np.testing.assert_allclose(_nsed(self.X, Y), 1.4986839425e-05, rtol=1e-6)
+        np.testing.assert_allclose(
+            self.X.mean(), Y.mean() - 0.1 * self.X.max(), rtol=5e-5
+        )
+
+    def test_sigma(self):
+        Y = mixed_noise_model(self.X, alpha=1e-5, sigma=0.1, random_state=self.rng)
+        np.testing.assert_allclose(_nsed(self.X, Y), 0.02836968, rtol=1e-6)
 
     def test_error_alpha(self):
         with pytest.raises(ValueError, match="alpha should be in range"):
@@ -32,6 +51,11 @@ class TestMixedNoiseModel:
     def test_error_sigma(self):
         with pytest.raises(ValueError, match="sigma should be"):
             _ = mixed_noise_model(self.X, sigma=-1.0)
+
+    @pytest.mark.parametrize("rng", [None, 101, np.random.RandomState(101)])
+    def test_random_state(self, rng):
+        # Should not throw any errors
+        _ = mixed_noise_model(self.X, random_state=rng)
 
 
 class TestGaussianNoise:

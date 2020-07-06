@@ -11,21 +11,21 @@ def _is_power_of_two(n):
     return (n & (n - 1) == 0) and n != 0
 
 
-def mixed_noise_model(X, alpha=0.1, mu=0.1, sigma=0.1, random_seed=None):
+def mixed_noise_model(X, alpha=1.0, mu=0.0, sigma=0.0, random_state=None):
     """Add Poisson-Gaussian noise to the data X
 
     Parameters
     ----------
     X : array
         The data to be corrupted.
-    alpha : float
+    alpha : float, default=1.0
         Level of noise gain. Should be in range [0, 1].
-    mu : float
+    mu : float, default=0.0
         Level of noise offset.
-    sigma : float
+    sigma : float, default=0.0
         Level of Gaussian noise. Should be >= 0.0.
-    random_seed : int or None, default=None
-        Random seed used to generate noise.
+    random_state : None or int or RandomState instance, default=None
+        Random seed used to generate the noise.
 
     Returns
     -------
@@ -38,19 +38,25 @@ def mixed_noise_model(X, alpha=0.1, mu=0.1, sigma=0.1, random_seed=None):
     if sigma < 0.0:
         raise ValueError("sigma should be >= 0.0")
 
-    rng = np.random.RandomState(random_seed)
+    if not isinstance(random_state, np.random.RandomState):
+        random_state = np.random.RandomState(random_state)
+
+    # Convert type to float
+    X = X.astype(float)
 
     # Rescale
-    X = X.astype(float)
     Xmax = X.max()
-    np.divide(X, Xmax, out=X)
+    X /= Xmax
 
     # Add noise
-    Y = alpha * rng.poisson(X / alpha) + mu + sigma * rng.normal(size=X.shape)
+    Y = (
+        alpha * random_state.poisson(X / alpha)
+        + mu
+        + sigma * random_state.normal(size=X.shape)
+    )
 
-    # Rescale
-    Y -= Y.min()
-    Y *= Xmax / Y.max()
+    # Rescale back
+    Y *= Xmax
 
     return Y
 
