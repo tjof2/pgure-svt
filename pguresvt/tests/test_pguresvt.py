@@ -25,7 +25,7 @@ class TestGaussianNoise:
         cur_path = os.path.dirname(os.path.realpath(__file__))
         self.X = np.load(f"{cur_path}/data.npz")["a"]
 
-        self.seed = 123
+        self.seed = 101
         self.rng = np.random.RandomState(self.seed)
         self.mu = 100.0
         self.sigma = 100.0
@@ -34,20 +34,23 @@ class TestGaussianNoise:
         self.Y[self.Y < 0.0] = 0.0
         self.Y = self.Y.astype(np.uint16)  # Temporary for now
 
-    def test_default_single_threaded(self):
+    def test_single_threaded(self):
         s = SVT(n_jobs=1, random_seed=self.seed)
         s.denoise(self.Y)
         assert _nsed(self.X, s.Y_) < 0.025
 
-    def test_default_multi_threaded(self):
-        s = SVT(n_jobs=-1, random_seed=self.seed)
+    def test_multi_threaded(self):
+        s = SVT(random_seed=self.seed)
         s.denoise(self.Y)
         assert _nsed(self.X, s.Y_) < 0.025
 
-    def test_default_known_noise(self):
-        s = SVT(
-            noise_mu=self.mu, noise_sigma=self.sigma, n_jobs=-1, random_seed=self.seed
-        )
+    def test_fortran_array(self):
+        s = SVT(noise_mu=self.mu, noise_sigma=self.sigma, random_seed=self.seed)
+        s.denoise(np.asfortranarray(self.Y))
+        assert _nsed(self.X, s.Y_) < 0.3
+
+    def test_known_noise(self):
+        s = SVT(noise_mu=self.mu, noise_sigma=self.sigma, random_seed=self.seed)
         s.denoise(self.Y)
         assert _nsed(self.X, s.Y_) < 0.3
 
