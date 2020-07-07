@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath("../"))
 
 
 project = "pgure-svt"
-copyright = "Copyright 2015-2020, Tom Furnival"
+copyright = "2015-2020, Tom Furnival"
 author = "Tom Furnival"
 
 # The full version, including alpha/beta/rc tags

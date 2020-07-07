@@ -14,7 +14,6 @@ If you use this code in a publication, please cite our work:
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://www.gnu.org/licenses/gpl-3.0.en.html)).
 
 ## Installation
-
 To install ``pgure-svt`` in a `conda` environment (Linux and MacOS only):
 
 ```bash
@@ -58,7 +57,6 @@ $ sudo make install
 To change the install location, type `cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..`, and recompile with `make && sudo make install`.
 
 ## Usage
-PGURE-SVT can be used either from Python, or as a standalone executable.
 
 #### Python
 PGURE-SVT comes with a simple Python wrapper that accepts any NumPy array with dimensions `(nx, ny, T)` for denoising.
@@ -87,22 +85,5 @@ For more information on the effects of the parameters, users are referred to the
 ##### Integration with HyperSpy
 PGURE-SVT can be integrated with the [HyperSpy](http://hyperspy.org) multi-dimensional data analysis toolbox, which provides a number of useful features including data visualization and data import from a number of microscopy file formats. An example Jupyter notebook is [provided here](https://github.com/tjof2/pgure-svt/blob/master/examples/PGURE-SVT-HyperSpy-Demo.ipynb).
 
-#### Standalone executable
-The PGURE-SVT standalone executable uses a simple command-line interface along with a separate parameter file. An example file, [`examples/param.svt`](https://github.com/tjof2/pgure-svt/blob/master/examples/param.svt) is provided. Note that the standalone executable currently only supports 8-bit and 16-bit TIFF sequences.
-
-```bash
-$ ./PGURE-SVT param.svt
-```
-
-```
-# Example parameter file for PGURE-SVT program
-
-# Specify the file name of the TIFF stack to be denoised
-filename             : ../test/examplesequence.tif
-
-# The start and end frames of the sequence to be denoised
-start_image          : 1
-end_image            : 50
-```
 
 Copyright (C) 2015-2020 Tom Furnival.
