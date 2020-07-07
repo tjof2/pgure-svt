@@ -77,7 +77,12 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Examples</a></li>
+<li><a class="reference internal" href="#">Examples</a><ul>
+<li><a class="reference internal" href="#simulated-dataset">Simulated dataset</a></li>
+<li><a class="reference internal" href="#nanoparticle-dataset">Nanoparticle dataset</a></li>
+<li><a class="reference internal" href="#standalone-executable">Standalone executable</a></li>
+</ul>
+</li>
 </ul>
 </ul>
 </li>
@@ -115,7 +120,139 @@
       
   <div class="section" id="examples">
 <span id="id1"></span><h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<p><cite>TODO</cite></p>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#simulated-dataset" id="id2">Simulated dataset</a></p></li>
+<li><p><a class="reference internal" href="#nanoparticle-dataset" id="id3">Nanoparticle dataset</a></p></li>
+<li><p><a class="reference internal" href="#standalone-executable" id="id4">Standalone executable</a></p></li>
+</ul>
+</div>
+<p>PGURE-SVT can be used either from Python, or as a standalone executable.</p>
+<p>The Python examples require the <a class="reference external" href="http://hyperspy.org">HyperSpy</a> multi-dimensional
+data analysis toolbox to be installed. This provides a number of useful features
+including data visualization and data import from a number of microscopy file
+formats. To install it in a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda install hyperspy -c conda-forge
+</pre></div>
+</div>
+<p>An example Jupyter notebook for both of these examples is <a class="reference external" href="https://github.com/tjof2/pgure-svt/blob/master/examples/PGURE-SVT-HyperSpy-Demo.ipynb">provided here</a>.</p>
+<div class="section" id="simulated-dataset">
+<h2><a class="toc-backref" href="#id2">Simulated dataset</a><a class="headerlink" href="#simulated-dataset" title="Permalink to this headline">¶</a></h2>
+<p>The first step is to load the simulated dataset from the <code class="docutils literal notranslate"><span class="pre">examples/</span></code> directory using HyperSpy.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">hyperspy.api</span> <span class="k">as</span> <span class="nn">hs</span>
+
+<span class="kn">from</span> <span class="nn">pguresvt</span> <span class="kn">import</span> <span class="n">hspy</span><span class="p">,</span> <span class="n">mixed_noise_model</span>
+
+<span class="c1"># Load example dataset</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">hs</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;examples/example.tif&quot;</span><span class="p">)</span>
+
+<span class="c1"># Truncate to 25 frames</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">inav</span><span class="p">[:</span><span class="mi">25</span><span class="p">]</span>
+
+<span class="c1"># Plot the result</span>
+<span class="n">s</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">navigator</span><span class="o">=</span><span class="s1">&#39;slider&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we corrupt the dataset with using a noise generator for mixed Poisson-Gaussian noise,
+according to the following equation, where the true, noise-free signal is <span class="math notranslate nohighlight">\(\mathbf{X}_{0}\)</span>,
+and the observed noisy signal is <span class="math notranslate nohighlight">\(\mathbf{Y}\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{Y}=\alpha\mathbf{Z}+\mathbf{E}\;\textrm{ with }\;\begin{cases}
+\mathbf{Z}\thicksim\mathcal{P}\left(\frac{\mathbf{X}^{0}}{\alpha}\right)\\
+\mathbf{E}\thicksim\mathcal{N}\left(\mu,\sigma^{2}\right)
+\end{cases}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\alpha\)</span> is the detector gain, <span class="math notranslate nohighlight">\(\mu\)</span> is the detector offset, and
+<span class="math notranslate nohighlight">\(\sigma\)</span> is the (Gaussian) detector noise.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">123</span>
+<span class="n">detector_gain</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">detector_offset</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">detector_sigma</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="n">noisy_data</span> <span class="o">=</span> <span class="n">mixed_noise_model</span><span class="p">(</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="n">detector_gain</span><span class="p">,</span>
+    <span class="n">mu</span><span class="o">=</span><span class="n">detector_offset</span><span class="p">,</span>
+    <span class="n">sigma</span><span class="o">=</span><span class="n">detector_sigma</span><span class="p">,</span>
+    <span class="n">random_seed</span><span class="o">=</span><span class="n">random_seed</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">s_noisy</span> <span class="o">=</span> <span class="n">hs</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">Signal2D</span><span class="p">(</span><span class="n">noisy_data</span><span class="p">)</span>
+
+<span class="c1"># Plot the noisy result</span>
+<span class="n">s_noisy</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">navigator</span><span class="o">=</span><span class="s2">&quot;slider&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example we do not use the noise estimation procedure, and instead provide
+the known parameters to the algorithm directly. This information is used by the
+PGURE optimizer to calculate the appropriate threshold.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">svt</span> <span class="o">=</span> <span class="n">hspy</span><span class="o">.</span><span class="n">HSPYSVT</span><span class="p">(</span>
+    <span class="n">patch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">noise_alpha</span><span class="o">=</span><span class="n">detector_gain</span><span class="p">,</span>
+    <span class="n">noise_mu</span><span class="o">=</span><span class="n">detector_offset</span><span class="p">,</span>
+    <span class="n">noise_sigma</span><span class="o">=</span><span class="n">detector_sigma</span><span class="p">,</span>
+    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Note that the denoising can take a few moments</span>
+<span class="n">s_denoised</span> <span class="o">=</span> <span class="n">svt</span><span class="o">.</span><span class="n">denoise</span><span class="p">(</span><span class="n">s_noisy</span><span class="p">)</span>
+
+<span class="c1"># Plot the denoised result</span>
+<span class="n">s_denoised</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">navigator</span><span class="o">=</span><span class="s1">&#39;slider&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="nanoparticle-dataset">
+<h2><a class="toc-backref" href="#id3">Nanoparticle dataset</a><a class="headerlink" href="#nanoparticle-dataset" title="Permalink to this headline">¶</a></h2>
+<p>In this example we apply PGURE-SVT to an experimental dataset of a nanoparticle acquired using ADF-STEM.
+This image sequence contains 50 frames at a rate of 4 frames per second. The results of this denoising are
+shown in Fig. 11 of the <a class="reference external" href="https://doi.org/10.1016/j.ultramic.2016.05.005">paper</a>.</p>
+<p>For larger images, such as the <code class="docutils literal notranslate"><span class="pre">256x256</span></code> pixels here, you can use the patch_overlap parameter to control
+the trade-off between speed and accuracy of the denoising procedure. This reduces the number of patches
+the algorithm works with, at the expense of introducing possible edge artefacts between patches.</p>
+<p>For the experimental sequence, the detector offset (<code class="docutils literal notranslate"><span class="pre">noise_mu</span></code>) was known beforehand, so a
+noise estimation procedure is used for the other values.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load example dataset and plot</span>
+<span class="n">s_np</span> <span class="o">=</span> <span class="n">hs</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;nanoparticle.tif&quot;</span><span class="p">)</span>
+<span class="n">s_np</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">navigator</span><span class="o">=</span><span class="s2">&quot;slider&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize with suggested parameters, optimized for speed</span>
+<span class="n">expt_svt</span> <span class="o">=</span> <span class="n">hspy</span><span class="o">.</span><span class="n">HSPYSVT</span><span class="p">(</span><span class="n">patch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">patch_overlap</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">noise_mu</span><span class="o">=</span><span class="mf">0.075</span><span class="p">)</span>
+
+<span class="c1"># Run the denoising</span>
+<span class="n">s_np_denoised</span> <span class="o">=</span> <span class="n">expt_svt</span><span class="o">.</span><span class="n">denoise</span><span class="p">(</span><span class="n">s_np</span><span class="p">)</span>
+
+<span class="c1"># Plot denoised data</span>
+<span class="n">s_np_denoised</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">navigator</span><span class="o">=</span><span class="s2">&quot;slider&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="standalone-executable">
+<h2><a class="toc-backref" href="#id4">Standalone executable</a><a class="headerlink" href="#standalone-executable" title="Permalink to this headline">¶</a></h2>
+<p>The PGURE-SVT standalone executable uses a simple command-line interface
+along with a separate parameter file.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./PGURE-SVT param.svt
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The standalone executable currently only supports 8-bit and 16-bit TIFF sequences.</p>
+</div>
+<p>An example file,
+<a class="reference external" href="https://github.com/tjof2/pgure-svt/blob/master/examples/param.svt">examples/param.svt</a>
+is provided.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example parameter file for PGURE-SVT program</span>
+
+<span class="c1"># Specify the file name of the TIFF stack to be denoised</span>
+<span class="n">filename</span>             <span class="p">:</span> <span class="o">../</span><span class="n">test</span><span class="o">/</span><span class="n">examplesequence</span><span class="o">.</span><span class="n">tif</span>
+
+<span class="c1"># The start and end frames of the sequence to be denoised</span>
+<span class="n">start_image</span>          <span class="p">:</span> <span class="mi">1</span>
+<span class="n">end_image</span>            <span class="p">:</span> <span class="mi">50</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -130,7 +267,7 @@
       
     </p>
     <p>
-        &copy; Copyright Copyright 2015-2020, Tom Furnival.<br/>
+        &copy; Copyright 2015-2020, Tom Furnival.<br/>
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.2.<br/>
     </p>
   </div>
