@@ -218,23 +218,33 @@
 <span class="sd">        no median filtering is performed.</span>
 <span class="sd">    optimize_pgure : bool, default=True</span>
 <span class="sd">        Whether to optimize PGURE or just denoise</span>
-<span class="sd">        according to given threshold.</span>
-<span class="sd">    threshold : float or None, default=None</span>
+<span class="sd">        according to given threshold, ``lambda1``.</span>
+<span class="sd">    lambda1 : float or None, default=None</span>
 <span class="sd">        If ``optimize_pgure=False``:</span>
 <span class="sd">            Singular value threshold value to use for</span>
-<span class="sd">            the entire image sequence.</span>
+<span class="sd">            the entire image sequence. Must be a positive float.</span>
 <span class="sd">        If ``optimize_pgure=True``:</span>
 <span class="sd">            Used as the initial guess for the optimization</span>
-<span class="sd">            of the singular value threshold. If None, a</span>
+<span class="sd">            of the singular value threshold. If ``None``, a</span>
 <span class="sd">            heuristic is used for the guess instead.</span>
+<span class="sd">    exponential_weighting : bool, default=True</span>
+<span class="sd">        If ``True``:</span>
+<span class="sd">            Applies exponential weighting to the singular values</span>
+<span class="sd">            of the Casorati matrix, such that smaller singular</span>
+<span class="sd">            values are thresholded more than larger values.</span>
+<span class="sd">        If ``False``:</span>
+<span class="sd">            Applies a constant threshold to all singular values.</span>
+<span class="sd">    noise_method : int, default=4</span>
+<span class="sd">        Method for estimating Poisson-Gaussian noise parameters.</span>
+<span class="sd">        Currently undocumented.</span>
 <span class="sd">    noise_alpha : float or None, default=None</span>
-<span class="sd">        Level of noise gain. If None, then parameter is</span>
+<span class="sd">        Level of noise gain. If ``None``, then parameter is</span>
 <span class="sd">        estimated online. Ignored if ``optimize_pgure=False``.</span>
 <span class="sd">    noise_mu : float or None, default=None</span>
-<span class="sd">        Level of noise offset. If None, then parameter is</span>
+<span class="sd">        Level of noise offset. If ``None``, then parameter is</span>
 <span class="sd">        estimated online. Ignored if ``optimize_pgure=False``.</span>
 <span class="sd">    noise_sigma : float or None, default=None</span>
-<span class="sd">        Level of Gaussian noise. If None, then parameter is</span>
+<span class="sd">        Level of Gaussian noise. If ``None``, then parameter is</span>
 <span class="sd">        estimated online. Ignored if ``optimize_pgure=False``.</span>
 <span class="sd">    tol : float, default=1e-7</span>
 <span class="sd">        Stopping tolerance of PGURE optimization algorithm.</span>
@@ -278,9 +288,9 @@
         <span class="n">lambda1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">exponential_weighting</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">noise_method</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-        <span class="n">noise_alpha</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">noise_mu</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">noise_sigma</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">noise_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">noise_mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">noise_sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">tol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span>
         <span class="n">max_iter</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
         <span class="n">n_jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -318,6 +328,9 @@
         <span class="c1"># C++ uses numerical values instead of None for defaults</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lambda1_</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">motion_filter_</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_filter</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_filter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_alpha_</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_alpha</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_mu_</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_mu</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_sigma_</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_sigma</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_sigma</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs_</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">random_seed_</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span>
 
@@ -328,11 +341,17 @@
                 <span class="sa">f</span><span class="s2">&quot;should not be greater than patch_size (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">patch_size</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_length</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">trajectory_length</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid trajectory_length parameter: got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectory_length</span><span class="si">}</span><span class="s2">,&quot;</span>
+                <span class="s2">&quot;but expected a positive, odd-valued integer&quot;</span>
+            <span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_estimation</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_window</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_window</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_window</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Invalid motion_window parameter: got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_window</span><span class="si">}</span><span class="s2">, &quot;</span>
-                    <span class="s2">&quot;should be greater than 1 pixel&quot;</span>
+                    <span class="s2">&quot;should be greater a positive, odd-valued integer &gt; 1 pixel.&quot;</span>
                 <span class="p">)</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_filter_</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -347,7 +366,7 @@
                 <span class="s2">&quot;should be a float &gt;= 0.0 if optimize_pgure is None.&quot;</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_sigma</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_alpha_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_mu_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_sigma_</span><span class="p">]):</span>
             <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Quadtree noise estimation requires square images, got </span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -402,9 +421,9 @@
             <span class="n">lambda1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lambda1_</span><span class="p">,</span>
             <span class="n">exponential_weighting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exponential_weighting</span><span class="p">,</span>
             <span class="n">noise_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_method</span><span class="p">,</span>
-            <span class="n">noise_alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_alpha</span><span class="p">,</span>
-            <span class="n">noise_mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_mu</span><span class="p">,</span>
-            <span class="n">noise_sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_sigma</span><span class="p">,</span>
+            <span class="n">noise_alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_alpha_</span><span class="p">,</span>
+            <span class="n">noise_mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_mu_</span><span class="p">,</span>
+            <span class="n">noise_sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_sigma_</span><span class="p">,</span>
             <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span>
             <span class="n">max_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">,</span>
             <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs_</span><span class="p">,</span>
