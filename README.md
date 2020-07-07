@@ -65,7 +65,7 @@ PGURE-SVT comes with a simple Python wrapper that accepts any NumPy array with d
 
 ```python
 import numpy as np
-from pguresvt import pguresvt
+from pguresvt import SVT
 
 # Example dataset has dimensions (nx, ny, T),
 # in this case a 64x64px video with 25 frames
@@ -73,7 +73,7 @@ X = np.random.randn(64, 64, 25)
 
 # Initialize the algorithm
 # with default parameters
-svt = pguresvt.SVT()
+svt = SVT()
 
 # Run the algorithm on the data X
 svt.denoise(X)

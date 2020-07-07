@@ -3,70 +3,83 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PGURE-SVT's documentation!
-=====================================
+PGURE-SVT
+=========
+
+PGURE-SVT (Poisson-Gaussian Unbiased Risk Estimator - Singular Value Thresholding)
+is an algorithm designed to denoise image sequences acquired in microscopy.
+It exploits the correlations between consecutive frames to form low-rank matrices,
+which are then recovered using a technique known as nuclear norm minimization.
+An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate
+the selection of the regularization parameter, while robust noise and motion
+estimation maintain broad applicability to many different types of microscopy.
+
+If you use this code in a publication, please cite our work:
+
+* T. Furnival, R. K. Leary and P. A. Midgley, "Denoising
+  time-resolved microscopy sequences with singular value
+  thresholding", *Ultramicroscopy*, vol. 178, pp. 112–124,
+  2017. DOI: `10.1016/j.ultramic.2016.05.005 <https://doi.org/10.1016/j.ultramic.2016.05.005>`_.
+
+Contents
+--------
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
 
    install
    examples
    api
 
-
-Installation
-------------
-
-We recommend the `Anaconda Python distribution <https://www.continuum.io/downloads>`_.
-Otherwise, to install ``pgure-svt``, you will first need to install its dependencies:
-
-.. code-block:: bash
-
-   pip install -U numpy
-
-Then install pgure-svt:
-
-.. code-block:: bash
-
-   pip install -U pgure-svt
-
-To upgrade, use the ``--upgrade`` flag provided by `pip`.
-
-To check if everything worked fine, you can do:
-
-.. code-block:: bash
-
-	python -c 'import pgure-svt'
-
-This should not produce any error message.
-
 Quickstart
 ----------
 
-TODO
+To install ``pgure-svt`` in a ``conda`` environment (Linux and MacOS only)
+from `conda-forge <https://conda-forge.org/>`_:
+
+.. code-block:: bash
+
+   conda install pgure-svt -c conda-forge
+
+For further details (including building from source),
+see the :ref:`installation user guide <install>`.
+
+Once installed, you can use ``pgure-svt`` as below:
 
 .. code-block:: python
 
    import numpy as np
-   from pgure-svt import OnlineRobustPCA
+   from pguresvt import SVT
 
-   # Generate toy dataset
-   U = np.random.randn(500, 5)
-   V = np.random.randn(50, 5)
-   X = U @ V.T
+   # Example dataset has dimensions (nx, ny, nt),
+   # in this case a 64x64px video with 25 frames
+   X = np.random.randn(64, 64, 25)
 
-   est = OnlineRobustPCA(n_components=5)
-   Y = est.fit_transform(X)
+   # Initialize the algorithm
+   # with default parameters
+   svt = SVT()
 
-Bug reports
------------
+   # Run the algorithm on the data X
+   svt.denoise(X)
 
-Use the `GitHub issue tracker <https://github.com/tjof2/pgure-svt/issues>`_ to report bugs.
+   # Get the denoised data Y
+   Y = svt.Y_
 
-Cite
-----
+Contributing
+------------
 
-TODO
+All contributions to PGURE-SVT are welcome!
 
+There are many ways to contribute to PGURE-SVT, with the most common ones being contribution of code,
+documentation or examples to the project. You can also help by by answering queries on the issue tracker,
+investigating bugs, and reviewing other pull requests, or by reporting any issues you are facing.
+Please use the `GitHub issue tracker <https://github.com/tjof2/pgure-svt/issues>`_ to report bugs.
 
+Lastly, you can contribute by helping to spread the word about PGURE-SVT: reference the project
+from your blog and articles, link to it from your website, or simply star it in GitHub to say "I use it".
+
+License
+-------
+
+PGURE-SVT is released free of charge under the GNU General Public License
+(`GPLv3 <http://www.gnu.org/licenses/gpl-3.0.en.html>`_).
