@@ -12,11 +12,24 @@ def _is_power_of_two(n):
 
 
 def mixed_noise_model(X, alpha=1.0, mu=0.0, sigma=0.0, random_state=None):
-    """Add Poisson-Gaussian noise to the data X
+    """Add Poisson-Gaussian noise to the data X.
+
+    Noise is generated according to the following mixed noise model:
+
+    .. math::
+
+        \\mathbf{Y}=\\alpha\\mathbf{Z}+\\mathbf{E}\\;\\textrm{ with }\\;
+        \\begin{cases}
+            \\mathbf{Z}\\thicksim\\mathcal{P}\\left(\\frac{\\mathbf{X}^{0}}{\\alpha}\\right)\\\\
+            \\mathbf{E}\\thicksim\\mathcal{N}\\left(\\mu,\\sigma^{2}\\right)
+        \\end{cases}
+
+    where ``alpha`` is the detector gain, ``mu`` is the detector offset, and
+    ``sigma`` is the (Gaussian) detector noise.
 
     Parameters
     ----------
-    X : array
+    X : np.ndarray
         The data to be corrupted.
     alpha : float, default=1.0
         Level of noise gain. Should be in range [0, 1].
@@ -29,8 +42,8 @@ def mixed_noise_model(X, alpha=1.0, mu=0.0, sigma=0.0, random_state=None):
 
     Returns
     -------
-    Y : array
-        The corrupted data.
+    Y : np.ndarray
+        The corrupted data, with the same shape as ``X``.
 
     """
     if alpha <= 0.0 or alpha > 1.0:
@@ -71,7 +84,12 @@ class SVT:
     An unbiased risk estimator for mixed Poisson-Gaussian noise is
     used to automate the selection of the regularization parameter,
     while robust noise and motion estimation maintain broad applicability
-    to many different types of microscopy. See [Furnival2017]_.
+    to many different types of microscopy.
+
+    For more information, see T. Furnival, R. K. Leary and P. A. Midgley,
+    "Denoising time-resolved microscopy sequences with singular value
+    thresholding", Ultramicroscopy, vol. 178, pp. 112–124, 2017. DOI:
+    `10.1016/j.ultramic.2016.05.005 <https://doi.org/10.1016/j.ultramic.2016.05.005>`_.
 
     Parameters
     ----------
@@ -138,13 +156,6 @@ class SVT:
         Level of noise offset for each frame.
     noise_sigmas_ : np.ndarray, shape (nt,)
         Level of Gaussian noise for each frame.
-
-    References
-    ----------
-    .. [Furnival2017] T. Furnival, R. K. Leary and P. A. Midgley, "Denoising
-                      time-resolved microscopy sequences with singular value
-                      thresholding", Ultramicroscopy, vol. 178, pp. 112–124,
-                      2017. DOI:10.1016/j.ultramic.2016.05.005
 
     """
 
