@@ -1,141 +1,205 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>PGURE-SVT by tjof2</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation &#8212; pgure-svt 0.6.0 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/override_layout.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="PGURE-SVT" href="index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/github-light.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <h1 class="header">PGURE-SVT</h1>
-        <ul>
-          <li class="download"><a class="buttons" href="https://github.com/tjof2/pgure-svt/archive/v0.3.3.tar.gz">Download v0.3.3</a></li>
-          <li><a class="buttons github" href="https://github.com/tjof2/pgure-svt">View On GitHub</a></li>
-        </ul>
-       <p class="header">This project is maintained by <a class="header name" href="https://github.com/tjof2">tjof2</a></p>
-       <p><a href="https://travis-ci.org/tjof2/pgure-svt">
-<img src="https://travis-ci.org/tjof2/pgure-svt.svg?branch=master"/>
-</a></p>
-      </header>
-      <section>
+  </head><body>
 
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          pgure-svt</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
 
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="#">Install</a></li>
+                <li><a href="examples.html">Examples</a></li>
+                <li><a href="api.html">API</a></li>
+                <li><a href="https://github.com/tjof2/pgure-svt">GitHub</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#conda-forge">conda-forge</a></li>
+<li><a class="reference internal" href="#building-from-source">Building from source</a><ul>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#python">Python</a></li>
+<li><a class="reference internal" href="#standalone-executable">Standalone executable</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="_sources/install.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
 
-<h1>
-<a id="pgure-svt" class="anchor" href="#pgure-svt" aria-hidden="true">
-<span class="octicon octicon-link"></span></a>Installation</h1>
-
-<p><small><em><a href="http://tjof2.github.io/pgure-svt">Home</a> &gt;
-                   Installation</small></em></p>
-
-  <h2>
-  <a id="windows" class="anchor" href="#windows" aria-hidden="true">
-    <span class="octicon octicon-link"></span></a>Windows</h2>
-
-<p>Pre-compiled binaries for 64-bit Windows are available to
-  <a href="https://github.com/tjof2/pgure-svt/releases/download/v0.3.3/PGURE-SVT_Win64.zip">download here</a>.</p>
-
-  <p><em>Note:</em> You may need to install the <a href="https://www.microsoft.com/en-gb/download/details.aspx?id=48145">Microsoft Visual C++ 2015 redistributable package</a> before running PGURE-SVT.</p>
-
-<h2>
-<a id="compiling-from-source" class="anchor" href="#compiling-from-source" aria-hidden="true">
-  <span class="octicon octicon-link"></span></a>Compiling from source</h2>
-
-  <p>PGURE-SVT has been tested on Ubuntu 12.04, 13.04 and 14.04. It should also work on Mac, although
-  you will probably need to specify GCC version 4.9 or above as your compiler.</p>
-
-  <h3>
-  <a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true">
-    <span class="octicon octicon-link"></span></a>Dependencies</h3>
-
-  <p>
-  To successfully compile the C++ code, PGURE-SVT requires the following packages and
-  libraries to be installed on your machine first.
-  </p>
-
-  <ul>
-  <li><strong><a href="http://www.cmake.org">CMake</a></strong> 2.8+</li>
-  <li><strong><a href="http://arma.sourceforge.net">Armadillo</a></strong> 6.400+</li>
-  <li><strong><a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a></strong> 2.4.2+</li>
-  <li><strong><a href="http://www.remotesensing.org/libtiff/">LibTIFF</a> - for the standalone executable only</strong></li>
-  </ul>
-
-  <p>When installing the Armadillo linear algebra library, it
-  is recommended that you also install a high-speed BLAS replacement such as OpenBLAS
-  or MKL; more information can be found in the  Armadillo <a href="http://arma.sourceforge.net/faq.html#blas_lapack_replacements">
-  documentation</a>.</p>
-  
-  <p>When installing NLopt, make sure you specify to build the shared library:</p>
-<pre><code>$ cd nlopt-2.4.2
-$ ./configure --enable-shared
-$ make
-$ sudo make install
-</code></pre>
-
-  <h3>
-  <a id="compilation" class="anchor" href="#compilation" aria-hidden="true">
-    <span class="octicon octicon-link"></span></a>Compilation</h3>
-
-<p>By default, the system will build a C++ library for linking with Python. Installation of
-the <a href="command.html"> standalone executable</a> must be specified by the user. To build PGURE-SVT, first unpack the source:</p>
-
-<pre><code>$ tar -xzf pgure-svt-0.3.3.tar.gz
-$ cd pgure-svt-0.3.3
-</code></pre>
-
-<p>Next create a <code>build</code> directory for CMake to use when compiling
-  and installing PGURE-SVT:</p>
-
-<pre><code>$ mkdir build
-$ cd build
-</code></pre>
-
-<p>Use CMake to compile and install PGURE-SVT. By default, this will
-generate a shared library in the <code>/usr/lib</code> directory.
-It will also install the Python wrapper by running <code>python setup.py install</code>.</p>
-
-<pre><code>$ cd build
-$ cmake ..
-$ make
-$ sudo make install
-</code></pre>
-
-<p>To change the install location, type <code>cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..</code> and
-recompile with <code>make</code> and <code>sudo make install</code>.</p>
-
-<p>The standalone executable is not built by default, as it requires LibTIFF to be installed. To install the
-PGURE-SVT executable into <code>/usr/bin</code>, use:</p>
-
-<pre><code>$ cmake -DBUILD_EXECUTABLE=ON ..
-$ make
-$ sudo make install
-</code></pre>
-
-      </section>
-      <footer>
-        <p><small>Copyright (C) 2015-2016 Tom Furnival. Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
-      </footer>
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-		          <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA-65991272-1");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
+  </div>
 
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="installation">
+<span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="conda-forge">
+<h2>conda-forge<a class="headerlink" href="#conda-forge" title="Permalink to this headline">¶</a></h2>
+<p>To install <code class="docutils literal notranslate"><span class="pre">pgure-svt</span></code> in a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment (Linux and MacOS only
+- Windows coming soon) from <a class="reference external" href="https://conda-forge.org/">conda-forge</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda install pgure-svt -c conda-forge
+</pre></div>
+</div>
+</div>
+<div class="section" id="building-from-source">
+<h2>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="dependencies">
+<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
+<p>To build from source, PGURE-SVT requires the following packages and libraries to be installed on your machine first.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="http://www.cmake.org">CMake</a> 2.8+</p></li>
+<li><p><a class="reference external" href="http://arma.sourceforge.net">Armadillo</a> 6.400+</p></li>
+<li><p><a class="reference external" href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLopt</a> 2.4.2+</p></li>
+<li><p><a class="reference external" href="http://www.remotesensing.org/libtiff/">LibTIFF</a> - for the standalone executable only</p></li>
+</ul>
+<p>When installing the Armadillo linear algebra library, it is recommended that you also install
+a high-speed BLAS replacement such as OpenBLAS or MKL; more information can be found in the
+<a class="reference external" href="http://arma.sourceforge.net/faq.html#blas_lapack_replacements">Armadillo</a> documentation.</p>
+</div>
+<div class="section" id="python">
+<h3>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h3>
+<p>Once you have installed the dependencies listed above, you can build the Python package from source:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/tjof2/pgure-svt.git
+<span class="nb">cd</span> pgure-svt
+pip install -e .
+</pre></div>
+</div>
+</div>
+<div class="section" id="standalone-executable">
+<h3>Standalone executable<a class="headerlink" href="#standalone-executable" title="Permalink to this headline">¶</a></h3>
+<p>The standalone PGURE-SVT executable has been tested on Ubuntu 12.04+. You can
+use CMake to compile and install PGURE-SVT.</p>
+<p>To install the PGURE-SVT executable into <code class="docutils literal notranslate"><span class="pre">/usr/bin</span></code>, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/tjof2/pgure-svt.git
+<span class="nb">cd</span> pgure-svt
+mkdir build
+<span class="nb">cd</span> build
+cmake ..
+make
+sudo make install
+</pre></div>
+</div>
+<p>To change the install location, replace the last three lines with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake -DCMAKE_INSTALL_PREFIX<span class="o">=</span>/path/to/install ..
+make
+sudo make install
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For OSX users, you may need to use the GCC compiler rather than the default.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright Copyright 2015-2020, Tom Furnival.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.2.<br/>
+    </p>
+  </div>
+</footer>
   </body>
 </html>

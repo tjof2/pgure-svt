@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation &#8212; pgure-svt 0.6.0 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/override_layout.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Examples" href="examples.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          pgure-svt</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="install.html">Install</a></li>
+                <li><a href="examples.html">Examples</a></li>
+                <li><a href="#">API</a></li>
+                <li><a href="https://github.com/tjof2/pgure-svt">GitHub</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Documentation</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">API Documentation</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="_sources/api.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="api-documentation">
+<span id="id1"></span><h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pguresvt.svt.SVT" title="pguresvt.svt.SVT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">svt.SVT</span></code></a></p></td>
+<td><p>Singular value thresholding for denoising image sequences.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pguresvt.svt.mixed_noise_model" title="pguresvt.svt.mixed_noise_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">svt.mixed_noise_model</span></code></a></p></td>
+<td><p>Add Poisson-Gaussian noise to the data X.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pguresvt.hspy.HSPYSVT" title="pguresvt.hspy.HSPYSVT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hspy.HSPYSVT</span></code></a></p></td>
+<td><p>HyperSpy wrapper for SVT.</p></td>
+</tr>
+</tbody>
+</table>
+<span class="target" id="module-pguresvt.svt"></span><dl class="py class">
+<dt id="pguresvt.svt.SVT">
+<em class="property">class </em><code class="sig-prename descclassname">pguresvt.svt.</code><code class="sig-name descname">SVT</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trajectory_length</span><span class="o">=</span><span class="default_value">15</span></em>, <em class="sig-param"><span class="n">patch_size</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">patch_overlap</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">motion_estimation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">motion_window</span><span class="o">=</span><span class="default_value">7</span></em>, <em class="sig-param"><span class="n">motion_filter</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">optimize_pgure</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">lambda1</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">exponential_weighting</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">noise_method</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">noise_alpha</span><span class="o">=</span><span class="default_value">- 1.0</span></em>, <em class="sig-param"><span class="n">noise_mu</span><span class="o">=</span><span class="default_value">- 1.0</span></em>, <em class="sig-param"><span class="n">noise_sigma</span><span class="o">=</span><span class="default_value">- 1.0</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-07</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">500</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_seed</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pguresvt/svt.html#SVT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pguresvt.svt.SVT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Singular value thresholding for denoising image sequences.</p>
+<p>PGURE-SVT is an algorithm designed to denoise image sequences
+acquired in microscopy. It exploits the correlations between
+consecutive frames to form low-rank matrices, which are then
+recovered using a technique known as nuclear norm minimization.
+An unbiased risk estimator for mixed Poisson-Gaussian noise is
+used to automate the selection of the regularization parameter,
+while robust noise and motion estimation maintain broad applicability
+to many different types of microscopy.</p>
+<p>For more information, see T. Furnival, R. K. Leary and P. A. Midgley,
+“Denoising time-resolved microscopy sequences with singular value
+thresholding”, Ultramicroscopy, vol. 178, pp. 112–124, 2017. DOI:
+<a class="reference external" href="https://doi.org/10.1016/j.ultramic.2016.05.005">10.1016/j.ultramic.2016.05.005</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trajectory_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>default=15</em>) – Length in frames of the block to form
+a Casorati matrix. Must be odd.</p></li>
+<li><p><strong>patch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>default=4</em>) – The dimensions of the patch in pixels
+to form a Casorati matrix.</p></li>
+<li><p><strong>patch_overlap</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>default=1</em>) – The dimensions of the patch in pixels
+to form a Casorati matrix.</p></li>
+<li><p><strong>motion_window</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>default=7</em>) – Size of neighbourhood in pixels for ARPS
+motion estimation search. Must be odd.</p></li>
+<li><p><strong>motion_filter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.8)"><em>None</em></a><em>, </em><em>default=5</em>) – Size of median filter in pixels used to
+improve motion estimation search. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+no median filtering is performed.</p></li>
+<li><p><strong>optimize_pgure</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to optimize PGURE or just denoise
+according to given threshold.</p></li>
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.8)"><em>None</em></a><em>, </em><em>default=None</em>) – <dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">optimize_pgure=False</span></code>:</dt><dd><p>Singular value threshold value to use for
+the entire image sequence.</p>
+</dd>
+<dt>If <code class="docutils literal notranslate"><span class="pre">optimize_pgure=True</span></code>:</dt><dd><p>Used as the initial guess for the optimization
+of the singular value threshold. If None, a
+heuristic is used for the guess instead.</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>noise_alpha</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.8)"><em>None</em></a><em>, </em><em>default=None</em>) – Level of noise gain. If None, then parameter is
+estimated online. Ignored if <code class="docutils literal notranslate"><span class="pre">optimize_pgure=False</span></code>.</p></li>
+<li><p><strong>noise_mu</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.8)"><em>None</em></a><em>, </em><em>default=None</em>) – Level of noise offset. If None, then parameter is
+estimated online. Ignored if <code class="docutils literal notranslate"><span class="pre">optimize_pgure=False</span></code>.</p></li>
+<li><p><strong>noise_sigma</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.8)"><em>None</em></a><em>, </em><em>default=None</em>) – Level of Gaussian noise. If None, then parameter is
+estimated online. Ignored if <code class="docutils literal notranslate"><span class="pre">optimize_pgure=False</span></code>.</p></li>
+<li><p><strong>tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>default=1e-7</em>) – Stopping tolerance of PGURE optimization algorithm.
+Ignored if <code class="docutils literal notranslate"><span class="pre">optimize_pgure=False</span></code>.</p></li>
+<li><p><strong>max_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>default=500</em>) – Maximum iterations of PGURE optimization algorithm.
+Ignored if <code class="docutils literal notranslate"><span class="pre">optimize_pgure=False</span></code>.</p></li>
+<li><p><strong>n_jobs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.8)"><em>None</em></a><em>, </em><em>default=None</em>) – The number of threads to use. A value of <code class="docutils literal notranslate"><span class="pre">None</span></code>
+means using all threads dependent on the available
+hardware.</p></li>
+<li><p><strong>random_seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.8)"><em>None</em></a><em>, </em><em>default=None</em>) – Random seed used when optimizing PGURE.
+Ignored if <code class="docutils literal notranslate"><span class="pre">optimize_pgure=False</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="pguresvt.svt.SVT.Y_">
+<code class="sig-name descname">Y_</code><a class="headerlink" href="#pguresvt.svt.SVT.Y_" title="Permalink to this definition">¶</a></dt>
+<dd><p>The denoised image sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray, shape (nx, ny, nt)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pguresvt.svt.SVT.lambda1s_">
+<code class="sig-name descname">lambda1s_</code><a class="headerlink" href="#pguresvt.svt.SVT.lambda1s_" title="Permalink to this definition">¶</a></dt>
+<dd><p>The singular value threshold applied to each frame.
+If <code class="docutils literal notranslate"><span class="pre">optimize_pgure=True</span></code>, these are the optimized values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray, shape (nt,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pguresvt.svt.SVT.noise_alphas_">
+<code class="sig-name descname">noise_alphas_</code><a class="headerlink" href="#pguresvt.svt.SVT.noise_alphas_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Level of noise gain for each frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray, shape (nt,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pguresvt.svt.SVT.noise_mus_">
+<code class="sig-name descname">noise_mus_</code><a class="headerlink" href="#pguresvt.svt.SVT.noise_mus_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Level of noise offset for each frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray, shape (nt,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pguresvt.svt.SVT.noise_sigmas_">
+<code class="sig-name descname">noise_sigmas_</code><a class="headerlink" href="#pguresvt.svt.SVT.noise_sigmas_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Level of Gaussian noise for each frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray, shape (nt,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pguresvt.svt.SVT.denoise">
+<code class="sig-name descname">denoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pguresvt/svt.html#SVT.denoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pguresvt.svt.SVT.denoise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Denoise the data X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>np.ndarray</em><em>, </em><em>shape</em><em> (</em><em>nx</em><em>, </em><em>ny</em><em>, </em><em>nt</em><em>)</em>) – The image sequence to be denoised.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – Returns the instance itself.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="pguresvt.svt.mixed_noise_model">
+<code class="sig-prename descclassname">pguresvt.svt.</code><code class="sig-name descname">mixed_noise_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">mu</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pguresvt/svt.html#mixed_noise_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pguresvt.svt.mixed_noise_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add Poisson-Gaussian noise to the data X.</p>
+<p>Noise is generated according to the following mixed noise model:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{Y}=\alpha\mathbf{Z}+\mathbf{E}\;\textrm{ with }\;
+\begin{cases}
+    \mathbf{Z}\thicksim\mathcal{P}\left(\frac{\mathbf{X}^{0}}{\alpha}\right)\\
+    \mathbf{E}\thicksim\mathcal{N}\left(\mu,\sigma^{2}\right)
+\end{cases}\end{split}\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">alpha</span></code> is the detector gain, <code class="docutils literal notranslate"><span class="pre">mu</span></code> is the detector offset, and
+<code class="docutils literal notranslate"><span class="pre">sigma</span></code> is the (Gaussian) detector noise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>np.ndarray</em>) – The data to be corrupted.</p></li>
+<li><p><strong>alpha</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>default=1.0</em>) – Level of noise gain. Should be in range [0, 1].</p></li>
+<li><p><strong>mu</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>default=0.0</em>) – Level of noise offset.</p></li>
+<li><p><strong>sigma</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>default=0.0</em>) – Level of Gaussian noise. Should be &gt;= 0.0.</p></li>
+<li><p><strong>random_state</strong> (<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.8)"><em>None</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em> or </em><em>RandomState instance</em><em>, </em><em>default=None</em>) – Random seed used to generate the noise.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Y</strong> – The corrupted data, with the same shape as <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-pguresvt.hspy"></span><dl class="py class">
+<dt id="pguresvt.hspy.HSPYSVT">
+<em class="property">class </em><code class="sig-prename descclassname">pguresvt.hspy.</code><code class="sig-name descname">HSPYSVT</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pguresvt/hspy.html#HSPYSVT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pguresvt.hspy.HSPYSVT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pguresvt.svt.SVT" title="pguresvt.svt.SVT"><code class="xref py py-class docutils literal notranslate"><span class="pre">pguresvt.svt.SVT</span></code></a></p>
+<p>HyperSpy wrapper for SVT.</p>
+<p>Allows arbitrary HyperSpy signals to be passed for SVT denoising.</p>
+<dl class="py method">
+<dt id="pguresvt.hspy.HSPYSVT.denoise">
+<code class="sig-name descname">denoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">signal</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pguresvt/hspy.html#HSPYSVT.denoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pguresvt.hspy.HSPYSVT.denoise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Denoises an arbitrary HyperSpy signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>signal</strong> (<em>hyperspy.signals.BaseSignal</em>) – The HyperSpy signal to denoise; can be of arbitrary type/shape.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Denoised data as a signal.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>hyperspy.signals.BaseSignal</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright Copyright 2015-2020, Tom Furnival.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

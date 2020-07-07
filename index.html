@@ -1,118 +1,211 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>PGURE-SVT by tjof2</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGURE-SVT &#8212; pgure-svt 0.6.0 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/override_layout.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="install.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/github-light.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <h1 class="header">PGURE-SVT</h1>
-        <ul>
-          <li class="download"><a class="buttons" href="https://github.com/tjof2/pgure-svt/archive/v0.3.3.tar.gz">Download v0.3.3</a></li>
-          <li><a class="buttons github" href="https://github.com/tjof2/pgure-svt">View On GitHub</a></li>
-        </ul>
-       <p class="header">This project is maintained by <a class="header name" href="https://github.com/tjof2">tjof2</a></p>
-       <p><a href="https://travis-ci.org/tjof2/pgure-svt">
-<img src="https://travis-ci.org/tjof2/pgure-svt.svg?branch=master"/>
-</a></p>
-      </header>
-      <section>
-<h1>
-<a id="pgure-svt" class="anchor" href="#pgure-svt" aria-hidden="true">
-<span class="octicon octicon-link"></span></a>PGURE-SVT</h1>
+  </head><body>
 
-<p><strong>Singular value thresholding for denoising video microscopy data</strong></p>
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">
+          pgure-svt</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
 
-<p>PGURE-SVT is an algorithm designed to denoise image sequences acquired in microscopy.
-It exploits the correlations between consecutive frames to form low-rank matrices, which
-are then recovered using a technique known as nuclear norm minimization. An unbiased risk
-estimator for mixed Poisson-Gaussian noise is used to automate the selection of the
-regularization parameter, while robust noise and motion estimation maintain broad
-applicability to many different types of microscopy. </p>
-
-<p>
-More information on the algorithm can be found in our paper, DOI:<a href="http://dx.doi.org/10.1016/j.ultramic.2016.05.005">10.1016/j.ultramic.2016.05.005</a>.
-</p>
-
-<ul>
-<li><a href="./install.html"><strong>Installation</strong></a></li>
-<li><a href="./python.html"><strong>Using PGURE-SVT with Python</strong></a></li>
-<li><a href="./command.html"><strong>Using PGURE-SVT from the command line</strong></a></li>
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="install.html">Install</a></li>
+                <li><a href="examples.html">Examples</a></li>
+                <li><a href="api.html">API</a></li>
+                <li><a href="https://github.com/tjof2/pgure-svt">GitHub</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
 </ul>
-
-<p>PGURE-SVT is released free of charge under the GNU General Public License
-(<a href="www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a>).</p>
-
-
-<h2>
-<a id="citing" class="anchor" href="#citing" aria-hidden="true">
-<span class="octicon octicon-link"></span></a>Citing</h2>
-
-<p>
-  If you use this code in a publication, please cite our work:
-</p>
-
-<pre><code>@article{PGURESVT2016,
-    title   = {Denoising time-resolved microscopy sequences with
-               singular value thresholding.},
-    author  = {Furnival, Tom and Leary, Rowan K. and Midgley, Paul A.},
-    journal = {Ultramicroscopy},
-    doi     = {10.1016/j.ultramic.2016.05.005},
-    year    = {Article in press}
-}
-</code></pre>
-
-<h2>
-<a id="changelog" class="anchor" href="#changelog" aria-hidden="true">
-<span class="octicon octicon-link"></span></a>Changelog</h2>
-
-<ul>
-  <li><strong>Version 0.3.3</strong> - 24/11/2016<br/>
-      &nbsp;-&nbsp;Minor bug fixes</li>
-  <li><strong>Version 0.3.2</strong> - 18/05/2016<br/>
-      &nbsp;-&nbsp;Updated OpenMP in standalone executable</li>
-      &nbsp;-&nbsp;Fixed dependency issue in Windows binaries</li>
-<li><strong>Version 0.3.1</strong> - 16/05/2016<br/>
-    &nbsp;-&nbsp;Added Windows binaries</li>
-<li><strong>Version 0.3.0</strong> - 19/04/2016<br/>
-    &nbsp;-&nbsp;Functional Python wrapper<br/>
-    &nbsp;-&nbsp;Link with <a href="http://hyperspy.org">HyperSpy</a> multidimensional analysis toolbox<br/>
-    &nbsp;-&nbsp;Supports images up to 4096x4096 pixels<br/>
-    &nbsp;-&nbsp;Simple median filter for outlier detection<br/>
-    &nbsp;-&nbsp;Numerous bug fixes</li>
-<li><strong>Version 0.2.3</strong> - 13/04/2016<br/>
-    &nbsp;-&nbsp;Fixes patch overlap bug<br/>
-    &nbsp;-&nbsp;Introduces a simple Python wrapper</li>
-<li><strong>Version 0.2.0</strong> - 17/03/2016<br/>
-    &nbsp;-&nbsp;This major overhaul converts the code to a more maintainable format</li>
 </ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">PGURE-SVT</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#quickstart">Quickstart</a></li>
+<li><a class="reference internal" href="#contributing">Contributing</a></li>
+<li><a class="reference internal" href="#license">License</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="_sources/index.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
 
-      </section>
-      <footer>
-        <p><small>Copyright (C) 2015-2016 Tom Furnival. Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
-      </footer>
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-		          <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA-65991272-1");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
+  </div>
 
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="pgure-svt">
+<h1>PGURE-SVT<a class="headerlink" href="#pgure-svt" title="Permalink to this headline">¶</a></h1>
+<p>PGURE-SVT (Poisson-Gaussian Unbiased Risk Estimator - Singular Value Thresholding)
+is an algorithm designed to denoise image sequences acquired in microscopy.
+It exploits the correlations between consecutive frames to form low-rank matrices,
+which are then recovered using a technique known as nuclear norm minimization.
+An unbiased risk estimator for mixed Poisson-Gaussian noise is used to automate
+the selection of the regularization parameter, while robust noise and motion
+estimation maintain broad applicability to many different types of microscopy.</p>
+<p>If you use this code in a publication, please cite our work:</p>
+<ul class="simple">
+<li><p>T. Furnival, R. K. Leary and P. A. Midgley, “Denoising
+time-resolved microscopy sequences with singular value
+thresholding”, <em>Ultramicroscopy</em>, vol. 178, pp. 112–124,
+2017. DOI: <a class="reference external" href="https://doi.org/10.1016/j.ultramic.2016.05.005">10.1016/j.ultramic.2016.05.005</a>.</p></li>
+</ul>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
+<p>To install <code class="docutils literal notranslate"><span class="pre">pgure-svt</span></code> in a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment (Linux and MacOS only)
+from <a class="reference external" href="https://conda-forge.org/">conda-forge</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda install pgure-svt -c conda-forge
+</pre></div>
+</div>
+<p>For further details (including building from source),
+see the <a class="reference internal" href="install.html#install"><span class="std std-ref">installation user guide</span></a>.</p>
+<p>Once installed, you can use <code class="docutils literal notranslate"><span class="pre">pgure-svt</span></code> as below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pguresvt</span> <span class="kn">import</span> <span class="n">SVT</span>
+
+<span class="c1"># Example dataset has dimensions (nx, ny, nt),</span>
+<span class="c1"># in this case a 64x64px video with 25 frames</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>
+
+<span class="c1"># Initialize the algorithm</span>
+<span class="c1"># with default parameters</span>
+<span class="n">svt</span> <span class="o">=</span> <span class="n">SVT</span><span class="p">()</span>
+
+<span class="c1"># Run the algorithm on the data X</span>
+<span class="n">svt</span><span class="o">.</span><span class="n">denoise</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+<span class="c1"># Get the denoised data Y</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">svt</span><span class="o">.</span><span class="n">Y_</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h2>
+<p>All contributions to PGURE-SVT are welcome!</p>
+<p>There are many ways to contribute to PGURE-SVT, with the most common ones being contribution of code,
+documentation or examples to the project. You can also help by by answering queries on the issue tracker,
+investigating bugs, and reviewing other pull requests, or by reporting any issues you are facing.
+Please use the <a class="reference external" href="https://github.com/tjof2/pgure-svt/issues">GitHub issue tracker</a> to report bugs.</p>
+<p>Lastly, you can contribute by helping to spread the word about PGURE-SVT: reference the project
+from your blog and articles, link to it from your website, or simply star it in GitHub to say “I use it”.</p>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>PGURE-SVT is released free of charge under the GNU General Public License
+(<a class="reference external" href="http://www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a>).</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright Copyright 2015-2020, Tom Furnival.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.2.<br/>
+    </p>
+  </div>
+</footer>
   </body>
 </html>
