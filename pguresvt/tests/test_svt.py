@@ -121,9 +121,18 @@ class TestErrors:
             s = SVT(patch_size=10, patch_overlap=11)
             s.denoise(self.X)
 
+    def test_error_trajectory_length(self):
+        with pytest.raises(ValueError, match="Invalid trajectory_length parameter"):
+            s = SVT(trajectory_length=14)
+            s.denoise(self.X)
+
     def test_error_motion_window(self):
         with pytest.raises(ValueError, match="Invalid motion_window parameter"):
             s = SVT(motion_estimation=True, motion_window=1)
+            s.denoise(self.X)
+
+        with pytest.raises(ValueError, match="Invalid motion_window parameter"):
+            s = SVT(motion_estimation=True, motion_window=8)
             s.denoise(self.X)
 
     def test_error_motion_filter(self):

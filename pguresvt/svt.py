@@ -111,23 +111,33 @@ class SVT:
         no median filtering is performed.
     optimize_pgure : bool, default=True
         Whether to optimize PGURE or just denoise
-        according to given threshold.
-    threshold : float or None, default=None
+        according to given threshold, ``lambda1``.
+    lambda1 : float or None, default=None
         If ``optimize_pgure=False``:
             Singular value threshold value to use for
-            the entire image sequence.
+            the entire image sequence. Must be a positive float.
         If ``optimize_pgure=True``:
             Used as the initial guess for the optimization
-            of the singular value threshold. If None, a
+            of the singular value threshold. If ``None``, a
             heuristic is used for the guess instead.
+    exponential_weighting : bool, default=True
+        If ``True``:
+            Applies exponential weighting to the singular values
+            of the Casorati matrix, such that smaller singular
+            values are thresholded more than larger values.
+        If ``False``:
+            Applies a constant threshold to all singular values.
+    noise_method : int, default=4
+        Method for estimating Poisson-Gaussian noise parameters.
+        Currently undocumented.
     noise_alpha : float or None, default=None
-        Level of noise gain. If None, then parameter is
+        Level of noise gain. If ``None``, then parameter is
         estimated online. Ignored if ``optimize_pgure=False``.
     noise_mu : float or None, default=None
-        Level of noise offset. If None, then parameter is
+        Level of noise offset. If ``None``, then parameter is
         estimated online. Ignored if ``optimize_pgure=False``.
     noise_sigma : float or None, default=None
-        Level of Gaussian noise. If None, then parameter is
+        Level of Gaussian noise. If ``None``, then parameter is
         estimated online. Ignored if ``optimize_pgure=False``.
     tol : float, default=1e-7
         Stopping tolerance of PGURE optimization algorithm.
@@ -171,9 +181,9 @@ class SVT:
         lambda1=None,
         exponential_weighting=True,
         noise_method=4,
-        noise_alpha=-1.0,
-        noise_mu=-1.0,
-        noise_sigma=-1.0,
+        noise_alpha=None,
+        noise_mu=None,
+        noise_sigma=None,
         tol=1e-7,
         max_iter=500,
         n_jobs=None,
@@ -211,6 +221,9 @@ class SVT:
         # C++ uses numerical values instead of None for defaults
         self.lambda1_ = -1 if self.lambda1 is None else self.lambda1
         self.motion_filter_ = -1 if self.motion_filter is None else self.motion_filter
+        self.noise_alpha_ = -1 if self.noise_alpha is None else self.noise_alpha
+        self.noise_mu_ = -1 if self.noise_mu is None else self.noise_mu
+        self.noise_sigma_ = -1 if self.noise_sigma is None else self.noise_sigma
         self.n_jobs_ = -1 if self.n_jobs is None else self.n_jobs
         self.random_seed_ = -1 if self.random_seed is None else self.random_seed
 
@@ -221,11 +234,17 @@ class SVT:
                 f"should not be greater than patch_size ({self.patch_size})"
             )
 
+        if self.trajectory_length % 2 == 0 or self.trajectory_length < 1:
+            raise ValueError(
+                f"Invalid trajectory_length parameter: got {self.trajectory_length},"
+                "but expected a positive, odd-valued integer"
+            )
+
         if self.motion_estimation:
-            if self.motion_window < 2:
+            if self.motion_window < 2 or self.motion_window % 2 == 0:
                 raise ValueError(
                     f"Invalid motion_window parameter: got {self.motion_window}, "
-                    "should be greater than 1 pixel"
+                    "should be greater a positive, odd-valued integer > 1 pixel."
                 )
 
             if not isinstance(self.motion_filter_, int):
@@ -240,7 +259,7 @@ class SVT:
                 "should be a float >= 0.0 if optimize_pgure is None."
             )
 
-        if any(v < 0.0 for v in [self.noise_alpha, self.noise_mu, self.noise_sigma]):
+        if any(v < 0.0 for v in [self.noise_alpha_, self.noise_mu_, self.noise_sigma_]):
             if X.shape[0] != X.shape[1]:
                 raise ValueError(
                     f"Quadtree noise estimation requires square images, got {X.shape}"
@@ -295,9 +314,9 @@ class SVT:
             lambda1=self.lambda1_,
             exponential_weighting=self.exponential_weighting,
             noise_method=self.noise_method,
-            noise_alpha=self.noise_alpha,
-            noise_mu=self.noise_mu,
-            noise_sigma=self.noise_sigma,
+            noise_alpha=self.noise_alpha_,
+            noise_mu=self.noise_mu_,
+            noise_sigma=self.noise_sigma_,
             tol=self.tol,
             max_iter=self.max_iter,
             n_jobs=self.n_jobs_,
