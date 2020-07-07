@@ -16,4 +16,10 @@ If you use this code in a publication, please cite our work:
 
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://www.gnu.org/licenses/gpl-3.0.en.html)).
 
+To install ``pgure-svt`` in a `conda` environment (Linux and MacOS only):
+
+```bash
+$ conda install pgure-svt -c conda-forge
+```
+
 Copyright (C) 2015-2020 Tom Furnival.
