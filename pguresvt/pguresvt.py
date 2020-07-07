@@ -129,7 +129,7 @@ class SVT:
     ----------
     Y_ : np.ndarray, shape (nx, ny, nt)
         The denoised image sequence.
-    lambda1s : np.ndarray, shape (nt,)
+    lambda1s_ : np.ndarray, shape (nt,)
         The singular value threshold applied to each frame.
         If ``optimize_pgure=True``, these are the optimized values.
     noise_alphas_ : np.ndarray, shape (nt,)
