@@ -16,34 +16,4 @@ If you use this code in a publication, please cite our work:
 
 PGURE-SVT is released free of charge under the GNU General Public License ([GPLv3](http://www.gnu.org/licenses/gpl-3.0.en.html)).
 
-## Quickstart
-To install ``pgure-svt`` in a `conda` environment (Linux and MacOS only):
-
-```bash
-$ conda install pgure-svt -c conda-forge
-```
-
-PGURE-SVT comes with a simple Python wrapper that accepts any NumPy array with dimensions `(nx, ny, T)` for denoising.
-
-```python
-import numpy as np
-from pguresvt import SVT
-
-# Example dataset has dimensions (nx, ny, T),
-# in this case a 64x64px video with 25 frames
-X = np.random.randn(64, 64, 25)
-
-# Initialize the algorithm
-# with default parameters
-svt = SVT()
-
-# Run the algorithm on the data X
-svt.denoise(X)
-
-# Get the denoised data Y
-Y = svt.Y_
-```
-
-For more information on the effects of the parameters, users are referred to the publication.
-
 Copyright (C) 2015-2020 Tom Furnival.
