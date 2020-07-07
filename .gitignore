@@ -1,3 +1,9 @@
+# Custom
+doc/
+pguresvt/
+pguresvt.egg-info/
+examples/
+
 # Compiled Object files
 *.slo
 *.lo
