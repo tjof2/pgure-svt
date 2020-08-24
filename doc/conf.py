@@ -26,7 +26,7 @@ copyright = "2015-2020, Tom Furnival"
 author = "Tom Furnival"
 
 # The full version, including alpha/beta/rc tags
-release = "0.6.0"
+release = "0.6.2"
 
 
 # -- General configuration ---------------------------------------------------
