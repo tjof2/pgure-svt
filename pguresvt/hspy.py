@@ -68,4 +68,8 @@ class HSPYSVT(SVT):
 
         super(HSPYSVT, self).denoise(self._X)
 
-        return signal._deepcopy_with_new_data(self.Y_.T)
+        denoised_signal = signal._deepcopy_with_new_data(self.Y_.T)
+        new_title = f"Denoised {signal.metadata.General.title}".strip()
+        denoised_signal.metadata.General.title = new_title
+
+        return denoised_signal
