@@ -68,7 +68,12 @@ class HSPYSVT(SVT):
 
         super(HSPYSVT, self).denoise(self._X)
 
-        denoised_signal = signal._deepcopy_with_new_data(self.Y_.T)
+        if self._signal_type == "spectrum":
+            axes = (1, 0)
+        elif self._signal_type == "image":
+            axes = (2, 0, 1)
+
+        denoised_signal = signal._deepcopy_with_new_data(self.Y_.transpose(axes))
         new_title = f"Denoised {signal.metadata.General.title}".strip()
         denoised_signal.metadata.General.title = new_title
 
