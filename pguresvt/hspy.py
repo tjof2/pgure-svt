@@ -1,8 +1,6 @@
 # Author: Tom Furnival
 # License: GPLv3
 
-from hyperspy.signals import BaseSignal
-
 from .svt import SVT
 
 
@@ -52,16 +50,6 @@ class HSPYSVT(SVT):
                 f"Expected 1D or 2D signal - got dimension {sig_dim}"
             )
 
-    def _denoised_data_to_signal(self):
-        """Converts denoised data back to a HyperSpy signal."""
-        signal = BaseSignal(self.Y_)
-
-        if self._signal_type == "spectrum":
-            return signal.as_signal1D(2)
-
-        if self._signal_type == "image":
-            return signal.as_signal2D((1, 2))
-
     def denoise(self, signal):
         """Denoises an arbitrary HyperSpy signal.
 
@@ -80,4 +68,13 @@ class HSPYSVT(SVT):
 
         super(HSPYSVT, self).denoise(self._X)
 
-        return self._denoised_data_to_signal()
+        if self._signal_type == "spectrum":
+            axes = (1, 0)
+        elif self._signal_type == "image":
+            axes = (2, 0, 1)
+
+        denoised_signal = signal._deepcopy_with_new_data(self.Y_.transpose(axes))
+        new_title = f"Denoised {signal.metadata.General.title}".strip()
+        denoised_signal.metadata.General.title = new_title
+
+        return denoised_signal
