@@ -2,7 +2,7 @@
 # License: GPLv3
 
 author = "Tom Furnival"
-copyright = "Copyright 2015-2020, Tom Furnival"
+copyright = "Copyright 2015-2021, Tom Furnival"
 credits = [
     "Tom Furnival",
     "Ben Martineau",
@@ -13,7 +13,7 @@ credits = [
 ]
 description = "Singular value thresholding for denoising video microscopy data"
 license = "GPLv3"
-version = "0.6.2"
+version = "0.6.4"
 maintainer = "Tom Furnival"
 email = "tjof2@cam.ac.uk"
 status = "Development"

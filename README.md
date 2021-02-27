@@ -22,4 +22,4 @@ To install ``pgure-svt`` in a `conda` environment (Linux and MacOS only):
 $ conda install pgure-svt -c conda-forge
 ```
 
-Copyright (C) 2015-2020 Tom Furnival.
+Copyright (C) 2015-2021 Tom Furnival.
